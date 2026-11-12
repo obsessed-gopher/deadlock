@@ -41,3 +41,28 @@ jobs:
       # integration tests against the postgres service above
       - run: go run ./tools/dev test-db
       - run: go run ./tools/dev vuln
+
+  web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 26
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      # npm ci, typecheck, unit tests, production build
+      - run: go run ./tools/dev web
+      # Playwright against the mock API (desktop + mobile)
+      - run: go run ./tools/dev e2e
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: |
+            web/playwright-report
+            web/test-results
+          retention-days: 7

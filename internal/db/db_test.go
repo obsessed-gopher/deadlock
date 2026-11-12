@@ -153,4 +153,39 @@ func TestIngestRoundTrip(t *testing.T) {
 	if _, err := d.GetPlayerMatch(ctx, match, 42); !errors.Is(err, ErrNotFound) {
 		t.Errorf("unknown player err = %v", err)
 	}
+
+	// Hero stats: two more matches, one won on the same hero, one on another.
+	more := []source.MatchSummary{
+		{
+			MatchID: match + 1, HeroID: 13, StartTime: 1794400000, DurationS: 1000, GameMode: 1, MatchMode: 1,
+			Team: 1, Result: 1, Kills: 2, Deaths: 1, Assists: 3, NetWorth: 20000, LastHits: 50, HeroLevel: 20,
+		},
+		{
+			MatchID: match + 2, HeroID: 7, StartTime: 1794300000, DurationS: 900, GameMode: 1, MatchMode: 1,
+			Team: 0, Result: 1, Kills: 1, Deaths: 5, Assists: 1, NetWorth: 15000, LastHits: 30, HeroLevel: 18,
+		},
+	}
+	if _, err := d.UpsertHistory(ctx, acc, more); err != nil {
+		t.Fatal(err)
+	}
+	for range 2 { // read-only: repeated calls agree
+		heroes, err := d.ListPlayerHeroStats(ctx, acc)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if len(heroes) != 2 {
+			t.Fatalf("hero stats = %v, want 2 heroes", heroes)
+		}
+		h := heroes[0] // most played first
+		if h.HeroId != 13 || h.Matches != 2 || h.Wins != 1 || h.Kills != 10 || h.Deaths != 9 || h.Assists != 11 ||
+			h.NetWorth != 49130 || h.LastHits != 166 || h.DurationS != 2728 || h.LastPlayed != 1794400000 {
+			t.Errorf("hero 13 = %+v", h)
+		}
+		if heroes[1].HeroId != 7 || heroes[1].Matches != 1 || heroes[1].Wins != 0 {
+			t.Errorf("hero 7 = %+v", heroes[1])
+		}
+	}
+	if heroes, err := d.ListPlayerHeroStats(ctx, 42); err != nil || len(heroes) != 0 {
+		t.Errorf("unknown player hero stats = %v, %v; want none", heroes, err)
+	}
 }

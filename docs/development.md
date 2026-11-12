@@ -2,7 +2,7 @@
 
 ## Первый запуск на новой машине
 
-Нужны: Go (версия из `go.mod`), Docker, `protoc` (только для кодогенерации; на Windows — `winget install Google.Protobuf`).
+Нужны: Go (версия из `go.mod`), Docker, `protoc` (только для кодогенерации; на Windows — `winget install Google.Protobuf`), Node.js 26 (только для фронта; `winget install OpenJS.NodeJS.LTS`).
 
 ```sh
 go run ./tools/dev setup      # golangci-lint, govulncheck, плагины protoc -> .tools/bin; включает git-хук
@@ -34,7 +34,11 @@ docker compose up -d --build
 
 - `go run ./tools/dev test-db` — обязателен при любых изменениях в `internal/db`;
 - `go run ./tools/dev test-linux` — юнит-тесты в контейнере `golang` с `-race`: то же, что в CI. Запускать при изменениях в работе с путями, файлами и конкурентностью, и всегда, когда CI упал, а локально зелено;
-- `go run ./tools/dev vuln` — при обновлении зависимостей.
+- `go run ./tools/dev vuln` — при обновлении зависимостей;
+- `go run ./tools/dev web` — проверки фронта (`web/`): `npm ci` (если нет `node_modules` или задан `CI`), `tsc --noEmit`, `node --test`, `next build`. Обязателен при изменениях в `web/` и в API. В CI — отдельная джоба `web`;
+- `go run ./tools/dev e2e` — Playwright против мок-API (ставит Chromium при первом запуске); аргументы уходят в `playwright test` (`-g sync`, `--headed`). Обязателен там же, где `web`. Подробно — [frontend-testing.md](frontend-testing.md).
+
+Устаревший `web/src/api/schema.gen.ts` ловит обычный `check`: тест `TestSwaggerToTSRealSpec` сравнивает его с результатом генерации.
 
 ## Тестирование
 
@@ -84,6 +88,7 @@ go run ./tools/dev gen
 
 - `proto/deadlock` (копия [SteamDatabase/Protobufs](https://github.com/SteamDatabase/Protobufs)) → `internal/pb`. Генерируется только замыкание импортов корневых файлов из `gameRoots` в `tools/protogen/main.go`; файлы Valve предварительно очищаются от нестандартных опций.
 - `proto/api` → `gen/go` (сообщения, gRPC, gateway) и `gen/openapi`.
+- `gen/openapi/api.swagger.json` → `web/src/api/schema.gen.ts` (TS-типы для фронта, `tools/protogen/tsgen.go`). Готовые генераторы (openapi-typescript и др.) больше не читают OpenAPI v2, а спецификация использует лишь объекты, enum-ы, массивы и `$ref`. Форма типов повторяет JSON gateway: поля есть всегда (`EmitUnpopulated`), незаданное сообщение — `null`, 64-битные числа — строки.
 
 Правила:
 
@@ -125,9 +130,35 @@ go run ./tools/dev gen
 - Один коммит — одно логическое изменение; код, тесты, сгенерированные файлы, changelog и документация к нему — вместе.
 - `--no-verify` — только чтобы сохранить незаконченную работу в своей ветке; перед слиянием `check` должен пройти.
 
+## Фронтенд
+
+`web/` — Next.js (App Router) + TypeScript, собственный `package.json`; зависимости — только `next`, `react`, `react-dom` и типы. Версии закреплены точно (`--save-exact`), `package-lock.json` в git.
+
+- Страницы — серверные компоненты: данные запрашиваются на сервере Next у REST-gateway (`src/api/client.ts`, адрес — `API_URL`). Браузер в Go API не ходит, CORS не нужен, порт API остаётся на `127.0.0.1`.
+- Синхронизация — server action (`src/app/players/[id]/actions.ts`), форма работает и без JS.
+- Логика без React (форматирование, разбор покупок, статистика героев) — в `src/lib`, тесты рядом (`*.test.ts`, `node:test`, без зависимостей).
+- Тестирование (юнит, e2e, мок-API, сверка через Playwright MCP) — [frontend-testing.md](frontend-testing.md).
+- Графики — SVG руками, без библиотек.
+- Импорты внутри `src` — с расширением `.ts`, чтобы `node --test` запускал файлы без сборки.
+
+## Стеки: прод и dev
+
+| | Файл / команда | Состав | Порты (на `127.0.0.1`) |
+|---|---|---|---|
+| прод | `docker compose up -d --build --wait` (`docker-compose.yml`) | postgres, server, web | web 3000, REST 8080, gRPC 9090, postgres 5432 |
+| dev на моке | `docker compose -f docker-compose.dev.yml up -d --build --wait` | mock, web (та же production-сборка) | web 3001, mock 8090 |
+| dev с hot reload | `cd web && npm run dev:mock` | mock + `next dev` | web 3002, mock 8092 |
+| e2e | `go run ./tools/dev e2e` | mock + standalone-сборка | web 3200, mock 8091 |
+
+Порты не пересекаются, стеки можно держать одновременно. Dev-стек — отдельный compose-проект (`name: deadlock-dev`), без Postgres, Go и сети: собирается за минуту на любой машине. Остановить: `docker compose -f docker-compose.dev.yml down`.
+
+Бэкенд на Go dev-стек не проверяет: для него — юнит-тесты, `test-db` и прод-стек.
+
 ## Конфигурация
 
 Вся конфигурация сервера — переменные окружения, читаются и валидируются в `cmd/server/config.go`; список с умолчаниями — в комментарии пакета `cmd/server/main.go`. Новая переменная: `config.go` + тест, комментарий в `main.go`, `.env.example`, `docker-compose.yml`, запись в changelog.
+
+Фронт читает `API_URL` (адрес REST-gateway), `SYNC_ACCOUNTS` (ссылки на главной) и `TZ` (часовой пояс дат: они рендерятся на сервере).
 
 ## Работа с проблемами
 

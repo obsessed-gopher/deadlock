@@ -2,3 +2,7 @@
 *.png binary
 *.zst binary
 *.vdata_c binary
+
+# generated: collapsed in GitHub diffs
+web/src/api/schema.gen.ts linguist-generated=true
+web/mock/fixtures/** linguist-generated=true

@@ -22,20 +22,33 @@ type fakeStore struct {
 
 	player *v1.Player
 	rows   []*v1.PlayerMatchRow
+	heroes []*v1.HeroStats
 	err    error
 
-	gotHero   uint32
-	gotBefore uint64
-	gotLimit  int
+	gotAccount uint32
+	gotHero    uint32
+	gotBefore  uint64
+	gotLimit   int
 }
 
-func (f *fakeStore) GetPlayer(context.Context, uint32) (*v1.Player, error) {
+func (f *fakeStore) GetPlayer(_ context.Context, accountID uint32) (*v1.Player, error) {
+	f.gotAccount = accountID
 	return f.player, f.err
 }
 
-func (f *fakeStore) ListPlayerMatches(_ context.Context, _, heroID uint32, before uint64, limit int) ([]*v1.PlayerMatchRow, error) {
-	f.gotHero, f.gotBefore, f.gotLimit = heroID, before, limit
+func (f *fakeStore) ListPlayerMatches(_ context.Context, accountID, heroID uint32, before uint64, limit int) ([]*v1.PlayerMatchRow, error) {
+	f.gotAccount, f.gotHero, f.gotBefore, f.gotLimit = accountID, heroID, before, limit
 	return f.rows, f.err
+}
+
+func (f *fakeStore) ListPlayerHeroStats(_ context.Context, accountID uint32) ([]*v1.HeroStats, error) {
+	f.gotAccount = accountID
+	return f.heroes, f.err
+}
+
+func (f *fakeStore) GetPlayerMatch(_ context.Context, _ uint64, accountID uint32) (*v1.PlayerMatch, error) {
+	f.gotAccount = accountID
+	return &v1.PlayerMatch{}, f.err
 }
 
 type fakeSyncer struct {
@@ -45,6 +58,14 @@ type fakeSyncer struct {
 
 func (f fakeSyncer) SyncPlayer(context.Context, uint32) (int, int, error) {
 	return f.newMatches, f.pending, f.err
+}
+
+// recordingSyncer remembers the account it was asked to sync.
+type recordingSyncer struct{ got uint32 }
+
+func (r *recordingSyncer) SyncPlayer(_ context.Context, accountID uint32) (int, int, error) {
+	r.got = accountID
+	return 0, 0, nil
 }
 
 func newServer(st Store, sy PlayerSyncer) *Server {
@@ -58,7 +79,11 @@ func TestRequiredIDs(t *testing.T) {
 		"GetPlayer":         func() error { _, err := s.GetPlayer(ctx, &v1.GetPlayerRequest{}); return err },
 		"ListPlayerMatches": func() error { _, err := s.ListPlayerMatches(ctx, &v1.ListPlayerMatchesRequest{}); return err },
 		"SyncPlayer":        func() error { _, err := s.SyncPlayer(ctx, &v1.SyncPlayerRequest{}); return err },
-		"GetMatch":          func() error { _, err := s.GetMatch(ctx, &v1.GetMatchRequest{}); return err },
+		"ListPlayerHeroStats": func() error {
+			_, err := s.ListPlayerHeroStats(ctx, &v1.ListPlayerHeroStatsRequest{})
+			return err
+		},
+		"GetMatch": func() error { _, err := s.GetMatch(ctx, &v1.GetMatchRequest{}); return err },
 		"GetPlayerMatch": func() error {
 			_, err := s.GetPlayerMatch(ctx, &v1.GetPlayerMatchRequest{MatchId: 1})
 			return err
@@ -67,6 +92,51 @@ func TestRequiredIDs(t *testing.T) {
 	for name, call := range calls {
 		if got := status.Code(call()); got != codes.InvalidArgument {
 			t.Errorf("%s with missing id: code = %s, want InvalidArgument", name, got)
+		}
+	}
+}
+
+func TestAccountIDAcceptsSteamID64(t *testing.T) {
+	const (
+		steamID64 = 76561199477771562
+		account   = 1517505834
+	)
+	st, sy := &fakeStore{}, &recordingSyncer{}
+	s := newServer(st, sy)
+	ctx := context.Background()
+	calls := map[string]func(id uint64) (uint32, error){
+		"GetPlayer": func(id uint64) (uint32, error) {
+			_, err := s.GetPlayer(ctx, &v1.GetPlayerRequest{AccountId: id})
+			return st.gotAccount, err
+		},
+		"ListPlayerMatches": func(id uint64) (uint32, error) {
+			_, err := s.ListPlayerMatches(ctx, &v1.ListPlayerMatchesRequest{AccountId: id})
+			return st.gotAccount, err
+		},
+		"GetPlayerMatch": func(id uint64) (uint32, error) {
+			_, err := s.GetPlayerMatch(ctx, &v1.GetPlayerMatchRequest{MatchId: 1, AccountId: id})
+			return st.gotAccount, err
+		},
+		"ListPlayerHeroStats": func(id uint64) (uint32, error) {
+			_, err := s.ListPlayerHeroStats(ctx, &v1.ListPlayerHeroStatsRequest{AccountId: id})
+			return st.gotAccount, err
+		},
+		"SyncPlayer": func(id uint64) (uint32, error) {
+			_, err := s.SyncPlayer(ctx, &v1.SyncPlayerRequest{AccountId: id})
+			return sy.got, err
+		},
+	}
+	for name, call := range calls {
+		for _, id := range []uint64{account, steamID64} {
+			st.gotAccount, sy.got = 0, 0
+			got, err := call(id)
+			if err != nil || got != account {
+				t.Errorf("%s(%d): store got %d, err %v; want %d", name, id, got, err, account)
+			}
+		}
+		st.gotAccount, sy.got = 0, 0
+		if _, err := call(4_294_967_296); status.Code(err) != codes.InvalidArgument {
+			t.Errorf("%s(2^32): code = %s, want InvalidArgument", name, status.Code(err))
 		}
 	}
 }
@@ -140,6 +210,24 @@ func TestListPlayerMatchesTokenAndFilter(t *testing.T) {
 		&v1.ListPlayerMatchesRequest{AccountId: 1, PageToken: "garbage"})
 	if got := status.Code(err); got != codes.InvalidArgument {
 		t.Errorf("bad token: code = %s, want InvalidArgument", got)
+	}
+}
+
+func TestListPlayerHeroStats(t *testing.T) {
+	heroes := []*v1.HeroStats{{HeroId: 13, Matches: 2}, {HeroId: 7, Matches: 1}}
+	s := newServer(&fakeStore{heroes: heroes}, fakeSyncer{})
+	resp, err := s.ListPlayerHeroStats(context.Background(), &v1.ListPlayerHeroStatsRequest{AccountId: 1})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(resp.GetHeroes()) != 2 || resp.GetHeroes()[0].GetHeroId() != 13 {
+		t.Errorf("heroes = %v, want the store rows in order", resp.GetHeroes())
+	}
+
+	s = newServer(&fakeStore{err: errors.New("connection refused")}, fakeSyncer{})
+	_, err = s.ListPlayerHeroStats(context.Background(), &v1.ListPlayerHeroStatsRequest{AccountId: 1})
+	if got := status.Code(err); got != codes.Internal {
+		t.Errorf("store failure: code = %s, want Internal", got)
 	}
 }
 

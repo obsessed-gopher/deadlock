@@ -14,6 +14,8 @@
 //	test-linux  unit tests with the race detector in a Linux container (what CI runs)
 //	gen       regenerate code from .proto files
 //	vuln      scan dependencies with govulncheck
+//	web       frontend checks in web/: npm ci (if needed), typecheck, tests, build
+//	e2e       frontend end-to-end tests (Playwright) against the mock API
 //	check     everything required before a commit: tidy, fmt, build, lint, test
 //	ci        same as check, with the race detector; used by the CI workflow
 //
@@ -80,6 +82,8 @@ func main() {
 		"test-linux": testLinux,
 		"gen":        gen,
 		"vuln":       vuln,
+		"web":        web,
+		"e2e":        e2e,
 		"check":      check,
 		"ci":         ci,
 	}
@@ -93,7 +97,7 @@ func main() {
 }
 
 func usage() {
-	fmt.Fprintln(os.Stderr, "usage: go run ./tools/dev setup|fmt|lint|test|test-db|gen|vuln|check|ci [args]")
+	fmt.Fprintln(os.Stderr, "usage: go run ./tools/dev setup|fmt|lint|test|test-db|test-linux|gen|vuln|web|e2e|check|ci [args]")
 	os.Exit(2)
 }
 
@@ -245,8 +249,48 @@ func ensure(t tool) (string, error) {
 	return bin, nil
 }
 
+// web runs the frontend checks. Dependencies are installed with "npm ci"
+// when node_modules is missing and always in CI, so a stale local install is
+// not reinstalled on every run.
+func web([]string) error {
+	if err := webDeps(); err != nil {
+		return err
+	}
+	return runIn(webDir, "npm", "run", "check")
+}
+
+const webDir = "web"
+
+func webDeps() error {
+	if _, err := os.Stat(filepath.Join(webDir, "node_modules")); err == nil && os.Getenv("CI") == "" {
+		return nil
+	}
+	return runIn(webDir, "npm", "ci", "--no-audit", "--no-fund")
+}
+
+// e2e builds the app and runs Playwright against the mock API. Extra args go
+// to "playwright test" (e.g. -g "sync" or --headed).
+func e2e(args []string) error {
+	if err := webDeps(); err != nil {
+		return err
+	}
+	install := []string{"playwright", "install", "chromium"}
+	if os.Getenv("CI") != "" {
+		install = append(install, "--with-deps")
+	}
+	if err := runIn(webDir, "npx", install...); err != nil {
+		return err
+	}
+	return runIn(webDir, "npm", append([]string{"run", "e2e", "--"}, args...)...)
+}
+
 func run(bin string, args ...string) error {
+	return runIn("", bin, args...)
+}
+
+func runIn(dir, bin string, args ...string) error {
 	cmd := exec.CommandContext(context.Background(), bin, args...) //nolint:gosec // dev tool: runs fixed commands with pass-through args from the developer
+	cmd.Dir = dir
 	cmd.Stdin, cmd.Stdout, cmd.Stderr = os.Stdin, os.Stdout, os.Stderr
 	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("%s %s: %w", filepath.Base(bin), strings.Join(args, " "), err)

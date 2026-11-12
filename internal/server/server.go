@@ -11,6 +11,7 @@ import (
 
 	"github.com/obsessed-gopher/deadlock/internal/db"
 	"github.com/obsessed-gopher/deadlock/internal/gamedata"
+	"github.com/obsessed-gopher/deadlock/internal/source"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -23,6 +24,7 @@ import (
 type Store interface {
 	GetPlayer(ctx context.Context, accountID uint32) (*v1.Player, error)
 	ListPlayerMatches(ctx context.Context, accountID, heroID uint32, beforeMatchID uint64, limit int) ([]*v1.PlayerMatchRow, error)
+	ListPlayerHeroStats(ctx context.Context, accountID uint32) ([]*v1.HeroStats, error)
 	GetMatch(ctx context.Context, matchID uint64) (*v1.Match, error)
 	GetPlayerMatch(ctx context.Context, matchID uint64, accountID uint32) (*v1.PlayerMatch, error)
 }
@@ -48,17 +50,19 @@ func New(store Store, sy PlayerSyncer, gd *gamedata.Data) *Server {
 
 // GetPlayer implements v1.StatsServiceServer.
 func (s *Server) GetPlayer(ctx context.Context, req *v1.GetPlayerRequest) (*v1.Player, error) {
-	if req.GetAccountId() == 0 {
-		return nil, status.Error(codes.InvalidArgument, "account_id is required")
+	id, err := accountID(req.GetAccountId())
+	if err != nil {
+		return nil, err
 	}
-	p, err := s.store.GetPlayer(ctx, req.GetAccountId())
+	p, err := s.store.GetPlayer(ctx, id)
 	return p, toStatus(err)
 }
 
 // ListPlayerMatches implements v1.StatsServiceServer.
 func (s *Server) ListPlayerMatches(ctx context.Context, req *v1.ListPlayerMatchesRequest) (*v1.ListPlayerMatchesResponse, error) {
-	if req.GetAccountId() == 0 {
-		return nil, status.Error(codes.InvalidArgument, "account_id is required")
+	id, err := accountID(req.GetAccountId())
+	if err != nil {
+		return nil, err
 	}
 	size := int(req.GetPageSize())
 	switch {
@@ -75,7 +79,7 @@ func (s *Server) ListPlayerMatches(ctx context.Context, req *v1.ListPlayerMatche
 		}
 		before = v
 	}
-	rows, err := s.store.ListPlayerMatches(ctx, req.GetAccountId(), req.GetHeroId(), before, size)
+	rows, err := s.store.ListPlayerMatches(ctx, id, req.GetHeroId(), before, size)
 	if err != nil {
 		return nil, toStatus(err)
 	}
@@ -86,12 +90,26 @@ func (s *Server) ListPlayerMatches(ctx context.Context, req *v1.ListPlayerMatche
 	return resp, nil
 }
 
+// ListPlayerHeroStats implements v1.StatsServiceServer.
+func (s *Server) ListPlayerHeroStats(ctx context.Context, req *v1.ListPlayerHeroStatsRequest) (*v1.ListPlayerHeroStatsResponse, error) {
+	id, err := accountID(req.GetAccountId())
+	if err != nil {
+		return nil, err
+	}
+	heroes, err := s.store.ListPlayerHeroStats(ctx, id)
+	if err != nil {
+		return nil, toStatus(err)
+	}
+	return &v1.ListPlayerHeroStatsResponse{Heroes: heroes}, nil
+}
+
 // SyncPlayer implements v1.StatsServiceServer.
 func (s *Server) SyncPlayer(ctx context.Context, req *v1.SyncPlayerRequest) (*v1.SyncPlayerResponse, error) {
-	if req.GetAccountId() == 0 {
-		return nil, status.Error(codes.InvalidArgument, "account_id is required")
+	id, err := accountID(req.GetAccountId())
+	if err != nil {
+		return nil, err
 	}
-	n, pending, err := s.syncer.SyncPlayer(ctx, req.GetAccountId())
+	n, pending, err := s.syncer.SyncPlayer(ctx, id)
 	if err != nil {
 		return nil, status.Errorf(codes.Unavailable, "sync: %v", err)
 	}
@@ -109,10 +127,14 @@ func (s *Server) GetMatch(ctx context.Context, req *v1.GetMatchRequest) (*v1.Mat
 
 // GetPlayerMatch implements v1.StatsServiceServer.
 func (s *Server) GetPlayerMatch(ctx context.Context, req *v1.GetPlayerMatchRequest) (*v1.PlayerMatch, error) {
-	if req.GetMatchId() == 0 || req.GetAccountId() == 0 {
-		return nil, status.Error(codes.InvalidArgument, "match_id and account_id are required")
+	if req.GetMatchId() == 0 {
+		return nil, status.Error(codes.InvalidArgument, "match_id is required")
 	}
-	pm, err := s.store.GetPlayerMatch(ctx, req.GetMatchId(), req.GetAccountId())
+	id, err := accountID(req.GetAccountId())
+	if err != nil {
+		return nil, err
+	}
+	pm, err := s.store.GetPlayerMatch(ctx, req.GetMatchId(), id)
 	return pm, toStatus(err)
 }
 
@@ -137,6 +159,18 @@ func gameDataToAPI(d *gamedata.Data) *v1.GameData {
 		})
 	}
 	return out
+}
+
+// accountID validates a request account id, which may also be a SteamID64.
+func accountID(v uint64) (uint32, error) {
+	if v == 0 {
+		return 0, status.Error(codes.InvalidArgument, "account_id is required")
+	}
+	id, ok := source.NormalizeAccountID(v)
+	if !ok {
+		return 0, status.Error(codes.InvalidArgument, "account_id is neither an account id nor a SteamID64")
+	}
+	return id, nil
 }
 
 func toStatus(err error) error {

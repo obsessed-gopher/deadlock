@@ -99,6 +99,40 @@ func (d *DB) ListPlayerMatches(ctx context.Context, accountID uint32, heroID uin
 	return out, rows.Err()
 }
 
+// ListPlayerHeroStats sums a player's match history per hero, most played
+// first. It needs only match history, not metadata. An unknown player has no
+// rows.
+func (d *DB) ListPlayerHeroStats(ctx context.Context, accountID uint32) ([]*v1.HeroStats, error) {
+	rows, err := d.Pool.Query(ctx, `
+		SELECT pm.hero_id, count(*), count(*) FILTER (WHERE pm.won),
+		       sum(pm.kills), sum(pm.deaths), sum(pm.assists),
+		       sum(pm.net_worth), sum(pm.last_hits), sum(m.duration_s), max(m.start_time)
+		FROM player_matches pm
+		JOIN matches m ON m.match_id = pm.match_id
+		WHERE pm.account_id = $1
+		GROUP BY pm.hero_id
+		ORDER BY count(*) DESC, pm.hero_id`, accountID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var out []*v1.HeroStats
+	for rows.Next() {
+		var (
+			h    v1.HeroStats
+			last time.Time
+		)
+		if err := rows.Scan(&h.HeroId, &h.Matches, &h.Wins, &h.Kills, &h.Deaths, &h.Assists,
+			&h.NetWorth, &h.LastHits, &h.DurationS, &last); err != nil {
+			return nil, err
+		}
+		h.LastPlayed = last.Unix()
+		out = append(out, &h)
+	}
+	return out, rows.Err()
+}
+
 // GetMatch returns the match header and, once metadata is ingested, the
 // scoreboard of all players. Unknown matches yield ErrNotFound.
 func (d *DB) GetMatch(ctx context.Context, matchID uint64) (*v1.Match, error) {

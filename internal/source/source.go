@@ -83,21 +83,31 @@ func SteamID64ToAccountID(id uint64) uint32 {
 	return uint32(id - steamID64Base)
 }
 
-// ParseAccountID accepts either a 32-bit account id or a SteamID64 and
-// returns the account id. Zero is not a valid account.
+// NormalizeAccountID accepts either a 32-bit account id or a SteamID64 and
+// returns the account id. ok is false for zero and for values that are
+// neither (above uint32 but outside the SteamID64 range).
+func NormalizeAccountID(v uint64) (id uint32, ok bool) {
+	switch {
+	case v == 0:
+		return 0, false
+	case v <= math.MaxUint32:
+		return uint32(v), true
+	case v > steamID64Base && v-steamID64Base <= math.MaxUint32:
+		return SteamID64ToAccountID(v), true
+	default:
+		return 0, false
+	}
+}
+
+// ParseAccountID is NormalizeAccountID for text input.
 func ParseAccountID(s string) (uint32, error) {
 	v, err := strconv.ParseUint(strings.TrimSpace(s), 10, 64)
 	if err != nil {
 		return 0, fmt.Errorf("bad account id %q", s)
 	}
-	switch {
-	case v == 0:
-		return 0, fmt.Errorf("bad account id %q", s)
-	case v <= math.MaxUint32:
-		return uint32(v), nil
-	case v > steamID64Base && v-steamID64Base <= math.MaxUint32:
-		return SteamID64ToAccountID(v), nil
-	default:
+	id, ok := NormalizeAccountID(v)
+	if !ok {
 		return 0, fmt.Errorf("bad account id %q: neither an account id nor a SteamID64", s)
 	}
+	return id, nil
 }

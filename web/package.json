@@ -1,0 +1,28 @@
+{
+  "name": "deadlock-web",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test \"src/**/*.test.ts\" \"mock/**/*.test.ts\"",
+    "check": "npm run typecheck && npm run test && npm run build",
+    "mock": "node mock/server.ts",
+    "e2e": "next build && node scripts/standalone.ts && playwright test",
+    "dev:mock": "node scripts/dev-mock.ts"
+  },
+  "dependencies": {
+    "next": "16.4.6",
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.65.0",
+    "@types/node": "26.6.6",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "typescript": "7.0.2"
+  }
+}

@@ -1,0 +1,34 @@
+# Development stack on mock data: the web UI against the mock API
+# (web/mock, fixtures captured from a real server). No Postgres, no Go server,
+# no network access, so it builds and runs anywhere in a minute.
+#
+#   docker compose -f docker-compose.dev.yml up -d --build --wait
+#   open http://localhost:3001
+#
+# Separate project name and ports: it can run next to the production stack
+# (docker-compose.yml). For hot reload instead: cd web && npm run dev:mock.
+name: deadlock-dev
+
+services:
+  mock:
+    build:
+      context: ./web
+      target: mock
+    ports:
+      - "127.0.0.1:8090:8090"
+    restart: unless-stopped
+
+  web:
+    build:
+      context: ./web
+      target: app
+    environment:
+      API_URL: http://mock:8090
+      SYNC_ACCOUNTS: "1517505834" # the account in web/mock/fixtures
+      TZ: ${TZ:-UTC}
+    ports:
+      - "127.0.0.1:3001:3000"
+    depends_on:
+      mock:
+        condition: service_healthy
+    restart: unless-stopped

@@ -31,5 +31,19 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
+  web:
+    build:
+      context: ./web
+      target: app
+    environment:
+      API_URL: http://server:8080
+      SYNC_ACCOUNTS: ${SYNC_ACCOUNTS:-} # shown as shortcuts on the home page
+      TZ: ${TZ:-UTC} # dates are rendered on the server
+    ports:
+      - "127.0.0.1:3000:3000"
+    depends_on:
+      - server
+    restart: unless-stopped
+
 volumes:
   pgdata:

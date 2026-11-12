@@ -10,6 +10,7 @@
 | [docs/development.md](docs/development.md) | пайплайны: проверки, тесты, кодогенерация, миграции, changelog, коммиты |
 | [docs/code-style.md](docs/code-style.md) | правила написания кода (Go и TypeScript) и тестов в этом проекте |
 | [docs/frontend-testing.md](docs/frontend-testing.md) | перед любым изменением `web/`: юнит, e2e, мок-данные, сверка через Playwright MCP |
+| [docs/roadmap.md](docs/roadmap.md) | план развития: какие части в работе и в каком порядке |
 | [docs/problems.md](docs/problems.md) | грабли и известные проблемы — смотри сюда первым делом, когда что-то «странно» |
 
 ## Команды

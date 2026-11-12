@@ -15,6 +15,7 @@ import (
 
 	v1 "deadlock_ideas/gen/go/deadlock/v1"
 	"deadlock_ideas/internal/db"
+	"deadlock_ideas/internal/gamedata"
 	"deadlock_ideas/internal/syncer"
 )
 
@@ -22,10 +23,12 @@ type Server struct {
 	v1.UnimplementedStatsServiceServer
 	DB     *db.DB
 	Syncer *syncer.Syncer
+
+	gameData *v1.GameData
 }
 
-func New(d *db.DB, s *syncer.Syncer) *Server {
-	return &Server{DB: d, Syncer: s}
+func New(d *db.DB, s *syncer.Syncer, gd *gamedata.Data) *Server {
+	return &Server{DB: d, Syncer: s, gameData: gameDataToAPI(gd)}
 }
 
 func (s *Server) GetPlayer(ctx context.Context, req *v1.GetPlayerRequest) (*v1.Player, error) {
@@ -91,6 +94,28 @@ func (s *Server) GetPlayerMatch(ctx context.Context, req *v1.GetPlayerMatchReque
 	}
 	pm, err := s.DB.GetPlayerMatch(ctx, req.GetMatchId(), req.GetAccountId())
 	return pm, toStatus(err)
+}
+
+func (s *Server) GetGameData(ctx context.Context, _ *v1.GetGameDataRequest) (*v1.GameData, error) {
+	return s.gameData, nil
+}
+
+// gameDataToAPI converts the embedded snapshot once at startup.
+func gameDataToAPI(d *gamedata.Data) *v1.GameData {
+	out := &v1.GameData{GameVersion: d.GameVersion}
+	for _, h := range d.Heroes {
+		out.Heroes = append(out.Heroes, &v1.Hero{
+			Id: h.ID, Key: h.Key, Name: h.Name, NameRu: h.NameRU, Type: h.Type,
+			Playable: h.State == "release" && !h.Disabled && !h.InDev,
+		})
+	}
+	for _, a := range d.Abilities {
+		out.Abilities = append(out.Abilities, &v1.Ability{
+			Id: a.ID, Key: a.Key, Name: a.Name, NameRu: a.NameRU, Type: a.Type,
+			Slot: a.Slot, Tier: uint32(a.Tier),
+		})
+	}
+	return out
 }
 
 func toStatus(err error) error {

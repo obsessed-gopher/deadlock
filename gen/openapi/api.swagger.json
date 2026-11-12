@@ -17,6 +17,29 @@
     "application/json"
   ],
   "paths": {
+    "/v1/gamedata": {
+      "get": {
+        "summary": "Static game data: hero and item/ability names, slots, tiers.\nChanges only with game patches; clients should cache it.",
+        "operationId": "StatsService_GetGameData",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GameData"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "tags": [
+          "StatsService"
+        ]
+      }
+    },
     "/v1/matches/{matchId}": {
       "get": {
         "summary": "Scoreboard of all players in a match.",
@@ -248,6 +271,39 @@
         }
       }
     },
+    "v1Ability": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "format": "int64",
+          "title": "value of item_id in match data"
+        },
+        "key": {
+          "type": "string",
+          "title": "e.g. \"upgrade_rapid_rounds\""
+        },
+        "name": {
+          "type": "string"
+        },
+        "nameRu": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string",
+          "description": "item | signature | weapon | innate | ..."
+        },
+        "slot": {
+          "type": "string",
+          "title": "weapon | vitality | spirit (items only)"
+        },
+        "tier": {
+          "type": "integer",
+          "format": "int64",
+          "title": "1..5 (items only)"
+        }
+      }
+    },
     "v1Death": {
       "type": "object",
       "properties": {
@@ -272,6 +328,55 @@
         "timeToKillS": {
           "type": "number",
           "format": "float"
+        }
+      }
+    },
+    "v1GameData": {
+      "type": "object",
+      "properties": {
+        "gameVersion": {
+          "type": "string"
+        },
+        "heroes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1Hero"
+          }
+        },
+        "abilities": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1Ability"
+          }
+        }
+      }
+    },
+    "v1Hero": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "key": {
+          "type": "string",
+          "title": "internal name, e.g. \"hero_haze\""
+        },
+        "name": {
+          "type": "string"
+        },
+        "nameRu": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string",
+          "title": "e.g. \"assassin\""
+        },
+        "playable": {
+          "type": "boolean",
+          "title": "released and enabled"
         }
       }
     },

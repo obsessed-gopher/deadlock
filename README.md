@@ -18,6 +18,7 @@ replay*.valve.net ──(.meta, zstd)──► syncer ──► Postgres ◄─�
 - `internal/syncer` — синхронизация истории и загрузка метаданных
 - `internal/source` — провайдеры данных за интерфейсами (сейчас deadlock-api)
 - `internal/zstd` — декодер zstd, скопирован из Go stdlib (BSD)
+- `internal/gamedata` — герои, предметы и способности (названия EN/RU, слот, тир). Снимок `snapshot/gamedata.json` встроен в бинарник; собственные парсеры VPK (`vpk`), ресурсов Source 2 (`resource`) и бинарного KV3 (`kv3`). `item_id` в данных матча = MurmurHash2(lower(имя), 0x31415926)
 
 В базе хранится сырой `.meta` (`matches.meta_raw`), поэтому таблицы можно пересчитать без повторной загрузки: Valve со временем удаляет старые реплеи.
 
@@ -45,6 +46,13 @@ TEST_DATABASE_URL='postgres://deadlock:deadlock@localhost:5432/deadlock?sslmode=
 
 # после изменения .proto или патча игры (обновить proto/deadlock):
 go run ./tools/protogen
+
+# после патча игры: пересобрать снимок героев/предметов из локальной установки
+go run ./tools/gamedata -check internal/meta/testdata/134969900.meta.zst
+
+# посмотреть файлы игры
+go run ./tools/vpkdump -grep scripts/ "<...>/Deadlock/game/citadel/pak01_dir.vpk"
+go run ./tools/vpkdump -kv scripts/heroes.vdata_c -key hero_haze "<...>/pak01_dir.vpk"
 ```
 
 Нужны `protoc` и плагины в `$GOPATH/bin`: `protoc-gen-go`, `protoc-gen-go-grpc`, `protoc-gen-grpc-gateway`, `protoc-gen-openapiv2`.

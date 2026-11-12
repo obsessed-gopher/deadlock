@@ -36,6 +36,41 @@ service StatsService {
   rpc GetPlayerMatch(GetPlayerMatchRequest) returns (PlayerMatch) {
     option (google.api.http) = {get: "/v1/matches/{match_id}/players/{account_id}"};
   }
+
+  // Static game data: hero and item/ability names, slots, tiers.
+  // Changes only with game patches; clients should cache it.
+  rpc GetGameData(GetGameDataRequest) returns (GameData) {
+    option (google.api.http) = {get: "/v1/gamedata"};
+  }
+}
+
+// ---------- game data ----------
+
+message GetGameDataRequest {}
+
+message GameData {
+  string game_version = 1;
+  repeated Hero heroes = 2;
+  repeated Ability abilities = 3;
+}
+
+message Hero {
+  uint32 id = 1;
+  string key = 2;             // internal name, e.g. "hero_haze"
+  string name = 3;
+  string name_ru = 4;
+  string type = 5;            // e.g. "assassin"
+  bool playable = 6;          // released and enabled
+}
+
+message Ability {
+  uint32 id = 1;              // value of item_id in match data
+  string key = 2;             // e.g. "upgrade_rapid_rounds"
+  string name = 3;
+  string name_ru = 4;
+  string type = 5;            // item | signature | weapon | innate | ...
+  string slot = 6;            // weapon | vitality | spirit (items only)
+  uint32 tier = 7;            // 1..5 (items only)
 }
 
 // ---------- enums ----------

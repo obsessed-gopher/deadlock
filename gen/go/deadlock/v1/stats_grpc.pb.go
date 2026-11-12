@@ -24,6 +24,7 @@ const (
 	StatsService_SyncPlayer_FullMethodName        = "/deadlock.v1.StatsService/SyncPlayer"
 	StatsService_GetMatch_FullMethodName          = "/deadlock.v1.StatsService/GetMatch"
 	StatsService_GetPlayerMatch_FullMethodName    = "/deadlock.v1.StatsService/GetPlayerMatch"
+	StatsService_GetGameData_FullMethodName       = "/deadlock.v1.StatsService/GetGameData"
 )
 
 // StatsServiceClient is the client API for StatsService service.
@@ -43,6 +44,9 @@ type StatsServiceClient interface {
 	GetMatch(ctx context.Context, in *GetMatchRequest, opts ...grpc.CallOption) (*Match, error)
 	// Detailed breakdown of one player in one match: timelines, items, deaths.
 	GetPlayerMatch(ctx context.Context, in *GetPlayerMatchRequest, opts ...grpc.CallOption) (*PlayerMatch, error)
+	// Static game data: hero and item/ability names, slots, tiers.
+	// Changes only with game patches; clients should cache it.
+	GetGameData(ctx context.Context, in *GetGameDataRequest, opts ...grpc.CallOption) (*GameData, error)
 }
 
 type statsServiceClient struct {
@@ -103,6 +107,16 @@ func (c *statsServiceClient) GetPlayerMatch(ctx context.Context, in *GetPlayerMa
 	return out, nil
 }
 
+func (c *statsServiceClient) GetGameData(ctx context.Context, in *GetGameDataRequest, opts ...grpc.CallOption) (*GameData, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GameData)
+	err := c.cc.Invoke(ctx, StatsService_GetGameData_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // StatsServiceServer is the server API for StatsService service.
 // All implementations must embed UnimplementedStatsServiceServer
 // for forward compatibility.
@@ -120,6 +134,9 @@ type StatsServiceServer interface {
 	GetMatch(context.Context, *GetMatchRequest) (*Match, error)
 	// Detailed breakdown of one player in one match: timelines, items, deaths.
 	GetPlayerMatch(context.Context, *GetPlayerMatchRequest) (*PlayerMatch, error)
+	// Static game data: hero and item/ability names, slots, tiers.
+	// Changes only with game patches; clients should cache it.
+	GetGameData(context.Context, *GetGameDataRequest) (*GameData, error)
 	mustEmbedUnimplementedStatsServiceServer()
 }
 
@@ -144,6 +161,9 @@ func (UnimplementedStatsServiceServer) GetMatch(context.Context, *GetMatchReques
 }
 func (UnimplementedStatsServiceServer) GetPlayerMatch(context.Context, *GetPlayerMatchRequest) (*PlayerMatch, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetPlayerMatch not implemented")
+}
+func (UnimplementedStatsServiceServer) GetGameData(context.Context, *GetGameDataRequest) (*GameData, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetGameData not implemented")
 }
 func (UnimplementedStatsServiceServer) mustEmbedUnimplementedStatsServiceServer() {}
 func (UnimplementedStatsServiceServer) testEmbeddedByValue()                      {}
@@ -256,6 +276,24 @@ func _StatsService_GetPlayerMatch_Handler(srv interface{}, ctx context.Context, 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _StatsService_GetGameData_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetGameDataRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(StatsServiceServer).GetGameData(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: StatsService_GetGameData_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(StatsServiceServer).GetGameData(ctx, req.(*GetGameDataRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // StatsService_ServiceDesc is the grpc.ServiceDesc for StatsService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -282,6 +320,10 @@ var StatsService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetPlayerMatch",
 			Handler:    _StatsService_GetPlayerMatch_Handler,
+		},
+		{
+			MethodName: "GetGameData",
+			Handler:    _StatsService_GetGameData_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

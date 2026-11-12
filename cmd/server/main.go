@@ -33,6 +33,7 @@ import (
 
 	v1 "deadlock_ideas/gen/go/deadlock/v1"
 	"deadlock_ideas/internal/db"
+	"deadlock_ideas/internal/gamedata"
 	"deadlock_ideas/internal/server"
 	"deadlock_ideas/internal/source"
 	"deadlock_ideas/internal/syncer"
@@ -79,13 +80,19 @@ func run(log *slog.Logger) error {
 	}
 	log.Info("database ready")
 
+	gd, err := gamedata.Embedded()
+	if err != nil {
+		return err
+	}
+	log.Info("game data", "version", gd.GameVersion, "heroes", len(gd.Heroes), "abilities", len(gd.Abilities))
+
 	api := source.NewDeadlockAPI()
 	sy := syncer.New(database, api, api, log)
 	sy.Interval = metaInterval
 
 	// gRPC
 	gs := grpc.NewServer(grpc.UnaryInterceptor(server.UnaryInterceptor(log)))
-	v1.RegisterStatsServiceServer(gs, server.New(database, sy))
+	v1.RegisterStatsServiceServer(gs, server.New(database, sy, gd))
 	reflection.Register(gs)
 	lis, err := net.Listen("tcp", grpcAddr)
 	if err != nil {

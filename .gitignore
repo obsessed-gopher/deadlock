@@ -1,0 +1,12 @@
+# downloaded replays / metadata (large, re-fetchable while Valve keeps them)
+/data/
+
+# local tool downloads
+/.tools/
+
+# IDE
+/.idea/
+
+# frontend (later)
+node_modules/
+.next/

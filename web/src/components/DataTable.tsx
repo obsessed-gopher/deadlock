@@ -11,6 +11,8 @@ import { type SortState, filterRows, nextSort, sortRows, visibleRows } from "@/l
 
 import type { Cell, Row, TableSpec } from "@/lib/tableSpec.ts";
 
+import { Icon } from "./Icon.tsx";
+
 export function DataTable({ spec }: { spec: TableSpec }) {
   const { t, locale } = useI18n();
   const id = useId();
@@ -160,6 +162,7 @@ function CellView({ cell }: { cell: Cell | undefined }) {
   return (
     <span className="cell">
       {cell.slot && <span className={`slot-mark slot-${cell.slot}`} aria-hidden="true" />}
+      {cell.icon && <Icon src={cell.icon} tile={cell.iconTile} />}
       {cell.bar !== undefined && (
         <span className={cell.tone ? `bar tone-${cell.tone}` : "bar"} aria-hidden="true">
           <span style={{ width: `${Math.round(Math.max(0, Math.min(1, cell.bar)) * 100)}%` }} />

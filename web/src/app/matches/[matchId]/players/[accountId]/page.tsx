@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { api, isId } from "@/api/client.ts";
 import { DataTable } from "@/components/DataTable.tsx";
 import { ErrorState } from "@/components/ErrorState.tsx";
+import { Icon } from "@/components/Icon.tsx";
 import { NetWorthChart } from "@/components/NetWorthChart.tsx";
 import { SoulBars } from "@/components/SoulBars.tsx";
 import { Stat } from "@/components/Stat.tsx";
@@ -13,6 +14,7 @@ import { buildEntries, finalItems } from "@/lib/build.ts";
 import { attempt } from "@/lib/errors.ts";
 import { kda, kdaRatio } from "@/lib/format.ts";
 import { makeLookup } from "@/lib/gamedata.ts";
+import { tileOf } from "@/lib/icons.ts";
 import { buildTable, deathsTable, scoreboardTables } from "@/lib/views.ts";
 
 type Params = { matchId: string; accountId: string };
@@ -54,6 +56,7 @@ export default async function PlayerMatchPage({ params }: { params: Promise<Para
           <Link href={`/matches/${match.matchId}`}>{t("match.title", { id: match.matchId })}</Link>
         </nav>
         <div className="row" style={{ gap: 16 }}>
+          {look.heroIcon(me.heroId) && <Icon src={look.heroIcon(me.heroId)!} size={56} />}
           <h1>{look.heroName(me.heroId)}</h1>
           <span className={`badge ${won ? "tone-win" : "tone-loss"}`}>
             <span className="dot" aria-hidden="true" />
@@ -100,7 +103,11 @@ export default async function PlayerMatchPage({ params }: { params: Promise<Para
           <div className="items">
             {finalItems(entries).map((e) => (
               <span key={`${e.itemId}-${e.t}`} className="item" title={i18n.duration(e.t)}>
-                <span className={`slot-mark slot-${e.slot || "ability"}`} aria-hidden="true" />
+                {look.abilityIcon(e.itemId) ? (
+                  <Icon src={look.abilityIcon(e.itemId)!} tile={tileOf(e.slot, true)} size={28} />
+                ) : (
+                  <span className={`slot-mark slot-${e.slot || "ability"}`} aria-hidden="true" />
+                )}
                 {e.name}
                 {e.tier > 0 && <span className="tier">T{e.tier}</span>}
               </span>

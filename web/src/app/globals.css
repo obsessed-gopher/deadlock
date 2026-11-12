@@ -848,3 +848,44 @@ td.num .cell {
   width: 16px;
   height: 16px;
 }
+
+/* ---------- icons ---------- */
+
+.icon-portrait {
+  flex: none;
+  border-radius: 50%;
+  background: var(--surface-3);
+  object-fit: cover;
+}
+
+.icon-tile {
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 6px;
+  background: var(--surface-3);
+}
+
+.icon-tile img {
+  display: block;
+}
+
+.tile-weapon {
+  background: #6b4a12;
+}
+
+.tile-vitality {
+  background: #1f5a33;
+}
+
+.tile-spirit {
+  background: #4f2f7a;
+}
+
+.tile-ability {
+  background: #2a2a2a;
+}
+
+.item {
+  padding: 4px 10px 4px 4px;
+}

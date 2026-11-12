@@ -5,6 +5,8 @@ import type { ListPlayerMatchesResponse, MetaStatus } from "@/api/schema.gen.ts"
 import type { I18n } from "@/i18n/core.ts";
 import { kda } from "@/lib/format.ts";
 import type { Lookup } from "@/lib/gamedata.ts";
+
+import { Icon } from "./Icon.tsx";
 import {
   type MatchListState,
   type MatchSortKey,
@@ -171,7 +173,12 @@ export function MatchesTable({
               return (
                 <tr key={m.matchId}>
                   <td className="faint mono small">{i18n.date(m.startTime)}</td>
-                  <td>{look.heroName(m.heroId)}</td>
+                  <td>
+                    <span className="cell">
+                      {look.heroIcon(m.heroId) && <Icon src={look.heroIcon(m.heroId)!} />}
+                      {look.heroName(m.heroId)}
+                    </span>
+                  </td>
                   <td>
                     <span className={`badge ${m.won ? "tone-win" : "tone-loss"}`}>
                       <span className="dot" aria-hidden="true" />

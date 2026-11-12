@@ -1,3 +1,5 @@
+import type { IconTile } from "./icons.ts";
+
 // Serializable description of a table: server components build it with
 // translated, formatted text and hand it to the DataTable client component.
 
@@ -14,6 +16,10 @@ export interface Cell {
   badge?: boolean;
   /** Item slot colour mark: weapon | vitality | spirit | ability. */
   slot?: string;
+  /** Icon URL before the text (lib/icons.ts). */
+  icon?: string;
+  /** Tile for glyph icons (items, abilities); none for hero portraits. */
+  iconTile?: IconTile;
   /** Strike through (sold items). */
   strike?: boolean;
   /** 0..1: a small bar before the text (win rates). */

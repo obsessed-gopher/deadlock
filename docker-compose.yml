@@ -39,6 +39,10 @@ services:
       API_URL: http://server:8080
       SYNC_ACCOUNTS: ${SYNC_ACCOUNTS:-} # shown as shortcuts on the home page
       TZ: ${TZ:-UTC} # dates are rendered on the server
+      ICONS_DIR: /icons
+    volumes:
+      # go run ./tools/gamedata -icons data/icons; without it: placeholders.
+      - ./data/icons:/icons:ro
     ports:
       - "127.0.0.1:3000:3000"
     depends_on:

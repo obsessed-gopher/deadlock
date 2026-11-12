@@ -6,6 +6,7 @@ import type { BuildEntry } from "./build.ts";
 import { duration, kda, kdaRatio } from "./format.ts";
 import type { Lookup } from "./gamedata.ts";
 import { heroRows } from "./heroes.ts";
+import { tileOf } from "./icons.ts";
 import type { TableSpec } from "./tableSpec.ts";
 
 type Ctx = { i18n: I18n; look: Lookup };
@@ -35,7 +36,7 @@ export function heroTable({ i18n, look }: Ctx, stats: HeroStats[], accountId: st
           winRate: h.winRate >= 0.5 ? "high" : "low",
         },
         cells: {
-          hero: { text: name, href: `/players/${accountId}?hero=${h.heroId}` },
+          hero: { text: name, href: `/players/${accountId}?hero=${h.heroId}`, icon: look.heroIcon(h.heroId) },
           matches: { text: i18n.num(h.matches), sort: h.matches },
           winRate: {
             text: i18n.pct(h.wins, h.matches),
@@ -109,6 +110,7 @@ export function scoreboardTables({ i18n, look }: Ctx, match: Match, highlightSlo
               hero: {
                 text: name,
                 href: `/matches/${match.matchId}/players/${p.accountId}`,
+                icon: look.heroIcon(p.heroId),
                 tag: p.abandonTimeS > 0 ? t("match.left") : undefined,
                 tagTitle: p.abandonTimeS > 0 ? t("match.leftTitle") : undefined,
               },
@@ -127,9 +129,10 @@ export function scoreboardTables({ i18n, look }: Ctx, match: Match, highlightSlo
 
 export function deathsTable({ i18n, look }: Ctx, deaths: Death[], players: MatchPlayer[]): TableSpec {
   const { t } = i18n;
+  const killerHero = (slot: number) => players.find((x) => x.slot === slot)?.heroId;
   const killer = (slot: number) => {
-    const p = players.find((x) => x.slot === slot);
-    return p ? look.heroName(p.heroId) : "—";
+    const id = killerHero(slot);
+    return id === undefined ? "—" : look.heroName(id);
   };
   const killers = [...new Set(deaths.map((d) => killer(d.killerSlot)))].sort((a, b) => a.localeCompare(b, i18n.locale));
   return {
@@ -146,7 +149,10 @@ export function deathsTable({ i18n, look }: Ctx, deaths: Death[], players: Match
       filters: { killer: killer(d.killerSlot) },
       cells: {
         t: { text: duration(d.t), sort: d.t },
-        killer: { text: killer(d.killerSlot) },
+        killer: {
+          text: killer(d.killerSlot),
+          icon: killerHero(d.killerSlot) === undefined ? undefined : look.heroIcon(killerHero(d.killerSlot)!),
+        },
         // Negative means the game did not record it.
         ttk: {
           text: d.timeToKillS >= 0 ? t("unit.seconds", { n: i18n.dec(d.timeToKillS, 1) }) : "—",
@@ -168,7 +174,7 @@ export function deathsTable({ i18n, look }: Ctx, deaths: Death[], players: Match
   };
 }
 
-export function buildTable({ i18n }: Ctx, entries: BuildEntry[]): TableSpec {
+export function buildTable({ i18n, look }: Ctx, entries: BuildEntry[]): TableSpec {
   const { t } = i18n;
   const typeText = (e: BuildEntry) =>
     e.kind === "item"
@@ -193,7 +199,12 @@ export function buildTable({ i18n }: Ctx, entries: BuildEntry[]): TableSpec {
       filters: { kind: e.kind === "item" ? "items" : "abilities", slot: e.slot },
       cells: {
         t: { text: duration(e.t), sort: e.t },
-        what: { text: e.name, slot: e.kind === "item" ? e.slot || undefined : "ability", strike: e.soldT > 0 },
+        what: {
+          text: e.name,
+          strike: e.soldT > 0,
+          icon: look.abilityIcon(e.itemId),
+          iconTile: tileOf(e.slot, e.kind === "item"),
+        },
         type: { text: typeText(e), tone: "muted" },
         sold: { text: e.soldT ? duration(e.soldT) : "", sort: e.soldT, tone: "muted" },
       },

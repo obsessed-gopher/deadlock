@@ -28,6 +28,7 @@ test("hero table: one row per hero, English names by default even in Russian", (
   assert.equal(haze?.cells.hero?.text, "Haze");
   assert.equal(haze?.cells.hero?.href, `/players/${ACC}?hero=13`);
   assert.equal(haze?.me, true);
+  assert.equal(haze?.cells.hero?.icon, "/icons/heroes/hero_haze");
   assert.equal(spec.columns[0]?.label, "Герой");
   // Every row has a role the role filter offers.
   const roles = new Set(spec.filters?.find((f) => f.key === "role")?.options.map((o) => o.value));
@@ -76,5 +77,10 @@ test("build: items vs abilities, slots, sold items struck through", () => {
   assert.ok(sold.length > 0);
   assert.ok(sold.every((r) => r.cells.sold?.text));
   assert.equal(spec.rows[0]?.cells.what?.text, "Smoke Bomb");
+  // Icons: abilities on a neutral tile, shop items on the tile of their slot.
+  assert.equal(spec.rows[0]?.cells.what?.icon, "/icons/abilities/ability_smoke_bomb");
+  assert.equal(spec.rows[0]?.cells.what?.iconTile, "ability");
+  const item = spec.rows.find((r) => r.filters?.kind === "items" && r.filters.slot === "weapon");
+  assert.equal(item?.cells.what?.iconTile, "weapon");
   assert.equal(spec.rows[0]?.cells.type?.text, "ability unlocked");
 });

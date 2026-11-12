@@ -42,6 +42,8 @@ export default defineConfig({
         API_URL: `http://localhost:${MOCK_PORT}`,
         SYNC_ACCOUNTS: "1517505834",
         TZ: "UTC",
+        // No game icons in CI: tests run against the placeholders on every machine.
+        ICONS_DIR: "e2e/no-icons",
       },
       reuseExistingServer: !CI,
       timeout: 60_000,

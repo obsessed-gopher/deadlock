@@ -99,7 +99,7 @@ go run ./tools/dev gen
 ### После патча игры
 
 1. Обновить `proto/deadlock` из SteamDatabase/Protobufs → `go run ./tools/dev gen`.
-2. Пересобрать снимок: `go run ./tools/gamedata -check internal/meta/testdata/134969900.meta.zst`.
+2. Пересобрать снимок и иконки: `go run ./tools/gamedata -check internal/meta/testdata/134969900.meta.zst -icons data/icons`.
 3. `go run ./tools/dev check`; запись в `CHANGELOG.md`.
 
 ## Миграции БД
@@ -158,7 +158,13 @@ go run ./tools/dev gen
 
 Вся конфигурация сервера — переменные окружения, читаются и валидируются в `cmd/server/config.go`; список с умолчаниями — в комментарии пакета `cmd/server/main.go`. Новая переменная: `config.go` + тест, комментарий в `main.go`, `.env.example`, `docker-compose.yml`, запись в changelog.
 
-Фронт читает `API_URL` (адрес REST-gateway), `SYNC_ACCOUNTS` (ссылки на главной) и `TZ` (часовой пояс дат: они рендерятся на сервере).
+Фронт читает `API_URL` (адрес REST-gateway), `SYNC_ACCOUNTS` (ссылки на главной), `TZ` (часовой пояс дат: они рендерятся на сервере) и `ICONS_DIR` (каталог иконок; по умолчанию `../data/icons` от `web/`, в Docker — смонтированный `./data/icons`).
+
+## Иконки
+
+Иконки героев, предметов и способностей — арт из файлов игры, **в git их нет**. Их достаёт из локальной установки `go run ./tools/gamedata -icons data/icons` (`internal/gamedata/vtex` декодирует текстуры `*.vtex_c`, PNG до 96 px, около 5 МБ). Повторять после патча игры.
+
+Отдаёт их фронт: `GET /icons/<heroes|abilities>/<key>` (`web/src/app/icons/...`) читает PNG из `ICONS_DIR`, а если файла нет — отвечает SVG-заглушкой с инициалами (200, не 404). Поэтому CI, e2e, мок и чистая машина работают без иконок и без ошибок в консоли; e2e нарочно запускаются без них (`ICONS_DIR=e2e/no-icons`).
 
 ## Работа с проблемами
 

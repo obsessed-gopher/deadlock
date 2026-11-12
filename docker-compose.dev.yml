@@ -26,6 +26,9 @@ services:
       API_URL: http://mock:8090
       SYNC_ACCOUNTS: "1517505834" # the account in web/mock/fixtures
       TZ: ${TZ:-UTC}
+      ICONS_DIR: /icons
+    volumes:
+      - ./data/icons:/icons:ro # optional: placeholders when empty
     ports:
       - "127.0.0.1:3001:3000"
     depends_on:

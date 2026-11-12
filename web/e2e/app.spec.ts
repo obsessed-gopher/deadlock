@@ -177,6 +177,21 @@ test("match breakdown: chart, sortable scoreboard, build and deaths filters", as
   await expectNoHorizontalScroll(page);
 });
 
+test("icons: heroes and items have images, missing ones are placeholders, not 404s", async ({ page, request }) => {
+  await page.goto(`/matches/${fullMatch.matchId}/players/${ACCOUNT}`);
+  const heroIcon = page.locator("h1").locator("xpath=..").locator("img.icon-portrait");
+  await expect(heroIcon).toHaveAttribute("src", `/icons/heroes/${look.hero(fullMatch.heroId)!.key}`);
+  // Every icon on the page loaded (the browser would log a failed load).
+  const srcs = await page.locator("img").evaluateAll((imgs) =>
+    imgs.map((i) => ({ src: i.getAttribute("src"), ok: (i as HTMLImageElement).complete })),
+  );
+  expect(srcs.length).toBeGreaterThan(20);
+  const res = await request.get(srcs[0]!.src!);
+  expect(res.status()).toBe(200);
+  expect(res.headers()["content-type"]).toBe("image/svg+xml");
+  expect((await request.get("/icons/items/x")).status()).toBe(404);
+});
+
 test("scoreboard links to another player's breakdown", async ({ page }) => {
   await page.goto(`/matches/${fullMatch.matchId}`);
   const links = page.locator(`table a[href^="/matches/${fullMatch.matchId}/players/"]`);

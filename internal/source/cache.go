@@ -19,6 +19,7 @@ type Cache struct {
 	HTTP  *http.Client
 }
 
+// NewCache returns a cache rooted at dir that resolves URLs through salts.
 func NewCache(dir string, salts SaltProvider) *Cache {
 	return &Cache{Dir: dir, Salts: salts, HTTP: &http.Client{Timeout: 30 * time.Minute}}
 }
@@ -51,7 +52,7 @@ func (c *Cache) fetch(ctx context.Context, matchID uint64, kind string, urlOf fu
 }
 
 func (c *Cache) download(ctx context.Context, url, path string) error {
-	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(path), 0o750); err != nil {
 		return err
 	}
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
@@ -62,7 +63,7 @@ func (c *Cache) download(ctx context.Context, url, path string) error {
 	if err != nil {
 		return fmt.Errorf("download %s: %w", url, err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("download %s: %s (replay may have expired)", url, resp.Status)
 	}
@@ -72,8 +73,8 @@ func (c *Cache) download(ctx context.Context, url, path string) error {
 		return err
 	}
 	if _, err := io.Copy(f, resp.Body); err != nil {
-		f.Close()
-		os.Remove(tmp)
+		_ = f.Close()
+		_ = os.Remove(tmp)
 		return fmt.Errorf("download %s: %w", url, err)
 	}
 	if err := f.Close(); err != nil {

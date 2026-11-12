@@ -1,0 +1,4 @@
+#!/bin/sh
+# Fast gate before every commit: formatting, build, lint, unit tests.
+# Enabled by "go run ./tools/dev setup". Bypass (rarely!) with --no-verify.
+exec go run ./tools/dev check

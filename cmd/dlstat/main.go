@@ -9,6 +9,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"flag"
 	"fmt"
 	"os"
@@ -17,9 +18,10 @@ import (
 	"text/tabwriter"
 	"time"
 
-	"deadlock_ideas/internal/meta"
-	"deadlock_ideas/internal/pb"
-	"deadlock_ideas/internal/source"
+	"github.com/obsessed-gopher/deadlock/internal/gamedata"
+	"github.com/obsessed-gopher/deadlock/internal/meta"
+	"github.com/obsessed-gopher/deadlock/internal/pb"
+	"github.com/obsessed-gopher/deadlock/internal/source"
 )
 
 func main() {
@@ -35,11 +37,14 @@ func main() {
 	args := parseInterspersed(fs, os.Args[2:])
 
 	ctx := context.Background()
+	var err error
+	if gd, err = gamedata.Embedded(); err != nil {
+		fail(err)
+	}
 	api := source.NewDeadlockAPI()
 	cache := source.NewCache(*cacheDir, api)
 	acc := parseAccount(*account)
 
-	var err error
 	switch cmd {
 	case "history":
 		err = history(ctx, api, acc, *n)
@@ -82,19 +87,16 @@ func parseAccount(s string) uint32 {
 	if s == "" {
 		return 0
 	}
-	v, err := strconv.ParseUint(s, 10, 64)
+	id, err := source.ParseAccountID(s)
 	if err != nil {
-		fail(fmt.Errorf("bad account %q", s))
+		fail(err)
 	}
-	if v > 1<<32 {
-		return source.SteamID64ToAccountID(v)
-	}
-	return uint32(v)
+	return id
 }
 
 func history(ctx context.Context, api *source.DeadlockAPI, acc uint32, n int) error {
 	if acc == 0 {
-		return fmt.Errorf("set -account or DL_ACCOUNT")
+		return errors.New("set -account or DL_ACCOUNT")
 	}
 	ms, err := api.MatchHistory(ctx, acc)
 	if err != nil {
@@ -144,12 +146,12 @@ func showMeta(path string, acc uint32) error {
 		if p.GetAccountId() == acc {
 			mark, me = " <", p
 		}
-		fmt.Fprintf(w, "%d\t%d\t%d%s\t%d\t%d\t%d/%d/%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\n",
-			p.GetTeam(), p.GetPlayerSlot(), p.GetAccountId(), mark, p.GetHeroId(), p.GetAssignedLane(),
+		fmt.Fprintf(w, "%d\t%d\t%d%s\t%s\t%d\t%d/%d/%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\n",
+			p.GetTeam(), p.GetPlayerSlot(), p.GetAccountId(), mark, heroName(p.GetHeroId()), p.GetAssignedLane(),
 			p.GetKills(), p.GetDeaths(), p.GetAssists(), p.GetNetWorth(), p.GetLastHits(),
 			soulsAt(p, 600), soulsAt(p, 1200), len(p.GetStats()), len(p.GetItems()), len(p.GetDeathDetails()))
 	}
-	w.Flush()
+	_ = w.Flush()
 
 	if me != nil {
 		showPlayer(me)
@@ -158,7 +160,7 @@ func showMeta(path string, acc uint32) error {
 }
 
 func showPlayer(p *pb.CMsgMatchMetaDataContents_Players) {
-	fmt.Printf("\n--- you: hero %d ---\n", p.GetHeroId())
+	fmt.Printf("\n--- you: %s ---\n", heroName(p.GetHeroId()))
 
 	fmt.Println("\nstat snapshots (time  souls  lh  dmg  dmg_taken  death_loss):")
 	for _, s := range p.GetStats() {
@@ -166,13 +168,13 @@ func showPlayer(p *pb.CMsgMatchMetaDataContents_Players) {
 			s.GetCreepKills(), s.GetPlayerDamage(), s.GetPlayerDamageTaken(), s.GetGoldDeathLoss())
 	}
 
-	fmt.Println("\nitems (time  item_id  sold):")
+	fmt.Println("\nitems (time  name  sold):")
 	for _, it := range p.GetItems() {
 		sold := ""
 		if it.GetSoldTimeS() > 0 {
 			sold = "sold " + mmss(it.GetSoldTimeS())
 		}
-		fmt.Printf("  %6s %11d %s\n", mmss(it.GetGameTimeS()), it.GetItemId(), sold)
+		fmt.Printf("  %6s  %-40s %s\n", mmss(it.GetGameTimeS()), itemName(it.GetItemId()), sold)
 	}
 
 	fmt.Println("\ndeaths (time  killer_slot  pos  respawn):")
@@ -199,12 +201,11 @@ func mmss(s uint32) string {
 	return fmt.Sprintf("%d:%02d", s/60, s%60)
 }
 
-
 // parseInterspersed lets flags appear before or after positional args.
 func parseInterspersed(fs *flag.FlagSet, in []string) []string {
 	var pos []string
 	for {
-		fs.Parse(in)
+		_ = fs.Parse(in) // ExitOnError: Parse exits on bad flags
 		in = fs.Args()
 		if len(in) == 0 {
 			return pos
@@ -212,4 +213,29 @@ func parseInterspersed(fs *flag.FlagSet, in []string) []string {
 		pos = append(pos, in[0])
 		in = in[1:]
 	}
+}
+
+// gd is the embedded snapshot; set once in main before any lookups.
+var gd *gamedata.Data
+
+func heroName(id uint32) string {
+	if h := gd.Hero(id); h != nil && h.Name != "" {
+		return h.Name
+	}
+	return fmt.Sprintf("hero#%d", id)
+}
+
+func itemName(id uint32) string {
+	a := gd.Ability(id)
+	if a == nil {
+		return fmt.Sprintf("#%d", id)
+	}
+	name := a.Name
+	if name == "" {
+		name = a.Key
+	}
+	if a.IsItem() {
+		return fmt.Sprintf("%s [%s T%d]", name, a.Slot, a.Tier)
+	}
+	return fmt.Sprintf("%s (%s)", name, a.Type)
 }

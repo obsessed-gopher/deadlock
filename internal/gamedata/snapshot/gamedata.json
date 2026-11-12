@@ -1,0 +1,7229 @@
+{
+ "game_version": "6861",
+ "heroes": [
+  {
+   "id": 0,
+   "key": "hero_base",
+   "name": ""
+  },
+  {
+   "id": 1,
+   "key": "hero_inferno",
+   "name": "Infernus",
+   "name_ru": "Инфернус",
+   "type": "mystic",
+   "state": "release",
+   "image": "file://{images}/heroes/inferno_sm.psd"
+  },
+  {
+   "id": 2,
+   "key": "hero_gigawatt",
+   "name": "Seven",
+   "name_ru": "Семь",
+   "type": "mystic",
+   "state": "release",
+   "image": "file://{images}/heroes/gigawatt_sm.psd"
+  },
+  {
+   "id": 3,
+   "key": "hero_hornet",
+   "name": "Vindicta",
+   "name_ru": "Виндикта",
+   "type": "marksman",
+   "state": "release",
+   "image": "file://{images}/heroes/hornet_sm.png"
+  },
+  {
+   "id": 4,
+   "key": "hero_ghost",
+   "name": "Lady Geist",
+   "name_ru": "Леди Гайст",
+   "type": "mystic",
+   "state": "release",
+   "image": "file://{images}/heroes/spectre_sm.psd"
+  },
+  {
+   "id": 6,
+   "key": "hero_atlas",
+   "name": "Abrams",
+   "name_ru": "Абрамс",
+   "type": "brawler",
+   "state": "release",
+   "image": "file://{images}/heroes/bull_sm.psd"
+  },
+  {
+   "id": 7,
+   "key": "hero_wraith",
+   "name": "Wraith",
+   "name_ru": "Тень",
+   "type": "marksman",
+   "state": "release",
+   "image": "file://{images}/heroes/wraith_sm.psd"
+  },
+  {
+   "id": 8,
+   "key": "hero_forge",
+   "name": "McGinnis",
+   "name_ru": "Макгиннис",
+   "type": "mystic",
+   "state": "release",
+   "image": "file://{images}/heroes/engineer_sm.psd"
+  },
+  {
+   "id": 10,
+   "key": "hero_chrono",
+   "name": "Paradox",
+   "name_ru": "Парадокс",
+   "type": "marksman",
+   "state": "release",
+   "image": "file://{images}/heroes/chrono_sm.psd"
+  },
+  {
+   "id": 11,
+   "key": "hero_dynamo",
+   "name": "Dynamo",
+   "name_ru": "Динамо",
+   "type": "healer",
+   "state": "release",
+   "image": "file://{images}/heroes/sumo_sm.psd"
+  },
+  {
+   "id": 12,
+   "key": "hero_kelvin",
+   "name": "Kelvin",
+   "name_ru": "Кельвин",
+   "type": "healer",
+   "state": "release",
+   "image": "file://{images}/heroes/kelvin_sm.psd"
+  },
+  {
+   "id": 13,
+   "key": "hero_haze",
+   "name": "Haze",
+   "name_ru": "Пелена",
+   "type": "assassin",
+   "state": "release",
+   "image": "file://{images}/heroes/haze_sm.psd"
+  },
+  {
+   "id": 14,
+   "key": "hero_astro",
+   "name": "Holliday",
+   "name_ru": "Холлидей",
+   "type": "marksman",
+   "state": "release",
+   "image": "file://{images}/heroes/astro_sm.psd"
+  },
+  {
+   "id": 15,
+   "key": "hero_bebop",
+   "name": "Bebop",
+   "name_ru": "Бибоп",
+   "type": "brawler",
+   "state": "release",
+   "image": "file://{images}/heroes/bebop_sm.psd"
+  },
+  {
+   "id": 16,
+   "key": "hero_nano",
+   "name": "Calico",
+   "name_ru": "Калико",
+   "type": "assassin",
+   "state": "release",
+   "image": "file://{images}/heroes/nano_sm.psd"
+  },
+  {
+   "id": 17,
+   "key": "hero_orion",
+   "name": "Grey Talon",
+   "name_ru": "Серый Коготь",
+   "type": "mystic",
+   "state": "release",
+   "image": "file://{images}/heroes/archer_sm.psd"
+  },
+  {
+   "id": 18,
+   "key": "hero_krill",
+   "name": "Mo \u0026 Krill",
+   "name_ru": "Мо и Мелкий",
+   "type": "brawler",
+   "state": "release",
+   "image": "file://{images}/heroes/digger_sm.psd"
+  },
+  {
+   "id": 19,
+   "key": "hero_shiv",
+   "name": "Shiv",
+   "name_ru": "Заточка",
+   "type": "brawler",
+   "state": "release",
+   "image": "file://{images}/heroes/shiv_sm.psd"
+  },
+  {
+   "id": 20,
+   "key": "hero_tengu",
+   "name": "Ivy",
+   "name_ru": "Плющик",
+   "type": "healer",
+   "state": "release",
+   "image": "file://{images}/heroes/tengu_sm.psd"
+  },
+  {
+   "id": 21,
+   "key": "hero_kali",
+   "name": "Kali",
+   "name_ru": "Kali",
+   "disabled": true,
+   "image": "file://{images}/heroes/kali_sm.psd"
+  },
+  {
+   "id": 25,
+   "key": "hero_warden",
+   "name": "Warden",
+   "name_ru": "Дозорный",
+   "type": "brawler",
+   "state": "release",
+   "image": "file://{images}/heroes/warden_sm.psd"
+  },
+  {
+   "id": 27,
+   "key": "hero_yamato",
+   "name": "Yamato",
+   "name_ru": "Ямато",
+   "type": "assassin",
+   "state": "release",
+   "image": "file://{images}/heroes/yamato_sm.psd"
+  },
+  {
+   "id": 31,
+   "key": "hero_lash",
+   "name": "Lash",
+   "name_ru": "Хлыст",
+   "type": "assassin",
+   "state": "release",
+   "image": "file://{images}/heroes/lash_sm.psd"
+  },
+  {
+   "id": 35,
+   "key": "hero_viscous",
+   "name": "Viscous",
+   "name_ru": "Вязкус",
+   "type": "brawler",
+   "state": "release",
+   "image": "file://{images}/heroes/viscous_sm.psd"
+  },
+  {
+   "id": 38,
+   "key": "hero_gunslinger",
+   "name": "Gunslinger",
+   "name_ru": "Gunslinger",
+   "disabled": true,
+   "in_dev": true,
+   "image": "file://{images}/heroes/gunslinger_sm.psd"
+  },
+  {
+   "id": 39,
+   "key": "hero_yakuza",
+   "name": "The Boss",
+   "name_ru": "The Boss",
+   "disabled": true,
+   "in_dev": true,
+   "image": "file://{images}/heroes/yakuza_sm.psd"
+  },
+  {
+   "id": 46,
+   "key": "hero_genericperson",
+   "name": "Generic Person",
+   "name_ru": "Generic Person",
+   "in_dev": true,
+   "image": "file://{images}/heroes/genericperson_sm.psd"
+  },
+  {
+   "id": 48,
+   "key": "hero_wrecker",
+   "name": "Wrecker",
+   "name_ru": "Крушитель",
+   "disabled": true,
+   "in_dev": true,
+   "image": "file://{images}/heroes/wrecker_sm.psd"
+  },
+  {
+   "id": 49,
+   "key": "hero_rutger",
+   "name": "Rutger",
+   "name_ru": "Rutger",
+   "disabled": true,
+   "in_dev": true,
+   "image": "file://{images}/heroes/rutger_sm.psd"
+  },
+  {
+   "id": 50,
+   "key": "hero_synth",
+   "name": "Pocket",
+   "name_ru": "Карман",
+   "type": "assassin",
+   "state": "release",
+   "image": "file://{images}/heroes/synth_sm.psd"
+  },
+  {
+   "id": 51,
+   "key": "hero_thumper",
+   "name": "Thumper",
+   "name_ru": "Thumper",
+   "disabled": true,
+   "in_dev": true,
+   "image": "file://{images}/heroes/thumper_sm.psd"
+  },
+  {
+   "id": 52,
+   "key": "hero_mirage",
+   "name": "Mirage",
+   "name_ru": "Мираж",
+   "type": "assassin",
+   "state": "release",
+   "image": "file://{images}/heroes/mirage_sm.psd"
+  },
+  {
+   "id": 53,
+   "key": "hero_slork",
+   "name": "Fathom",
+   "name_ru": "Фатом",
+   "disabled": true,
+   "in_dev": true,
+   "image": "file://{images}/heroes/slork_sm.psd"
+  },
+  {
+   "id": 54,
+   "key": "hero_cadence",
+   "name": "Cadence",
+   "name_ru": "Cadence",
+   "disabled": true,
+   "in_dev": true,
+   "image": "file://{images}/heroes/cadence_sm.psd"
+  },
+  {
+   "id": 55,
+   "key": "hero_targetdummy",
+   "name": "TargetDummy",
+   "name_ru": "Манекен-мишень",
+   "state": "debugonly",
+   "image": "file://{images}/heroes/targetdummy_sm.psd"
+  },
+  {
+   "id": 56,
+   "key": "hero_bomber",
+   "name": "Bomber",
+   "name_ru": "Bomber",
+   "disabled": true,
+   "in_dev": true
+  },
+  {
+   "id": 57,
+   "key": "hero_shieldguy",
+   "name": "Shield Guy",
+   "name_ru": "Shield Guy",
+   "disabled": true,
+   "in_dev": true
+  },
+  {
+   "id": 58,
+   "key": "hero_viper",
+   "name": "Vyper",
+   "name_ru": "Гадюка",
+   "type": "assassin",
+   "state": "release",
+   "image": "file://{images}/heroes/kali_sm.psd"
+  },
+  {
+   "id": 59,
+   "key": "hero_vandal",
+   "name": "Vandal",
+   "name_ru": "Vandal",
+   "disabled": true,
+   "in_dev": true,
+   "image": "file://{images}/heroes/vandal_sm.psd"
+  },
+  {
+   "id": 60,
+   "key": "hero_magician",
+   "name": "Sinclair",
+   "name_ru": "Синклер",
+   "type": "mystic",
+   "state": "release",
+   "image": "file://{images}/heroes/magician_sm.psd"
+  },
+  {
+   "id": 61,
+   "key": "hero_trapper",
+   "name": "Trapper",
+   "name_ru": "Ловец",
+   "disabled": true,
+   "in_dev": true,
+   "image": "file://{images}/heroes/trapper_sm.psd"
+  },
+  {
+   "id": 62,
+   "key": "hero_operative",
+   "name": "Raven",
+   "name_ru": "Ворон",
+   "disabled": true,
+   "in_dev": true,
+   "image": "file://{images}/heroes/operative_sm.psd"
+  },
+  {
+   "id": 63,
+   "key": "hero_vampirebat",
+   "name": "Mina",
+   "name_ru": "Мина",
+   "type": "mystic",
+   "state": "release",
+   "image": "file://{images}/heroes/vampirebat_sm.psd"
+  },
+  {
+   "id": 64,
+   "key": "hero_drifter",
+   "name": "Drifter",
+   "name_ru": "Скиталец",
+   "type": "assassin",
+   "state": "release",
+   "image": "file://{images}/heroes/drifter_sm.psd"
+  },
+  {
+   "id": 65,
+   "key": "hero_priest",
+   "name": "Venator",
+   "name_ru": "Венатор",
+   "type": "marksman",
+   "state": "release",
+   "image": "file://{images}/heroes/priest_sm.psd"
+  },
+  {
+   "id": 66,
+   "key": "hero_frank",
+   "name": "Victor",
+   "name_ru": "Виктор",
+   "type": "brawler",
+   "state": "release",
+   "image": "file://{images}/heroes/frank_sm.psd"
+  },
+  {
+   "id": 67,
+   "key": "hero_bookworm",
+   "name": "Paige",
+   "name_ru": "Пейдж",
+   "type": "healer",
+   "state": "release",
+   "image": "file://{images}/heroes/bookworm_sm.psd"
+  },
+  {
+   "id": 68,
+   "key": "hero_boho",
+   "name": "Boho",
+   "name_ru": "Boho",
+   "disabled": true,
+   "in_dev": true,
+   "image": "file://{images}/heroes/hornet_sm.png"
+  },
+  {
+   "id": 69,
+   "key": "hero_doorman",
+   "name": "The Doorman",
+   "name_ru": "Швейцар",
+   "type": "mystic",
+   "state": "release",
+   "image": "file://{images}/heroes/doorman_sm.psd"
+  },
+  {
+   "id": 70,
+   "key": "hero_skyrunner",
+   "name": "Skyrunner",
+   "name_ru": "Skyrunner",
+   "disabled": true,
+   "in_dev": true,
+   "image": "file://{images}/heroes/skyrunner_sm.psd"
+  },
+  {
+   "id": 71,
+   "key": "hero_swan",
+   "name": "Swan",
+   "name_ru": "Swan",
+   "disabled": true,
+   "in_dev": true,
+   "image": "file://{images}/heroes/swan_sm.psd"
+  },
+  {
+   "id": 72,
+   "key": "hero_punkgoat",
+   "name": "Billy",
+   "name_ru": "Билли",
+   "type": "brawler",
+   "state": "release",
+   "image": "file://{images}/heroes/punkgoat_sm.psd"
+  },
+  {
+   "id": 73,
+   "key": "hero_druid",
+   "name": "Druid",
+   "name_ru": "Druid",
+   "disabled": true,
+   "in_dev": true,
+   "image": "file://{images}/heroes/druid_sm.psd"
+  },
+  {
+   "id": 74,
+   "key": "hero_graf",
+   "name": "Graf",
+   "name_ru": "Graf",
+   "disabled": true,
+   "in_dev": true,
+   "image": "file://{images}/heroes/graf_sm.psd"
+  },
+  {
+   "id": 75,
+   "key": "hero_fortuna",
+   "name": "Fortuna",
+   "name_ru": "Fortuna",
+   "disabled": true,
+   "in_dev": true,
+   "image": "file://{images}/heroes/fortuna_sm.psd"
+  },
+  {
+   "id": 76,
+   "key": "hero_necro",
+   "name": "Graves",
+   "name_ru": "Грейвс",
+   "type": "mystic",
+   "state": "release",
+   "image": "file://{images}/heroes/necro_sm.psd"
+  },
+  {
+   "id": 77,
+   "key": "hero_fencer",
+   "name": "Apollo",
+   "name_ru": "Аполлон",
+   "type": "assassin",
+   "state": "release",
+   "image": "file://{images}/heroes/fencer_sm.psd"
+  },
+  {
+   "id": 78,
+   "key": "hero_deadpack",
+   "name": "Deadman Danny",
+   "name_ru": "Дохлый Дэнни",
+   "type": "marksman",
+   "state": "release",
+   "image": "file://{images}/heroes/deadpack_sm.psd"
+  },
+  {
+   "id": 79,
+   "key": "hero_familiar",
+   "name": "Rem",
+   "name_ru": "Дрём",
+   "type": "healer",
+   "state": "release",
+   "image": "file://{images}/heroes/familiar_sm.psd"
+  },
+  {
+   "id": 80,
+   "key": "hero_werewolf",
+   "name": "Silver",
+   "name_ru": "Сильвер",
+   "type": "brawler",
+   "state": "release",
+   "image": "file://{images}/heroes/werewolf_sm.psd"
+  },
+  {
+   "id": 81,
+   "key": "hero_unicorn",
+   "name": "Celeste",
+   "name_ru": "Селеста",
+   "type": "mystic",
+   "state": "release",
+   "image": "file://{images}/heroes/unicorn_sm.psd"
+  },
+  {
+   "id": 82,
+   "key": "hero_opera",
+   "name": "Opera",
+   "name_ru": "Opera",
+   "disabled": true,
+   "in_dev": true
+  },
+  {
+   "id": 83,
+   "key": "hero_testhero",
+   "name": "",
+   "type": "assassin",
+   "disabled": true,
+   "in_dev": true,
+   "image": "file://{images}/heroes/nano_sm.psd"
+  },
+  {
+   "id": 84,
+   "key": "hero_ratking",
+   "name": "Rat King",
+   "name_ru": "Крысиный король",
+   "type": "brawler",
+   "state": "release",
+   "image": "file://{images}/heroes/ratking_sm.psd"
+  },
+  {
+   "id": 85,
+   "key": "hero_chessmaster",
+   "name": "Solomon",
+   "name_ru": "Соломон",
+   "type": "mystic",
+   "state": "release",
+   "image": "file://{images}/heroes/chessmaster_sm.psd"
+  },
+  {
+   "id": 86,
+   "key": "hero_artist",
+   "name": "Violet",
+   "name_ru": "Виолетта",
+   "type": "mystic",
+   "state": "release",
+   "in_dev": true,
+   "image": "file://{images}/heroes/artist_sm.psd"
+  },
+  {
+   "id": 87,
+   "key": "hero_nurse",
+   "name": "Nurse Harrow",
+   "name_ru": "Сестра Хэрроу",
+   "type": "healer",
+   "state": "release",
+   "image": "file://{images}/heroes/nurse_sm.psd"
+  },
+  {
+   "id": 88,
+   "key": "hero_baba",
+   "name": "Baba",
+   "name_ru": "Буся",
+   "type": "mystic",
+   "state": "release",
+   "in_dev": true,
+   "image": "file://{images}/heroes/baba_sm.psd"
+  }
+ ],
+ "abilities": [
+  {
+   "id": 1593133799,
+   "key": "ability_afterburn",
+   "name": "Afterburn",
+   "name_ru": "Тление",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/inferno_deflect.psd"
+  },
+  {
+   "id": 2516700978,
+   "key": "ability_artist_bamboogrove",
+   "name": "Abstract Landscape",
+   "name_ru": "Абстрактный пейзаж",
+   "type": "ultimate",
+   "image": "file://{images}/hud/abilities/artist/artist_landscape.psd"
+  },
+  {
+   "id": 3724628144,
+   "key": "ability_artist_bamboogrove_trigger",
+   "type": "innate",
+   "image": "file://{images}/hud/abilities/artist/artist_landscapeend.psd"
+  },
+  {
+   "id": 836615329,
+   "key": "ability_artist_homingbrush",
+   "name": "Living Ink",
+   "name_ru": "Живая тушь",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/artist/artist_livingink.psd"
+  },
+  {
+   "id": 815266434,
+   "key": "ability_artist_pullbrush",
+   "name": "Living Ink",
+   "name_ru": "Живая тушь",
+   "type": "weapon",
+   "image": "file://{images}/hud/abilities/artist/artist_livingink.psd"
+  },
+  {
+   "id": 3389503777,
+   "key": "ability_artist_rollingprojectile",
+   "name": "Flow State",
+   "name_ru": "В потоке",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/artist/artist_brush.psd"
+  },
+  {
+   "id": 436205884,
+   "key": "ability_artist_rollingprojectile_trigger",
+   "type": "innate",
+   "image": "file://{images}/hud/abilities/artist/artist_brushflick.psd"
+  },
+  {
+   "id": 3612874202,
+   "key": "ability_artist_tether",
+   "name": "Still Life",
+   "name_ru": "Портрет с натуры",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/artist/artist_portrait.psd"
+  },
+  {
+   "id": 1018021554,
+   "key": "ability_baba_bench_melee",
+   "name": "Melee",
+   "name_ru": "Ближний бой",
+   "type": "innate"
+  },
+  {
+   "id": 3122124161,
+   "key": "ability_baba_bench_run",
+   "name": "Granny Long Legs",
+   "name_ru": "Длинноногая бабуся",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/baba/strafing_run.psd"
+  },
+  {
+   "id": 1282689113,
+   "key": "ability_baba_bubbling_brew",
+   "name": "Threadsap",
+   "name_ru": "Истощающая нить",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/baba/threadsap.psd"
+  },
+  {
+   "id": 2003165630,
+   "key": "ability_baba_hexing_brew",
+   "name": "Baba's Brew",
+   "name_ru": "Бусин отвар",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/baba/teapot_brew.psd"
+  },
+  {
+   "id": 1169498311,
+   "key": "ability_baba_hexing_brew_throw",
+   "type": "innate",
+   "image": "file://{images}/hud/abilities/baba/pigeon_hex.psd"
+  },
+  {
+   "id": 299875845,
+   "key": "ability_baba_ultimate_2",
+   "name": "Feed The Birds",
+   "name_ru": "Птичий корм",
+   "type": "ultimate",
+   "image": "file://{images}/hud/abilities/baba/pigeon_launcher.psd"
+  },
+  {
+   "id": 3303049331,
+   "key": "ability_bebop_stickybomb2",
+   "name": "Sticky Bomb",
+   "name_ru": "Бомба-липучка",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/bebop/bebop_sticky_bomb.psd"
+  },
+  {
+   "id": 715325746,
+   "key": "ability_blood_bomb",
+   "name": "Essence Bomb",
+   "name_ru": "Бомба квинтэссенции",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/spectre/blood_bomb.psd"
+  },
+  {
+   "id": 3230530872,
+   "key": "ability_blood_shards",
+   "name": "Malice",
+   "name_ru": "Порча",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/spectre/geist_dagger.psd"
+  },
+  {
+   "id": 3793541808,
+   "key": "ability_boho_ability02",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/nano/nano_roller_bomb.psd"
+  },
+  {
+   "id": 2674556961,
+   "key": "ability_boho_ability03",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/nano/nano_roller_bomb.psd"
+  },
+  {
+   "id": 1069317536,
+   "key": "ability_boho_ability04",
+   "type": "ultimate",
+   "image": "file://{images}/hud/abilities/nano/nano_roller_bomb.psd"
+  },
+  {
+   "id": 2000761890,
+   "key": "ability_boho_bouncyprojectile",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/magician/magician_magicbolt.psd"
+  },
+  {
+   "id": 759370291,
+   "key": "ability_boho_channeltether",
+   "type": "ultimate",
+   "image": "file://{images}/hud/abilities/mirage/mirage_djinns_reach.psd"
+  },
+  {
+   "id": 370209602,
+   "key": "ability_boho_damageshare",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/synth/synth_grasp.psd"
+  },
+  {
+   "id": 3962304265,
+   "key": "ability_boho_doublehit",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/shiv/shiv_prison_dance.psd"
+  },
+  {
+   "id": 1815345037,
+   "key": "ability_boho_ridebroom",
+   "type": "ultimate",
+   "image": "file://{images}/hud/abilities/hornet/vindicta_flight.psd"
+  },
+  {
+   "id": 1831181190,
+   "key": "ability_boho_skipgrenade",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/astro/bounce_pad.psd"
+  },
+  {
+   "id": 3875361929,
+   "key": "ability_bomber_ability02",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/nano/nano_roller_bomb.psd"
+  },
+  {
+   "id": 4081662205,
+   "key": "ability_bomber_ability03",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/nano/nano_roller_bomb.psd"
+  },
+  {
+   "id": 3232290270,
+   "key": "ability_bomber_ult",
+   "type": "ultimate",
+   "image": "file://{images}/hud/abilities/nano/nano_tunnel_vision.psd"
+  },
+  {
+   "id": 3054993162,
+   "key": "ability_bookworm_aoemagic",
+   "name": "Captivating Read",
+   "name_ru": "Пленяющее чтиво",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/bookworm/bookworm_blindinglight.psd"
+  },
+  {
+   "id": 604448162,
+   "key": "ability_bookworm_dragonfire",
+   "name": "Bookwyrm",
+   "name_ru": "Книжный змей",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/bookworm/bookworm_dragon.psd"
+  },
+  {
+   "id": 3553292912,
+   "key": "ability_bookworm_knightbarrier",
+   "name": "Plot Armor",
+   "name_ru": "Сюжетная броня",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/bookworm/bookworm_defendandfight.psd"
+  },
+  {
+   "id": 1841901343,
+   "key": "ability_bookworm_knightcharge",
+   "name": "Rallying Charge",
+   "name_ru": "Единящее наступление",
+   "type": "ultimate",
+   "image": "file://{images}/hud/abilities/bookworm/bookworm_charge.psd"
+  },
+  {
+   "id": 2240607294,
+   "key": "ability_bounce_pad",
+   "name": "Bounce Pad",
+   "name_ru": "Трамплин",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/astro/holliday_bounce_pad.psd"
+  },
+  {
+   "id": 731943444,
+   "key": "ability_bullet_flurry",
+   "name": "Bullet Dance",
+   "name_ru": "Танец пуль",
+   "type": "ultimate",
+   "image": "file://{images}/hud/abilities/haze/haze_bullet_flurry.psd"
+  },
+  {
+   "id": 2406758797,
+   "key": "ability_burrow",
+   "name": "Burrow",
+   "name_ru": "Зарывание",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/grappler/grappler_spin.psd"
+  },
+  {
+   "id": 3338528319,
+   "key": "ability_charged_bomb",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/bebop/bebop_sticky_bomb.psd"
+  },
+  {
+   "id": 511336372,
+   "key": "ability_charged_bomb_throw",
+   "type": "innate",
+   "image": "file://{images}/hud/abilities/engineer_fissure_2_activate.psd"
+  },
+  {
+   "id": 548943648,
+   "key": "ability_charged_shot",
+   "name": "Charged Shot",
+   "name_ru": "Заряженный выстрел",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/archer/archer_charged_shot.psd"
+  },
+  {
+   "id": 2424652896,
+   "key": "ability_chessmaster_forkpiece",
+   "name": "Rook Battery",
+   "name_ru": "Ладейная батарея",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/chess/chessmaster_rook.psd"
+  },
+  {
+   "id": 1566272751,
+   "key": "ability_chessmaster_forkpiece_trigger",
+   "name": "Rook Battery",
+   "name_ru": "Ладейная батарея",
+   "type": "innate",
+   "image": "file://{images}/hud/abilities/chess/chessmaster_fork.psd"
+  },
+  {
+   "id": 4180486641,
+   "key": "ability_chessmaster_knightbuff",
+   "name": "Kingside Knight",
+   "name_ru": "Королевский конь",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/chess/chessmaster_knight.psd"
+  },
+  {
+   "id": 2831262884,
+   "key": "ability_chessmaster_knightbuff_trigger",
+   "name": "Move King",
+   "name_ru": "Ход королём",
+   "type": "weapon",
+   "image": "file://{images}/hud/abilities/chess/chessmaster_moveking.psd"
+  },
+  {
+   "id": 3284310919,
+   "key": "ability_chessmaster_movechesspiece",
+   "name": "Move Piece",
+   "name_ru": "Ход фигурой",
+   "type": "weapon",
+   "image": "file://{images}/hud/abilities/chess/chessmaster_movepiece.psd"
+  },
+  {
+   "id": 1389230689,
+   "key": "ability_chessmaster_queen",
+   "name": "Develop Queen",
+   "name_ru": "Развить ферзя",
+   "type": "ultimate",
+   "image": "file://{images}/hud/abilities/chess/chessmaster_queen.psd"
+  },
+  {
+   "id": 2487769573,
+   "key": "ability_chessmaster_queen_trigger",
+   "name": "Develop Queen",
+   "name_ru": "Развить ферзя",
+   "type": "innate",
+   "image": "file://{images}/hud/abilities/chess/chessmaster_undoqueen.psd"
+  },
+  {
+   "id": 4011110259,
+   "key": "ability_chessmaster_throwbishop",
+   "name": "Setup Bishop",
+   "name_ru": "Поставить слона",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/chess/chessmaster_bishop.psd"
+  },
+  {
+   "id": 37090126,
+   "key": "ability_chessmaster_throwbishop_trigger",
+   "name": "Setup Bishop",
+   "name_ru": "Поставить слона",
+   "type": "innate",
+   "image": "file://{images}/hud/abilities/chess/chessmaster_undobishop.psd"
+  },
+  {
+   "id": 4179229681,
+   "key": "ability_crackshot",
+   "name": "Crackshot",
+   "name_ru": "Меткий глаз",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/astro/holliday_crackshot.psd"
+  },
+  {
+   "id": 2603013853,
+   "key": "ability_deadpack_chargeblast",
+   "name": "Strix Salvo",
+   "name_ru": "Стригийский залп",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/deadpack/deadpack_salvo.psd"
+  },
+  {
+   "id": 374042410,
+   "key": "ability_deadpack_flamethrower",
+   "name": "Jettison Fuel",
+   "name_ru": "Сброс топлива",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/deadpack/deadpack_thermalmass.psd"
+  },
+  {
+   "id": 1366425122,
+   "key": "ability_deadpack_primary_weapon_charge",
+   "type": "weapon",
+   "image": "file://{images}/hud/abilities/weapon_damage.psd"
+  },
+  {
+   "id": 1904698842,
+   "key": "ability_deadpack_rocketeer",
+   "name": "Chimera Mk1",
+   "name_ru": "Химера М1",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/deadpack/deadpack_chimera.psd"
+  },
+  {
+   "id": 1026127931,
+   "key": "ability_deadpack_ultimate",
+   "name": "Close The Deal",
+   "name_ru": "Закрыть сделку",
+   "type": "ultimate",
+   "image": "file://{images}/hud/abilities/deadpack/deadpack_flight.psd"
+  },
+  {
+   "id": 892506099,
+   "key": "ability_deadpack_zip_line",
+   "type": "innate"
+  },
+  {
+   "id": 2364803451,
+   "key": "ability_death_tax",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/spectre/death_tax.psd"
+  },
+  {
+   "id": 597292183,
+   "key": "ability_digger_entertunnel",
+   "name": "Digging...",
+   "name_ru": "Рою...",
+   "type": "innate"
+  },
+  {
+   "id": 103496908,
+   "key": "ability_doorman_bomb",
+   "name": "Call Bell",
+   "name_ru": "Звонок для вызова",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/doorman/doorman_bell.psd"
+  },
+  {
+   "id": 109766091,
+   "key": "ability_doorman_doorway",
+   "name": "Doorway",
+   "name_ru": "Дверной портал",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/doorman/doorman_doorway.psd"
+  },
+  {
+   "id": 3720109443,
+   "key": "ability_doorman_doorway_close",
+   "name": "Close Doors",
+   "name_ru": "Закрыть двери",
+   "type": "innate",
+   "image": "file://{images}/hud/abilities/doorman/doorman_doorwayclose.psd"
+  },
+  {
+   "id": 1703045691,
+   "key": "ability_doorman_hotel",
+   "name": "Hotel Guest",
+   "name_ru": "Постоялец отеля",
+   "type": "ultimate",
+   "image": "file://{images}/hud/abilities/doorman/doorman_elevator.psd"
+  },
+  {
+   "id": 1719512318,
+   "key": "ability_doorman_luggage_cart",
+   "name": "Luggage Cart",
+   "name_ru": "Багажная тележка",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/doorman/doorman_luggagetrolley.psd"
+  },
+  {
+   "id": 1033019133,
+   "key": "ability_drifter_hunger",
+   "name": "Bloodscent",
+   "name_ru": "Запах крови",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/drifter/drifter_thehunger.psd"
+  },
+  {
+   "id": 1931915135,
+   "key": "ability_druid_base_plant",
+   "type": "signature"
+  },
+  {
+   "id": 2082403219,
+   "key": "ability_druid_helicopter_seeds",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/nano/nano_roller_bomb.psd"
+  },
+  {
+   "id": 3923533266,
+   "key": "ability_druid_leech_seed",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/nano/nano_roller_bomb.psd"
+  },
+  {
+   "id": 609857027,
+   "key": "ability_druid_plant_branch_wall",
+   "type": "signature"
+  },
+  {
+   "id": 308607838,
+   "key": "ability_druid_plant_healing_tree",
+   "type": "signature"
+  },
+  {
+   "id": 3679258313,
+   "key": "ability_druid_plant_invis_bush",
+   "type": "signature"
+  },
+  {
+   "id": 3828288251,
+   "key": "ability_druid_plant_something",
+   "type": "signature"
+  },
+  {
+   "id": 2800600819,
+   "key": "ability_druid_sprout",
+   "type": "signature"
+  },
+  {
+   "id": 2510227556,
+   "key": "ability_druid_ult",
+   "type": "ultimate",
+   "image": "file://{images}/hud/abilities/nano/nano_tunnel_vision.psd"
+  },
+  {
+   "id": 2610344982,
+   "key": "ability_empowerbullet",
+   "name": "Sleight of Hand",
+   "name_ru": "Ловкость рук",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/inferno_molotov.psd"
+  },
+  {
+   "id": 1235098866,
+   "key": "ability_explosive_barrel",
+   "name": "Powder Keg",
+   "name_ru": "Пороховая бочка",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/astro/holliday_powder_keg.psd"
+  },
+  {
+   "id": 2396527575,
+   "key": "ability_familiar_ability01",
+   "name": "Naptime",
+   "name_ru": "Тихий час",
+   "type": "ultimate",
+   "image": "file://{images}/hud/abilities/familiar/familiar_sleep.psd"
+  },
+  {
+   "id": 3692321247,
+   "key": "ability_familiar_ability02",
+   "name": "Pillow Toss",
+   "name_ru": "Бой подушками",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/familiar/familiar_pillow.psd"
+  },
+  {
+   "id": 932332550,
+   "key": "ability_familiar_alt_weapon",
+   "type": "weapon",
+   "image": "file://{images}/hud/abilities/weapon_damage.psd"
+  },
+  {
+   "id": 1568845221,
+   "key": "ability_familiar_attach",
+   "name": "Tag Along",
+   "name_ru": "Приятная компания",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/familiar/familiar_tag_along.psd"
+  },
+  {
+   "id": 2975289954,
+   "key": "ability_familiar_attach_trigger",
+   "name": "Hop To Ally",
+   "name_ru": "Перепрыгнуть к союзнику",
+   "type": "innate",
+   "image": "file://{images}/hud/abilities/familiar/familiar_tag_along2.psd"
+  },
+  {
+   "id": 536278136,
+   "key": "ability_familiar_helpinghands",
+   "name": "Lil Helpers",
+   "name_ru": "Маленькие помощники",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/familiar/familiar_helpers.psd"
+  },
+  {
+   "id": 1961336982,
+   "key": "ability_familiar_primary_weapon_bubblegun",
+   "name": "Gun Damage",
+   "name_ru": "Урон от оружия",
+   "type": "weapon",
+   "image": "file://{images}/hud/abilities/weapon_damage.psd"
+  },
+  {
+   "id": 147493976,
+   "key": "ability_fencer_lunge",
+   "name": "Flawless Advance",
+   "name_ru": "Безупречное наступление",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/fencer/fencer_lungingstab.psd"
+  },
+  {
+   "id": 2006773718,
+   "key": "ability_fencer_riposte",
+   "name": "Riposte",
+   "name_ru": "Рипост",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/fencer/fencer_riposte.psd"
+  },
+  {
+   "id": 2463759749,
+   "key": "ability_fencer_riposte_target_select",
+   "type": "innate",
+   "image": "file://{images}/hud/abilities/fencer/fencer_riposte_attack.psd"
+  },
+  {
+   "id": 725153709,
+   "key": "ability_fencer_throwblade",
+   "name": "Disengaging Sigil",
+   "name_ru": "Высвобождающий сигил",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/fencer/fencer_sigil.psd"
+  },
+  {
+   "id": 494112189,
+   "key": "ability_fencer_ultimate",
+   "name": "Itani Lo Sahn",
+   "name_ru": "Итани Ло Сан",
+   "type": "ultimate",
+   "image": "file://{images}/hud/abilities/fencer/fencer_ult.psd"
+  },
+  {
+   "id": 1142270357,
+   "key": "ability_fire_bomb",
+   "name": "Concussive Combustion",
+   "name_ru": "Сотрясающий взрыв",
+   "type": "ultimate",
+   "image": "file://{images}/hud/abilities/inferno_bomb.psd"
+  },
+  {
+   "id": 3516947824,
+   "key": "ability_flame_dash",
+   "name": "Flame Dash",
+   "name_ru": "Пламенный рывок",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/inferno_dash.psd"
+  },
+  {
+   "id": 309803113,
+   "key": "ability_fortuna_ability01",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/nano/nano_roller_bomb.psd"
+  },
+  {
+   "id": 3803152704,
+   "key": "ability_fortuna_ability02",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/nano/nano_roller_bomb.psd"
+  },
+  {
+   "id": 620778714,
+   "key": "ability_fortuna_ability03",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/nano/nano_roller_bomb.psd"
+  },
+  {
+   "id": 3632058121,
+   "key": "ability_fortuna_ult",
+   "type": "ultimate",
+   "image": "file://{images}/hud/abilities/nano/nano_tunnel_vision.psd"
+  },
+  {
+   "id": 1472593493,
+   "key": "ability_frank_painaura",
+   "name": "Aura of Suffering",
+   "name_ru": "Аура страдания",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/frank/frank_aura_of_suffering.psd"
+  },
+  {
+   "id": 3493884851,
+   "key": "ability_frank_revive",
+   "name": "Shocking Reanimation",
+   "name_ru": "Шоковая реанимация",
+   "type": "ultimate",
+   "image": "file://{images}/hud/abilities/frank/frank_shocking_reanimation.psd"
+  },
+  {
+   "id": 3727084744,
+   "key": "ability_frank_selfzap",
+   "name": "Jumpstart",
+   "name_ru": "Прикуривание",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/frank/frank_jump_start.psd"
+  },
+  {
+   "id": 2043074967,
+   "key": "ability_frank_shocktarget2",
+   "name": "Pain Battery",
+   "name_ru": "Батарея боли",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/frank/frank_pain_battery.psd"
+  },
+  {
+   "id": 2521299219,
+   "key": "ability_golden_idol",
+   "name": "Soul Urn",
+   "name_ru": "Урна душ",
+   "type": "held",
+   "image": "file://{images}/hud/abilities/wraith_lift.psd"
+  },
+  {
+   "id": 2627122290,
+   "key": "ability_graf_ability01",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/nano/nano_roller_bomb.psd"
+  },
+  {
+   "id": 4197612718,
+   "key": "ability_graf_ability02",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/nano/nano_roller_bomb.psd"
+  },
+  {
+   "id": 2949458312,
+   "key": "ability_graf_ability03",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/nano/nano_roller_bomb.psd"
+  },
+  {
+   "id": 2561043068,
+   "key": "ability_graf_ult",
+   "type": "ultimate",
+   "image": "file://{images}/hud/abilities/nano/nano_tunnel_vision.psd"
+  },
+  {
+   "id": 3190606822,
+   "key": "ability_gravity_lasso",
+   "name": "Spirit Lasso",
+   "name_ru": "Спиритическое лассо",
+   "type": "ultimate",
+   "image": "file://{images}/hud/abilities/astro/holliday_spirit_lasso.psd"
+  },
+  {
+   "id": 3242902780,
+   "key": "ability_guided_arrow",
+   "name": "Guided Owl",
+   "name_ru": "Управляемая сова",
+   "type": "ultimate",
+   "image": "file://{images}/hud/abilities/archer/archer_guided_arrow.psd"
+  },
+  {
+   "id": 1224888294,
+   "key": "ability_gunslinger_demon_carbine",
+   "name": "Hellfire Salvo",
+   "name_ru": "Залп адского огня",
+   "type": "ultimate",
+   "image": "file://{images}/hud/abilities/duo/duo_attack.psd"
+  },
+  {
+   "id": 3248109871,
+   "key": "ability_gunslinger_salvo",
+   "name": "Demontrigger Blitz",
+   "name_ru": "Демонический залп",
+   "type": "ultimate",
+   "image": "file://{images}/hud/abilities/tokamak/tokamak_hot_shot.psd"
+  },
+  {
+   "id": 2995140627,
+   "key": "ability_gunslinger_spreadingfire",
+   "name": "Flame Imp",
+   "name_ru": "Огненный бес",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/inferno_passive.psd"
+  },
+  {
+   "id": 371372145,
+   "key": "ability_haunt",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/inferno_deflect.psd"
+  },
+  {
+   "id": 1307289689,
+   "key": "ability_health_swap",
+   "name": "Soul Exchange",
+   "name_ru": "Обмен душами",
+   "type": "ultimate",
+   "image": "file://{images}/hud/abilities/spectre/blood_exchange.psd"
+  },
+  {
+   "id": 3826390464,
+   "key": "ability_ice_dome",
+   "name": "Frozen Shelter",
+   "name_ru": "Ледяное укрытие",
+   "type": "ultimate",
+   "image": "file://{images}/hud/abilities/kelvin/frozen_shelter.psd"
+  },
+  {
+   "id": 852962635,
+   "key": "ability_ice_dome_trigger",
+   "name": "Frozen Shelter",
+   "name_ru": "Ледяное укрытие",
+   "type": "innate",
+   "image": "file://{images}/hud/abilities/engineer_fissure_2_activate.psd"
+  },
+  {
+   "id": 18921423,
+   "key": "ability_ice_grenade",
+   "name": "Frost Grenade",
+   "name_ru": "Леденящая граната",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/kelvin/freezing_grenade.psd"
+  },
+  {
+   "id": 2351041382,
+   "key": "ability_icebeam",
+   "name": "Arctic Beam",
+   "name_ru": "Арктический луч",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/kelvin/ice_beam.psd"
+  },
+  {
+   "id": 1963397252,
+   "key": "ability_icepath",
+   "name": "Ice Path",
+   "name_ru": "Ледяная дорожка",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/kelvin/ice_path.psd"
+  },
+  {
+   "id": 512733154,
+   "key": "ability_immobilize_trap",
+   "name": "Spirit Snare",
+   "name_ru": "Спиритическая ловушка",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/archer/imobolize_trap.psd"
+  },
+  {
+   "id": 491391007,
+   "key": "ability_incendiary_projectile",
+   "name": "Napalm",
+   "name_ru": "Напалм",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/inferno_molotov.psd"
+  },
+  {
+   "id": 1454278799,
+   "key": "ability_intimidate",
+   "name": "Scorn",
+   "name_ru": "Презрение",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/grappler/grappler_regen.psd"
+  },
+  {
+   "id": 2641680935,
+   "key": "ability_item_pickup_effects",
+   "type": "item"
+  },
+  {
+   "id": 21628267,
+   "key": "ability_kali_dust_storm",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/kali/kali_whirling_blade.psd"
+  },
+  {
+   "id": 488392205,
+   "key": "ability_kali_trappers_bolo",
+   "type": "ultimate",
+   "image": "file://{images}/hud/abilities/bebop/bebop_sticky_bomb.psd"
+  },
+  {
+   "id": 519124136,
+   "key": "ability_lash_flog",
+   "name": "Flog",
+   "name_ru": "Порка",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/lash/lash_flog.psd"
+  },
+  {
+   "id": 218284420,
+   "key": "ability_life_drain",
+   "name": "Life Drain",
+   "name_ru": "Высасывание жизни",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/spectre/life_drain.psd"
+  },
+  {
+   "id": 994831172,
+   "key": "ability_magician_animalcurse",
+   "name": "Rabbit Hex",
+   "name_ru": "Кроличий сглаз",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/magician/magician_animalcurse.psd"
+  },
+  {
+   "id": 2142213586,
+   "key": "ability_magician_animalhexarea",
+   "name": "Rabbit Hex",
+   "name_ru": "Кроличий сглаз",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/magician/magician_animalcurse.psd"
+  },
+  {
+   "id": 3113315799,
+   "key": "ability_magician_bigbolt",
+   "name": "Grand Finale!",
+   "name_ru": "Гранд-финал!",
+   "type": "ultimate",
+   "image": "file://{images}/upgrades/mods_tech/return_fire.psd"
+  },
+  {
+   "id": 12456023,
+   "key": "ability_magician_cloneturret",
+   "name": "Spectral Assistant",
+   "name_ru": "Призрачный помощник",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/magician/magician_cloneturret.psd"
+  },
+  {
+   "id": 653642027,
+   "key": "ability_magician_cloneturret_trigger",
+   "name": "Spectral Assistant",
+   "name_ru": "Призрачный помощник",
+   "type": "innate",
+   "image": "file://{images}/hud/abilities/ability_activate.psd"
+  },
+  {
+   "id": 191022746,
+   "key": "ability_magician_copyult",
+   "name": "Audience Participation",
+   "name_ru": "Участие аудитории",
+   "type": "ultimate",
+   "image": "file://{images}/hud/abilities/magician/magician_copyult.psd"
+  },
+  {
+   "id": 895140205,
+   "key": "ability_magician_escape",
+   "name": "Escape Artist",
+   "name_ru": "Эскаполог",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/mirage/mirage_sand_phantom.psd"
+  },
+  {
+   "id": 3156905386,
+   "key": "ability_magician_magicbolt",
+   "name": "Vexing Bolt",
+   "name_ru": "Досаждающий заряд",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/magician/magician_magicbolt.psd"
+  },
+  {
+   "id": 28521455,
+   "key": "ability_magician_magicbolt_trigger",
+   "type": "innate",
+   "image": "file://{images}/upgrades/mods_weapon/ricochet.psd"
+  },
+  {
+   "id": 2524015798,
+   "key": "ability_magician_shadowclone",
+   "name": "The Great Homunculus!",
+   "name_ru": "Великий гомункул!",
+   "type": "ultimate",
+   "image": "file://{images}/hud/abilities/rutger/rutger_cheat_death.psd"
+  },
+  {
+   "id": 1410779535,
+   "key": "ability_magician_stage",
+   "name": "Captive Audience",
+   "name_ru": "Невольный зритель",
+   "type": "ultimate",
+   "image": "file://{images}/hud/abilities/kelvin/frozen_shelter.psd"
+  },
+  {
+   "id": 1889173382,
+   "key": "ability_medic_trooper_heal",
+   "type": "signature"
+  },
+  {
+   "id": 4220996204,
+   "key": "ability_melee_archer",
+   "name": "Melee",
+   "name_ru": "Ближний бой",
+   "type": "melee",
+   "image": "file://{images}/hud/abilities/melee_damage.psd"
+  },
+  {
+   "id": 1633429680,
+   "key": "ability_melee_artist",
+   "name": "Melee",
+   "name_ru": "Ближний бой",
+   "type": "melee",
+   "image": "file://{images}/hud/abilities/melee_damage.psd"
+  },
+  {
+   "id": 519260576,
+   "key": "ability_melee_astro",
+   "name": "Melee",
+   "name_ru": "Ближний бой",
+   "type": "melee",
+   "image": "file://{images}/hud/abilities/melee_damage.psd"
+  },
+  {
+   "id": 2794662248,
+   "key": "ability_melee_baba",
+   "name": "Melee",
+   "name_ru": "Ближний бой",
+   "type": "melee",
+   "image": "file://{images}/hud/abilities/melee_damage.psd"
+  },
+  {
+   "id": 1318429798,
+   "key": "ability_melee_boho",
+   "type": "melee",
+   "image": "file://{images}/hud/abilities/melee_damage.psd"
+  },
+  {
+   "id": 1759542823,
+   "key": "ability_melee_bomber",
+   "type": "melee",
+   "image": "file://{images}/hud/abilities/melee_damage.psd"
+  },
+  {
+   "id": 3850113264,
+   "key": "ability_melee_bookworm",
+   "name": "Melee",
+   "name_ru": "Ближний бой",
+   "type": "melee",
+   "image": "file://{images}/hud/abilities/melee_damage.psd"
+  },
+  {
+   "id": 677666973,
+   "key": "ability_melee_butcher",
+   "type": "melee",
+   "image": "file://{images}/hud/abilities/melee_damage.psd"
+  },
+  {
+   "id": 2613762411,
+   "key": "ability_melee_chessmaster",
+   "name": "Melee",
+   "name_ru": "Ближний бой",
+   "type": "melee",
+   "image": "file://{images}/hud/abilities/melee_damage.psd"
+  },
+  {
+   "id": 2867233108,
+   "key": "ability_melee_deadpack",
+   "name": "Melee",
+   "name_ru": "Ближний бой",
+   "type": "melee",
+   "image": "file://{images}/hud/abilities/melee_damage.psd"
+  },
+  {
+   "id": 1400683724,
+   "key": "ability_melee_digger",
+   "name": "Melee",
+   "name_ru": "Ближний бой",
+   "type": "melee",
+   "image": "file://{images}/hud/abilities/melee_damage.psd"
+  },
+  {
+   "id": 2903891855,
+   "key": "ability_melee_doorman",
+   "name": "Melee",
+   "name_ru": "Ближний бой",
+   "type": "melee",
+   "image": "file://{images}/hud/abilities/melee_damage.psd"
+  },
+  {
+   "id": 1184405291,
+   "key": "ability_melee_drifter",
+   "name": "Melee",
+   "name_ru": "Ближний бой",
+   "type": "melee",
+   "image": "file://{images}/hud/abilities/melee_damage.psd"
+  },
+  {
+   "id": 3204148430,
+   "key": "ability_melee_druid",
+   "type": "melee",
+   "image": "file://{images}/hud/abilities/melee_damage.psd"
+  },
+  {
+   "id": 2247993425,
+   "key": "ability_melee_familiar",
+   "name": "Melee",
+   "name_ru": "Ближний бой",
+   "type": "melee",
+   "image": "file://{images}/hud/abilities/melee_damage.psd"
+  },
+  {
+   "id": 1224118768,
+   "key": "ability_melee_fencer",
+   "name": "Melee",
+   "name_ru": "Ближний бой",
+   "type": "melee",
+   "image": "file://{images}/hud/abilities/melee_damage.psd"
+  },
+  {
+   "id": 1388731643,
+   "key": "ability_melee_fortuna",
+   "type": "melee",
+   "image": "file://{images}/hud/abilities/melee_damage.psd"
+  },
+  {
+   "id": 3745177128,
+   "key": "ability_melee_frank",
+   "name": "Melee",
+   "name_ru": "Ближний бой",
+   "type": "melee",
+   "image": "file://{images}/hud/abilities/melee_damage.psd"
+  },
+  {
+   "id": 2500675101,
+   "key": "ability_melee_ghost",
+   "name": "Melee",
+   "name_ru": "Ближний бой",
+   "type": "melee",
+   "image": "file://{images}/hud/abilities/melee_damage.psd"
+  },
+  {
+   "id": 2614530871,
+   "key": "ability_melee_graf",
+   "type": "melee",
+   "image": "file://{images}/hud/abilities/melee_damage.psd"
+  },
+  {
+   "id": 3104292528,
+   "key": "ability_melee_haze",
+   "name": "Melee",
+   "name_ru": "Ближний бой",
+   "type": "melee",
+   "image": "file://{images}/hud/abilities/melee_damage.psd"
+  },
+  {
+   "id": 750371308,
+   "key": "ability_melee_inferno",
+   "name": "Melee",
+   "name_ru": "Ближний бой",
+   "type": "melee",
+   "image": "file://{images}/hud/abilities/melee_damage.psd"
+  },
+  {
+   "id": 3403409980,
+   "key": "ability_melee_kelvin",
+   "name": "Melee",
+   "name_ru": "Ближний бой",
+   "type": "melee",
+   "image": "file://{images}/hud/abilities/melee_damage.psd"
+  },
+  {
+   "id": 3283820257,
+   "key": "ability_melee_lash",
+   "name": "Melee",
+   "name_ru": "Ближний бой",
+   "type": "melee",
+   "image": "file://{images}/hud/abilities/melee_damage.psd"
+  },
+  {
+   "id": 3610020756,
+   "key": "ability_melee_magician",
+   "name": "Melee",
+   "name_ru": "Ближний бой",
+   "type": "melee",
+   "image": "file://{images}/hud/abilities/melee_damage.psd"
+  },
+  {
+   "id": 511524160,
+   "key": "ability_melee_mirage",
+   "name": "Melee",
+   "name_ru": "Ближний бой",
+   "type": "melee",
+   "image": "file://{images}/hud/abilities/melee_damage.psd"
+  },
+  {
+   "id": 3861289372,
+   "key": "ability_melee_nano",
+   "name": "Melee",
+   "name_ru": "Ближний бой",
+   "type": "melee",
+   "image": "file://{images}/hud/abilities/melee_damage.psd"
+  },
+  {
+   "id": 406697186,
+   "key": "ability_melee_necro",
+   "name": "Melee",
+   "name_ru": "Ближний бой",
+   "type": "melee",
+   "image": "file://{images}/hud/abilities/melee_damage.psd"
+  },
+  {
+   "id": 1312339700,
+   "key": "ability_melee_nurse",
+   "name": "Melee",
+   "name_ru": "Ближний бой",
+   "type": "melee",
+   "image": "file://{images}/hud/abilities/melee_damage.psd"
+  },
+  {
+   "id": 3326957253,
+   "key": "ability_melee_opera",
+   "name": "Melee",
+   "name_ru": "Ближний бой",
+   "type": "melee",
+   "image": "file://{images}/hud/abilities/melee_damage.psd"
+  },
+  {
+   "id": 2559648467,
+   "key": "ability_melee_priest",
+   "name": "Melee",
+   "name_ru": "Ближний бой",
+   "type": "melee",
+   "image": "file://{images}/hud/abilities/melee_damage.psd"
+  },
+  {
+   "id": 3023323617,
+   "key": "ability_melee_punkgoat",
+   "name": "Melee",
+   "name_ru": "Ближний бой",
+   "type": "melee",
+   "image": "file://{images}/hud/abilities/melee_damage.psd"
+  },
+  {
+   "id": 2052857081,
+   "key": "ability_melee_ratking",
+   "name": "Melee",
+   "name_ru": "Ближний бой",
+   "type": "melee",
+   "image": "file://{images}/hud/abilities/melee_damage.psd"
+  },
+  {
+   "id": 17949280,
+   "key": "ability_melee_shieldguy",
+   "type": "melee",
+   "image": "file://{images}/hud/abilities/melee_damage.psd"
+  },
+  {
+   "id": 1274698030,
+   "key": "ability_melee_skyrunner",
+   "type": "melee",
+   "image": "file://{images}/hud/abilities/melee_damage.psd"
+  },
+  {
+   "id": 2605250528,
+   "key": "ability_melee_swan",
+   "type": "melee",
+   "image": "file://{images}/hud/abilities/melee_damage.psd"
+  },
+  {
+   "id": 4050229048,
+   "key": "ability_melee_trapper",
+   "type": "melee",
+   "image": "file://{images}/hud/abilities/melee_damage.psd"
+  },
+  {
+   "id": 3021389868,
+   "key": "ability_melee_unicorn",
+   "name": "Melee",
+   "name_ru": "Ближний бой",
+   "type": "melee",
+   "image": "file://{images}/hud/abilities/melee_damage.psd"
+  },
+  {
+   "id": 1372322902,
+   "key": "ability_melee_vampirebat",
+   "name": "Melee",
+   "name_ru": "Ближний бой",
+   "type": "melee",
+   "image": "file://{images}/hud/abilities/melee_damage.psd"
+  },
+  {
+   "id": 2067539397,
+   "key": "ability_melee_vandal",
+   "type": "melee",
+   "image": "file://{images}/hud/abilities/melee_damage.psd"
+  },
+  {
+   "id": 1015591692,
+   "key": "ability_melee_viper",
+   "name": "Melee",
+   "name_ru": "Ближний бой",
+   "type": "melee",
+   "image": "file://{images}/hud/abilities/melee_damage.psd"
+  },
+  {
+   "id": 3914911135,
+   "key": "ability_melee_viscous",
+   "name": "Melee",
+   "name_ru": "Ближний бой",
+   "type": "melee",
+   "image": "file://{images}/hud/abilities/melee_damage.psd"
+  },
+  {
+   "id": 2362587754,
+   "key": "ability_melee_werewolf",
+   "name": "Melee",
+   "name_ru": "Ближний бой",
+   "type": "melee",
+   "image": "file://{images}/hud/abilities/melee_damage.psd"
+  },
+  {
+   "id": 2697859853,
+   "key": "ability_melee_wrecker",
+   "name": "Melee",
+   "name_ru": "Ближний бой",
+   "type": "melee",
+   "image": "file://{images}/hud/abilities/melee_damage.psd"
+  },
+  {
+   "id": 3334760137,
+   "key": "ability_melee_yamato",
+   "name": "Melee",
+   "name_ru": "Ближний бой",
+   "type": "melee",
+   "image": "file://{images}/hud/abilities/melee_damage.psd"
+  },
+  {
+   "id": 1009029159,
+   "key": "ability_nano_catform",
+   "name": "Ava",
+   "name_ru": "Ава",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/nano/nano_catform.psd"
+  },
+  {
+   "id": 3975527743,
+   "key": "ability_nano_catform_pounce",
+   "type": "innate"
+  },
+  {
+   "id": 847436099,
+   "key": "ability_nano_catform_trigger",
+   "type": "innate",
+   "image": "file://{images}/hud/abilities/nano/nano_humanform.psd"
+  },
+  {
+   "id": 4131517918,
+   "key": "ability_nano_clustergrenade",
+   "name": "Gloom Bombs",
+   "name_ru": "Бомбы мрака",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/nano/nano_clustergrenade.psd"
+  },
+  {
+   "id": 1426567660,
+   "key": "ability_nano_dash",
+   "name": "Leaping Slash",
+   "name_ru": "Рассекающий рывок",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/nano/nano_dash.psd"
+  },
+  {
+   "id": 3467292895,
+   "key": "ability_nano_pounce",
+   "name": "Pounce",
+   "name_ru": "Наскок",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/nano/nano_warp.psd"
+  },
+  {
+   "id": 1430464147,
+   "key": "ability_nano_pounce_instant",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/nano/nano_warp.psd"
+  },
+  {
+   "id": 755723302,
+   "key": "ability_nano_proximity_ritual",
+   "name": "Nekomata Ward",
+   "name_ru": "Страж-нэкомата",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/nano/nano_roller_bomb.psd"
+  },
+  {
+   "id": 2054144742,
+   "key": "ability_nano_shadow_pulse",
+   "name": "Return to Shadows",
+   "name_ru": "Возвращение в тени",
+   "type": "ultimate",
+   "image": "file://{images}/hud/abilities/nano/nano_shadow_pulse.psd"
+  },
+  {
+   "id": 4081368554,
+   "key": "ability_nano_shadow_step",
+   "name": "Queen of Shadows",
+   "name_ru": "Королева теней",
+   "type": "ultimate",
+   "image": "file://{images}/hud/abilities/slork/slork_invis.psd"
+  },
+  {
+   "id": 1777769116,
+   "key": "ability_necro_coffin",
+   "name": "Back Off!",
+   "name_ru": "Сгинь!",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/necro/necro_coffin.psd"
+  },
+  {
+   "id": 629925354,
+   "key": "ability_necro_fear",
+   "name": "Essence Theft",
+   "name_ru": "Хищение эссенции",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/necro/necro_siphon.psd"
+  },
+  {
+   "id": 4110547059,
+   "key": "ability_necro_gravestone",
+   "name": "Borrowed Decree",
+   "name_ru": "Загробный договор",
+   "type": "ultimate",
+   "image": "file://{images}/hud/abilities/necro/necro_gravestone.psd"
+  },
+  {
+   "id": 1991038380,
+   "key": "ability_necro_haunt",
+   "name": "Haunting Spectres",
+   "name_ru": "Призрачное сопровождение",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/trapper/trapper_spider_wave.psd"
+  },
+  {
+   "id": 3214055642,
+   "key": "ability_necro_hauntingskull",
+   "name": "Jar of Dead",
+   "name_ru": "Банка мёртвых",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/necro/necro_skull.psd"
+  },
+  {
+   "id": 2750845124,
+   "key": "ability_necro_killsummon",
+   "name": "Borrow Life",
+   "name_ru": "Заимствование жизни",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/spectre/life_drain.psd"
+  },
+  {
+   "id": 3708354687,
+   "key": "ability_necro_killsummon_trigger",
+   "type": "innate",
+   "image": "file://{images}/hud/abilities/punkgoat/punkgoat_capricious.psd"
+  },
+  {
+   "id": 152191637,
+   "key": "ability_necro_nukemap",
+   "type": "ultimate",
+   "image": "file://{images}/hud/abilities/tokamak/tokamak_hot_shot.psd"
+  },
+  {
+   "id": 2462670856,
+   "key": "ability_necro_wither",
+   "name": "Wither \u0026 Die",
+   "name_ru": "Зачахни и умри",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/necro/necro_skull.psd"
+  },
+  {
+   "id": 2001589780,
+   "key": "ability_necro_zombiewall",
+   "name": "Grasping Hands",
+   "name_ru": "Хватка смерти",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/necro/necro_hands.psd"
+  },
+  {
+   "id": 2073346996,
+   "key": "ability_npc_shield",
+   "type": "signature"
+  },
+  {
+   "id": 3621314027,
+   "key": "ability_nurse_adrenaline_rush",
+   "name": "Wretched Vapors",
+   "name_ru": "Гнусные пары",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/nurse/nurse_vapors.psd"
+  },
+  {
+   "id": 3427093887,
+   "key": "ability_nurse_fear",
+   "name": "Lurking Terrors",
+   "name_ru": "Затаённые ужасы",
+   "type": "ultimate",
+   "image": "file://{images}/hud/abilities/nurse/medicine_bag.psd"
+  },
+  {
+   "id": 683490631,
+   "key": "ability_nurse_healing_needles",
+   "name": "Healing Needles",
+   "name_ru": "Лечебные иглы",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/nurse/needle.psd"
+  },
+  {
+   "id": 267712790,
+   "key": "ability_nurse_leech_therapy",
+   "name": "Leech Therapy",
+   "name_ru": "Гирудотерапия",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/nurse/leech.psd"
+  },
+  {
+   "id": 808611817,
+   "key": "ability_opera_ability01",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/nano/nano_roller_bomb.psd"
+  },
+  {
+   "id": 1777250969,
+   "key": "ability_opera_ability02",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/nano/nano_roller_bomb.psd"
+  },
+  {
+   "id": 3819597066,
+   "key": "ability_opera_ability03",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/nano/nano_roller_bomb.psd"
+  },
+  {
+   "id": 463497510,
+   "key": "ability_opera_ult",
+   "type": "ultimate",
+   "image": "file://{images}/hud/abilities/nano/nano_tunnel_vision.psd"
+  },
+  {
+   "id": 3377867107,
+   "key": "ability_perched_predator",
+   "name": "Sekhmet's Spirit",
+   "name_ru": "Дух Сехмета",
+   "type": "signature",
+   "image": "file://{images}/upgrades/mods_weapon/high_velocity_mag.psd"
+  },
+  {
+   "id": 3380228790,
+   "key": "ability_perched_predator_trigger",
+   "type": "innate",
+   "image": "file://{images}/hud/abilities/engineer_fissure_2_activate.psd"
+  },
+  {
+   "id": 3452399392,
+   "key": "ability_power_jump",
+   "name": "Rain of Arrows",
+   "name_ru": "Дождь из стрел",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/archer/archer_power_jump.psd"
+  },
+  {
+   "id": 539192269,
+   "key": "ability_power_surge",
+   "name": "Power Surge",
+   "name_ru": "Скачок напряжения",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/giga_chain.psd"
+  },
+  {
+   "id": 1034605902,
+   "key": "ability_priest_antispiritvest",
+   "name": "Blessed Tac-Vest",
+   "name_ru": "Благословенный жилет",
+   "type": "signature",
+   "image": "file://{images}/upgrades/upgrade_shield.psd"
+  },
+  {
+   "id": 11154161,
+   "key": "ability_priest_beartrap",
+   "name": "Hex-Lined Snap Trap",
+   "name_ru": "Заколдованный капкан",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/priest/priest_trap.psd"
+  },
+  {
+   "id": 911307831,
+   "key": "ability_priest_flashbang",
+   "name": "Consecrating Grenade",
+   "name_ru": "Освящающая граната",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/priest/priest_grenade.psd"
+  },
+  {
+   "id": 1764146857,
+   "key": "ability_priest_knockback",
+   "name": "Gutshot",
+   "name_ru": "Разрывной выстрел",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/priest/priest_shotgun.psd"
+  },
+  {
+   "id": 3093645682,
+   "key": "ability_priest_selfheal",
+   "name": "Potent Vapors",
+   "name_ru": "Сильнодействующий ладан",
+   "type": "signature",
+   "image": "file://{images}/upgrades/mods_tech/healbane.psd"
+  },
+  {
+   "id": 2443795083,
+   "key": "ability_priest_silencebomb",
+   "name": "Choking Incense",
+   "name_ru": "Удушающий ладан",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/warden/warden_crowd_control.psd"
+  },
+  {
+   "id": 476551004,
+   "key": "ability_priest_smokegrenade",
+   "name": "Teargas Grenade",
+   "name_ru": "Слезоточивая граната",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/warden/warden_crowd_control.psd"
+  },
+  {
+   "id": 2260066289,
+   "key": "ability_priest_stackingdefense",
+   "name": "Grit",
+   "name_ru": "Выдержка",
+   "type": "signature",
+   "image": "file://{images}/upgrades/mods_armor/advanced_armor.psd"
+  },
+  {
+   "id": 2918874166,
+   "key": "ability_priest_weaponswap",
+   "name": "Ira Domini",
+   "name_ru": "Гнев Божий",
+   "type": "ultimate",
+   "image": "file://{images}/hud/abilities/priest/priest_crossbow.psd"
+  },
+  {
+   "id": 3296031213,
+   "key": "ability_punkgoat_blasted",
+   "name": "Blasted",
+   "name_ru": "В стельку",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/punkgoat/goat_blasted.psd"
+  },
+  {
+   "id": 1792773251,
+   "key": "ability_punkgoat_goatflip",
+   "name": "Rising Ram",
+   "name_ru": "Рогатый таран",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/punkgoat/goat_risingram.psd"
+  },
+  {
+   "id": 3152475531,
+   "key": "ability_punkgoat_slide",
+   "type": "innate"
+  },
+  {
+   "id": 3762861984,
+   "key": "ability_punkgoat_tether",
+   "name": "Chain Gang",
+   "name_ru": "Цепная банда",
+   "type": "ultimate",
+   "image": "file://{images}/hud/abilities/punkgoat/goat_chaingang.psd"
+  },
+  {
+   "id": 1841661392,
+   "key": "ability_punkgoat_ult",
+   "name": "Bashdown",
+   "name_ru": "Разгром",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/punkgoat/goat_sigilslam.psd"
+  },
+  {
+   "id": 5742079,
+   "key": "ability_ratking_entertunnel",
+   "name": "Squeezing In...",
+   "name_ru": "Протискивание...",
+   "type": "innate"
+  },
+  {
+   "id": 690412829,
+   "key": "ability_ratking_ratarmor",
+   "name": "Royal Pestments",
+   "name_ru": "Крысолевская мантия",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/ratking/ratking_shield.psd"
+  },
+  {
+   "id": 3681399397,
+   "key": "ability_ratking_ratnibble",
+   "name": "Rat Swarm",
+   "name_ru": "Крысиная стая",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/ratking/ratking_swarm.psd"
+  },
+  {
+   "id": 3002308408,
+   "key": "ability_ratking_scrap_grenade",
+   "name": "Scrap Grenade",
+   "name_ru": "Хлам-граната",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/ratking/ratking_grenade.psd"
+  },
+  {
+   "id": 1627989937,
+   "key": "ability_ratking_standard_bearer",
+   "name": "Rule, Ratannia!",
+   "name_ru": "Правь, Крысания!",
+   "type": "ultimate",
+   "image": "file://{images}/hud/abilities/ratking/ratking_flag.psd"
+  },
+  {
+   "id": 356935139,
+   "key": "ability_ratking_standard_bearer_trigger",
+   "type": "innate",
+   "image": "file://{images}/hud/abilities/ratking/ratking_swarm.psd"
+  },
+  {
+   "id": 1565699451,
+   "key": "ability_rolling_fireball",
+   "type": "signature",
+   "image": "file://{images}/upgrades/mods_weapon/high_velocity_mag.psd"
+  },
+  {
+   "id": 3422822440,
+   "key": "ability_scrap_blast",
+   "name": "Bio Blast",
+   "name_ru": "Биовзрыв",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/wrecker/scrap_blast.psd"
+  },
+  {
+   "id": 2935955509,
+   "key": "ability_shieldguy_ability01",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/nano/nano_roller_bomb.psd"
+  },
+  {
+   "id": 2322200384,
+   "key": "ability_shieldguy_ability02",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/nano/nano_roller_bomb.psd"
+  },
+  {
+   "id": 1105433407,
+   "key": "ability_shieldguy_ability03",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/nano/nano_roller_bomb.psd"
+  },
+  {
+   "id": 2824729668,
+   "key": "ability_shieldguy_ult",
+   "type": "ultimate",
+   "image": "file://{images}/hud/abilities/nano/nano_tunnel_vision.psd"
+  },
+  {
+   "id": 228680142,
+   "key": "ability_skyrunner_flakshot",
+   "name": "Flakshot",
+   "name_ru": "Зенитный огонь",
+   "type": "signature",
+   "image": "file://{images}/upgrades/mods_weapon/ricochet.psd"
+  },
+  {
+   "id": 3449758496,
+   "key": "ability_skyrunner_magic_beam",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/kelvin/freezing_grenade.psd"
+  },
+  {
+   "id": 201562678,
+   "key": "ability_skyrunner_swingline",
+   "name": "Lifethread",
+   "name_ru": "Нить жизни",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/lash/lash_flog.psd"
+  },
+  {
+   "id": 425769687,
+   "key": "ability_skyrunner_ult",
+   "type": "ultimate",
+   "image": "file://{images}/hud/abilities/nano/nano_tunnel_vision.psd"
+  },
+  {
+   "id": 2948410412,
+   "key": "ability_sleep_dagger",
+   "name": "Sleep Dagger",
+   "name_ru": "Усыпляющий кинжал",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/haze/haze_sleep_dagger.psd"
+  },
+  {
+   "id": 2414191464,
+   "key": "ability_smoke_bomb",
+   "name": "Smoke Bomb",
+   "name_ru": "Дымовая шашка",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/haze/haze_smoke_bomb.psd"
+  },
+  {
+   "id": 1080948381,
+   "key": "ability_stacking_damage",
+   "name": "Fixation",
+   "name_ru": "Пристальный взгляд",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/haze/haze_fixation.psd"
+  },
+  {
+   "id": 1418303954,
+   "key": "ability_swan_acrobat",
+   "name": "Acrobat",
+   "name_ru": "Акробатика",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/kelvin/ice_path.psd"
+  },
+  {
+   "id": 2619369142,
+   "key": "ability_swan_featherboomerang",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/mirage/mirage_fire_beetles.psd"
+  },
+  {
+   "id": 682591488,
+   "key": "ability_swan_leap",
+   "name": "Jeté",
+   "name_ru": "Жете",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/bull_jump.psd"
+  },
+  {
+   "id": 1048488396,
+   "key": "ability_swan_ult",
+   "type": "ultimate",
+   "image": "file://{images}/hud/abilities/nano/nano_tunnel_vision.psd"
+  },
+  {
+   "id": 1914797280,
+   "key": "ability_throw_sand",
+   "name": "Sand Blast",
+   "name_ru": "Песочная волна",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/grappler/grappler_throw_sand.psd"
+  },
+  {
+   "id": 1289909147,
+   "key": "ability_trapper_fear",
+   "name": "Spectral Silk",
+   "name_ru": "Призрачный шёлк",
+   "type": "signature",
+   "image": "file://{images}/upgrades/mods_tech/healbane.psd"
+  },
+  {
+   "id": 1502050181,
+   "key": "ability_trapper_fear1",
+   "type": "signature",
+   "image": "file://{images}/upgrades/mods_tech/healbane.psd"
+  },
+  {
+   "id": 2675680636,
+   "key": "ability_trapper_poisonjar",
+   "name": "Bottled Phantasmicide",
+   "name_ru": "Фантазмицид в банке",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/trapper/trapper_poison_jar.psd"
+  },
+  {
+   "id": 3322902852,
+   "key": "ability_trapper_spidershield",
+   "name": "Pest Barrier",
+   "name_ru": "Вредительный барьер",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/trapper/trapper_spider_shield.psd"
+  },
+  {
+   "id": 2876116869,
+   "key": "ability_trapper_spiderwave",
+   "name": "Crawling Plague",
+   "name_ru": "Ползучая чума",
+   "type": "ultimate",
+   "image": "file://{images}/hud/abilities/trapper/trapper_spider_wave.psd"
+  },
+  {
+   "id": 3360792911,
+   "key": "ability_trapper_webwall",
+   "name": "Silktrap",
+   "name_ru": "Шёлковая ловушка",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/trapper/trapper_web_wall.psd"
+  },
+  {
+   "id": 1113896001,
+   "key": "ability_trigger_base",
+   "type": "innate",
+   "image": "file://{images}/hud/abilities/ability_activate.psd"
+  },
+  {
+   "id": 1917840730,
+   "key": "ability_ult_combo",
+   "name": "Combo",
+   "name_ru": "Комбо",
+   "type": "ultimate",
+   "image": "file://{images}/hud/abilities/grappler/grappler_combo.psd"
+  },
+  {
+   "id": 2590796390,
+   "key": "ability_unicorn_dazzlingorb",
+   "name": "Shining Wonder",
+   "name_ru": "Сияющее чудо",
+   "type": "ultimate",
+   "image": "file://{images}/hud/abilities/unicorn/unicorn_orb.psd"
+  },
+  {
+   "id": 1011349580,
+   "key": "ability_unicorn_luminousstrike",
+   "name": "Radiant Daggers",
+   "name_ru": "Лучезарные кинжалы",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/unicorn/unicorn_luminousflux.psd"
+  },
+  {
+   "id": 1950738949,
+   "key": "ability_unicorn_prismaticguard",
+   "name": "Dazzling Trick",
+   "name_ru": "Ослепительный трюк",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/unicorn/unicorn_shield.psd"
+  },
+  {
+   "id": 3443575800,
+   "key": "ability_unicorn_radiantblast",
+   "name": "Light Eater",
+   "name_ru": "Дыхание светом",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/unicorn/unicorn_flare.psd"
+  },
+  {
+   "id": 2398133749,
+   "key": "ability_vampirebat_batblink",
+   "name": "Sanguine Retreat",
+   "name_ru": "Багровое отступление",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/vampirebat/vampirebat_sanguine_retreat.psd"
+  },
+  {
+   "id": 2173193859,
+   "key": "ability_vampirebat_batblink_trigger",
+   "type": "innate",
+   "image": "file://{images}/hud/abilities/vampirebat/vampirebat_sanguine_retreat.psd"
+  },
+  {
+   "id": 760825750,
+   "key": "ability_vampirebat_batcloud",
+   "type": "ultimate",
+   "image": "file://{images}/hud/abilities/vampirebat/vampirebat_nox_nostra.psd"
+  },
+  {
+   "id": 3379486147,
+   "key": "ability_vampirebat_batswarm",
+   "name": "Nox Nostra",
+   "name_ru": "Владыка ночи",
+   "type": "ultimate",
+   "image": "file://{images}/hud/abilities/vampirebat/vampirebat_nox_nostra.psd"
+  },
+  {
+   "id": 1233782561,
+   "key": "ability_vampirebat_lovebites",
+   "name": "Love Bites",
+   "name_ru": "Любовные укусы",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/vampirebat/vampirebat_love_bites.psd"
+  },
+  {
+   "id": 193508101,
+   "key": "ability_vampirebat_steallife",
+   "name": "Rake",
+   "name_ru": "Загребание",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/vampirebat/vampirebat_rake.psd"
+  },
+  {
+   "id": 2833514487,
+   "key": "ability_vandal_pillar",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/tokamak/tokamak_blinding_radiance.psd"
+  },
+  {
+   "id": 645773760,
+   "key": "ability_viper_debuffdagger",
+   "name": "Screwjab Dagger",
+   "name_ru": "Вертящийся кинжал",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/viper/viper_debuffdagger.psd"
+  },
+  {
+   "id": 1322882622,
+   "key": "ability_viper_hookdagger",
+   "name": "Hook Blade",
+   "name_ru": "Крюк-лезвие",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/shiv/shiv_toss.psd"
+  },
+  {
+   "id": 1594727071,
+   "key": "ability_viper_petrifybola",
+   "name": "Petrifying Bola",
+   "name_ru": "Бола окаменения",
+   "type": "ultimate",
+   "image": "file://{images}/hud/abilities/viper/viper_petrifybola.psd"
+  },
+  {
+   "id": 726306979,
+   "key": "ability_viper_slide",
+   "type": "innate"
+  },
+  {
+   "id": 1469918191,
+   "key": "ability_viper_snakedash",
+   "name": "Slither",
+   "name_ru": "Ползание",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/viper/viper_snakedash.psd"
+  },
+  {
+   "id": 2052252881,
+   "key": "ability_viper_ult",
+   "name": "Petrify",
+   "name_ru": "Окаменение",
+   "type": "ultimate",
+   "image": "file://{images}/hud/abilities/tokamak/tokamak_blinding_radiance.psd"
+  },
+  {
+   "id": 3428732129,
+   "key": "ability_viper_venom",
+   "name": "Lethal Venom",
+   "name_ru": "Смертельный яд",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/viper/viper_venom.psd"
+  },
+  {
+   "id": 2656490109,
+   "key": "ability_warden_crowd_control",
+   "name": "Alchemical Flask",
+   "name_ru": "Алхимическая колба",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/warden/warden_crowd_control.psd"
+  },
+  {
+   "id": 2751689917,
+   "key": "ability_warden_high_alert",
+   "name": "Willpower",
+   "name_ru": "Сила воли",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/warden/warden_high_alert.psd"
+  },
+  {
+   "id": 1656913918,
+   "key": "ability_warden_lock_down",
+   "name": "Binding Word",
+   "name_ru": "Сковывающее слово",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/warden/warden_lock_down.psd"
+  },
+  {
+   "id": 2702908623,
+   "key": "ability_warden_riot_protocol",
+   "name": "Last Stand",
+   "name_ru": "Последний бой",
+   "type": "ultimate",
+   "image": "file://{images}/hud/abilities/warden/warden_riot_protocol.psd"
+  },
+  {
+   "id": 3117047651,
+   "key": "ability_werewolf_cripplingslash",
+   "name": "Tail Whack",
+   "name_ru": "Удар хвостом",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/werewolf/werewolf_tailwhack.psd"
+  },
+  {
+   "id": 2565763509,
+   "key": "ability_werewolf_frenzy",
+   "name": "Go For The Throat",
+   "name_ru": "Зубами в горло",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/werewolf/werewolf_bite.psd"
+  },
+  {
+   "id": 2074867748,
+   "key": "ability_werewolf_hunt",
+   "type": "ultimate",
+   "image": "file://{images}/hud/abilities/phalanx_beef.psd"
+  },
+  {
+   "id": 2717130900,
+   "key": "ability_werewolf_kickflip",
+   "name": "Boot Kick",
+   "name_ru": "Пинок",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/werewolf/werewolf_jumpback.psd"
+  },
+  {
+   "id": 3867044190,
+   "key": "ability_werewolf_leap",
+   "name": "Crushing Leap",
+   "name_ru": "Сокрушительный прыжок",
+   "type": "innate",
+   "image": "file://{images}/hud/abilities/werewolf/werewolf_wolfforward.psd"
+  },
+  {
+   "id": 4009459244,
+   "key": "ability_werewolf_maulingleap",
+   "name": "Mauling Leap",
+   "name_ru": "Калечащий прыжок",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/werewolf/werewolf_wolfforward.psd"
+  },
+  {
+   "id": 3983754897,
+   "key": "ability_werewolf_netshot",
+   "name": "Entangling Bola",
+   "name_ru": "Опутывающая бола",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/werewolf/werewolf_bola.psd"
+  },
+  {
+   "id": 2554327994,
+   "key": "ability_werewolf_onthehunt",
+   "name": "On The Hunt",
+   "name_ru": "Охота",
+   "type": "innate",
+   "image": "file://{images}/hud/abilities/drifter/drifter_terror.psd"
+  },
+  {
+   "id": 1532069386,
+   "key": "ability_werewolf_passive",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/drifter/drifter_stalkersmark.psd"
+  },
+  {
+   "id": 3200615766,
+   "key": "ability_werewolf_trackingbomb",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/drifter/drifter_terror.psd"
+  },
+  {
+   "id": 515791019,
+   "key": "ability_werewolf_transformation",
+   "name": "Lycan Curse",
+   "name_ru": "Ликантропия",
+   "type": "ultimate",
+   "image": "file://{images}/hud/abilities/werewolf/werewolf_lycancurse.psd"
+  },
+  {
+   "id": 2792879300,
+   "key": "ability_werewolf_transformation_trigger",
+   "name": "End the Curse",
+   "name_ru": "Снять проклятие",
+   "type": "innate",
+   "image": "file://{images}/hud/abilities/haze/haze_fixation.psd"
+  },
+  {
+   "id": 1385849824,
+   "key": "ability_werewolf_unloadgun",
+   "name": "Slam Fire",
+   "name_ru": "Скоростной огонь",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/werewolf/werewolf_slamfire.psd"
+  },
+  {
+   "id": 208809857,
+   "key": "ability_wrecker_salvage",
+   "name": "Consume",
+   "name_ru": "Поглощение",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/wrecker/salvage.psd"
+  },
+  {
+   "id": 2493171901,
+   "key": "ability_wrecker_teleport",
+   "name": "Astral Walk",
+   "name_ru": "Астральная прогулка",
+   "type": "ultimate",
+   "image": "file://{images}/hud/abilities/wrecker/wrecking_crew.psd"
+  },
+  {
+   "id": 100068731,
+   "key": "ability_wrecker_ultimate",
+   "name": "Magnetic Flux",
+   "name_ru": "Магнитный поток",
+   "type": "ultimate",
+   "image": "file://{images}/hud/abilities/wrecker/wrecking_crew.psd"
+  },
+  {
+   "id": 4062064977,
+   "key": "ability_wrecking_ball",
+   "name": "Wrecking Ball",
+   "name_ru": "Разрушительный шар",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/wrecker/wrecking_ball.psd"
+  },
+  {
+   "id": 4016285240,
+   "key": "ability_wrecking_ball_throw",
+   "type": "innate",
+   "image": "file://{images}/hud/abilities/ability_activate.psd"
+  },
+  {
+   "id": 4225582829,
+   "key": "armor_upgrade_base",
+   "type": "item",
+   "slot": "vitality"
+  },
+  {
+   "id": 4049908402,
+   "key": "armor_upgrade_t1",
+   "type": "item",
+   "slot": "vitality",
+   "tier": 1
+  },
+  {
+   "id": 2484189167,
+   "key": "armor_upgrade_t2",
+   "type": "item",
+   "slot": "vitality",
+   "tier": 2
+  },
+  {
+   "id": 3162468251,
+   "key": "armor_upgrade_t3",
+   "type": "item",
+   "slot": "vitality",
+   "tier": 3
+  },
+  {
+   "id": 2366847482,
+   "key": "armor_upgrade_t4",
+   "type": "item",
+   "slot": "vitality",
+   "tier": 4
+  },
+  {
+   "id": 1851590806,
+   "key": "armor_upgrade_t5",
+   "type": "item",
+   "slot": "vitality",
+   "tier": 5
+  },
+  {
+   "id": 1157620447,
+   "key": "cadence_ability_anthem",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/cadence/cadence_ability_1.psd"
+  },
+  {
+   "id": 599532073,
+   "key": "cadence_ability_crescendo",
+   "type": "ultimate",
+   "image": "file://{images}/hud/abilities/cadence/cadence_ability_4.psd"
+  },
+  {
+   "id": 3356256357,
+   "key": "cadence_ability_grandfinale",
+   "type": "ultimate",
+   "image": "file://{images}/hud/abilities/cadence/cadence_ability_4.psd"
+  },
+  {
+   "id": 957095276,
+   "key": "cadence_ability_lullaby",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/cadence/cadence_ability_3.psd"
+  },
+  {
+   "id": 421275722,
+   "key": "cadence_ability_silencecontraptions",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/cadence/cadence_ability_2.psd"
+  },
+  {
+   "id": 3832675871,
+   "key": "citadel_ability_bebop_laser_beam",
+   "name": "Hyper Beam",
+   "name_ru": "Гиперлуч",
+   "type": "ultimate",
+   "image": "file://{images}/hud/abilities/bebop/bebop_hyper_beam.psd"
+  },
+  {
+   "id": 2824119765,
+   "key": "citadel_ability_bull_charge",
+   "name": "Shoulder Charge",
+   "name_ru": "Плечом вперёд",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/bull_charge.psd"
+  },
+  {
+   "id": 4072270083,
+   "key": "citadel_ability_bull_heal",
+   "name": "Siphon Life",
+   "name_ru": "Переливание жизни",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/bull_drain.psd"
+  },
+  {
+   "id": 509856396,
+   "key": "citadel_ability_bull_leap",
+   "name": "Seismic Impact",
+   "name_ru": "Сейсмический удар",
+   "type": "ultimate",
+   "image": "file://{images}/hud/abilities/bull_jump.psd"
+  },
+  {
+   "id": 1999680326,
+   "key": "citadel_ability_card_toss",
+   "name": "Card Trick",
+   "name_ru": "Карточный трюк",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/wraith_card_trick.psd"
+  },
+  {
+   "id": 3534969709,
+   "key": "citadel_ability_chain_lightning",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/giga_chain.psd"
+  },
+  {
+   "id": 3954890388,
+   "key": "citadel_ability_charged_tackle",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/sumo/sumo_charge.psd"
+  },
+  {
+   "id": 1128670012,
+   "key": "citadel_ability_chrono_kinetic_carbine",
+   "name": "Kinetic Carbine",
+   "name_ru": "Кинетический карабин",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/duo/duo_attack.psd"
+  },
+  {
+   "id": 58655583,
+   "key": "citadel_ability_chrono_pulse_grenade",
+   "name": "Pulse Grenade",
+   "name_ru": "Пульсирующая граната",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/chrono/chrono_time_bomb.psd"
+  },
+  {
+   "id": 2917891787,
+   "key": "citadel_ability_chrono_swap",
+   "name": "Paradoxical Swap",
+   "name_ru": "Парадоксальная перестановка",
+   "type": "ultimate",
+   "image": "file://{images}/hud/abilities/chrono/chrono_swap.psd"
+  },
+  {
+   "id": 1366719170,
+   "key": "citadel_ability_chrono_time_wall",
+   "name": "Time Wall",
+   "name_ru": "Стена времени",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/chrono/chrono_time_wall.psd"
+  },
+  {
+   "id": 4261702459,
+   "key": "citadel_ability_climb_rope",
+   "type": "innate"
+  },
+  {
+   "id": 2207638101,
+   "key": "citadel_ability_dash",
+   "name": "Dash",
+   "name_ru": "Рывок",
+   "type": "innate"
+  },
+  {
+   "id": 1725685134,
+   "key": "citadel_ability_fissure_wall",
+   "name": "Spectral Wall",
+   "name_ru": "Призрачная стена",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/engineer_fissure_2.psd"
+  },
+  {
+   "id": 1690335039,
+   "key": "citadel_ability_fissure_wall_cancel",
+   "type": "innate",
+   "image": "file://{images}/hud/abilities/ability_activate.psd"
+  },
+  {
+   "id": 318567870,
+   "key": "citadel_ability_fissure_wall_trigger",
+   "type": "innate",
+   "image": "file://{images}/hud/abilities/engineer_fissure_2_activate.psd"
+  },
+  {
+   "id": 2566573207,
+   "key": "citadel_ability_flying_strike",
+   "name": "Flying Slash",
+   "name_ru": "Рассечение в полёте",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/yamato/yamato_flying_strike.psd"
+  },
+  {
+   "id": 2366960452,
+   "key": "citadel_ability_healing_slash",
+   "name": "Crimson Slash",
+   "name_ru": "Багровое рассечение",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/yamato/yamato_crimson_slash.psd"
+  },
+  {
+   "id": 1928108461,
+   "key": "citadel_ability_hook",
+   "name": "Grapple Arm",
+   "name_ru": "Рука-захват",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/bebop/bebop_hook.psd"
+  },
+  {
+   "id": 537527508,
+   "key": "citadel_ability_hornet_chain",
+   "name": "Stake",
+   "name_ru": "Кол",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/hornet/vindicta_stake.psd"
+  },
+  {
+   "id": 1796564033,
+   "key": "citadel_ability_hornet_leap",
+   "name": "Flight",
+   "name_ru": "Полёт",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/hornet/vindicta_flight.psd"
+  },
+  {
+   "id": 775377419,
+   "key": "citadel_ability_hornet_snipe",
+   "name": "Assassinate",
+   "name_ru": "Контрольный выстрел",
+   "type": "ultimate",
+   "image": "file://{images}/hud/abilities/hornet/hornet_assassinate.psd"
+  },
+  {
+   "id": 2048438176,
+   "key": "citadel_ability_hornet_sting",
+   "name": "Crow Familiar",
+   "name_ru": "Ворон-фамильяр",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/hornet/hornet_crow.psd"
+  },
+  {
+   "id": 3319782965,
+   "key": "citadel_ability_infinity_slash",
+   "name": "Shadow Transformation",
+   "name_ru": "Превращение в тень",
+   "type": "ultimate",
+   "image": "file://{images}/hud/abilities/yamato/yamato_blinding_steel.psd"
+  },
+  {
+   "id": 1466127517,
+   "key": "citadel_ability_jump",
+   "name": "Jump",
+   "name_ru": "Прыжок",
+   "type": "innate"
+  },
+  {
+   "id": 1262508092,
+   "key": "citadel_ability_jump_ratking",
+   "name": "Jump",
+   "name_ru": "Прыжок",
+   "type": "innate"
+  },
+  {
+   "id": 3219375905,
+   "key": "citadel_ability_kali_disruptive_charge",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/kali/kali_speed_burst.psd"
+  },
+  {
+   "id": 4260284622,
+   "key": "citadel_ability_kali_spinning_blade",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/kali/kali_oscilloblade.psd"
+  },
+  {
+   "id": 2670099061,
+   "key": "citadel_ability_lash",
+   "name": "Grapple",
+   "name_ru": "Сцепка",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/lash/lash_lash.psd"
+  },
+  {
+   "id": 3561817145,
+   "key": "citadel_ability_lash_down_strike",
+   "name": "Ground Strike",
+   "name_ru": "Удар по земле",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/lash/lash_death_slam.psd"
+  },
+  {
+   "id": 397010810,
+   "key": "citadel_ability_lash_ultimate",
+   "name": "Death Slam",
+   "name_ru": "Смертельный бросок",
+   "type": "ultimate",
+   "image": "file://{images}/hud/abilities/lash/lash_counter_lash.psd"
+  },
+  {
+   "id": 1065103387,
+   "key": "citadel_ability_lightning_ball",
+   "name": "Lightning Ball",
+   "name_ru": "Шаровая молния",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/giga_ball.psd"
+  },
+  {
+   "id": 3706135393,
+   "key": "citadel_ability_magewalk",
+   "name": "Misdirection",
+   "name_ru": "Дезориентация",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/shiv/shiv_gather_foes.psd"
+  },
+  {
+   "id": 4109126631,
+   "key": "citadel_ability_mantle",
+   "name": "Mantle",
+   "name_ru": "Преодоление препятствия",
+   "type": "innate"
+  },
+  {
+   "id": 3123925900,
+   "key": "citadel_ability_melee_architect",
+   "type": "melee",
+   "image": "file://{images}/hud/abilities/melee_damage.psd"
+  },
+  {
+   "id": 2373292985,
+   "key": "citadel_ability_melee_bebop",
+   "name": "Melee",
+   "name_ru": "Ближний бой",
+   "type": "melee",
+   "image": "file://{images}/hud/abilities/melee_damage.psd"
+  },
+  {
+   "id": 3415298717,
+   "key": "citadel_ability_melee_bull",
+   "name": "Melee",
+   "name_ru": "Ближний бой",
+   "type": "melee",
+   "image": "file://{images}/hud/abilities/melee_damage.psd"
+  },
+  {
+   "id": 755819616,
+   "key": "citadel_ability_melee_butcher",
+   "type": "melee",
+   "image": "file://{images}/hud/abilities/melee_damage.psd"
+  },
+  {
+   "id": 852374872,
+   "key": "citadel_ability_melee_cadence",
+   "type": "melee",
+   "image": "file://{images}/hud/abilities/melee_damage.psd"
+  },
+  {
+   "id": 3672737523,
+   "key": "citadel_ability_melee_chrono",
+   "name": "Melee",
+   "name_ru": "Ближний бой",
+   "type": "melee",
+   "image": "file://{images}/hud/abilities/melee_damage.psd"
+  },
+  {
+   "id": 2660222379,
+   "key": "citadel_ability_melee_engineer",
+   "name": "Melee",
+   "name_ru": "Ближний бой",
+   "type": "melee",
+   "image": "file://{images}/hud/abilities/melee_damage.psd"
+  },
+  {
+   "id": 384715776,
+   "key": "citadel_ability_melee_genericperson",
+   "name": "Melee",
+   "name_ru": "Ближний бой",
+   "type": "melee",
+   "image": "file://{images}/hud/abilities/melee_damage.psd"
+  },
+  {
+   "id": 2372182196,
+   "key": "citadel_ability_melee_gigawatt",
+   "name": "Melee",
+   "name_ru": "Ближний бой",
+   "type": "melee",
+   "image": "file://{images}/hud/abilities/melee_damage.psd"
+  },
+  {
+   "id": 3299584775,
+   "key": "citadel_ability_melee_gunslinger",
+   "type": "melee",
+   "image": "file://{images}/hud/abilities/melee_damage.psd"
+  },
+  {
+   "id": 1619999260,
+   "key": "citadel_ability_melee_hornet",
+   "name": "Melee",
+   "name_ru": "Ближний бой",
+   "type": "melee",
+   "image": "file://{images}/hud/abilities/melee_damage.psd"
+  },
+  {
+   "id": 2950623773,
+   "key": "citadel_ability_melee_kali",
+   "name": "Melee",
+   "name_ru": "Ближний бой",
+   "type": "melee",
+   "image": "file://{images}/hud/abilities/melee_damage.psd"
+  },
+  {
+   "id": 664285540,
+   "key": "citadel_ability_melee_parry",
+   "name": "Parry",
+   "name_ru": "Парирование",
+   "type": "innate"
+  },
+  {
+   "id": 11664367,
+   "key": "citadel_ability_melee_shiv",
+   "name": "Melee",
+   "name_ru": "Ближний бой",
+   "type": "melee",
+   "image": "file://{images}/hud/abilities/melee_damage.psd"
+  },
+  {
+   "id": 855695370,
+   "key": "citadel_ability_melee_sumo",
+   "name": "Melee",
+   "name_ru": "Ближний бой",
+   "type": "melee",
+   "image": "file://{images}/hud/abilities/melee_damage.psd"
+  },
+  {
+   "id": 3134673014,
+   "key": "citadel_ability_melee_targetdummy",
+   "type": "melee",
+   "image": "file://{images}/hud/abilities/melee_damage.psd"
+  },
+  {
+   "id": 2840115251,
+   "key": "citadel_ability_melee_tengu",
+   "name": "Melee",
+   "name_ru": "Ближний бой",
+   "type": "melee",
+   "image": "file://{images}/hud/abilities/melee_damage.psd"
+  },
+  {
+   "id": 1208692244,
+   "key": "citadel_ability_melee_thumper",
+   "type": "melee",
+   "image": "file://{images}/hud/abilities/melee_damage.psd"
+  },
+  {
+   "id": 3433765565,
+   "key": "citadel_ability_melee_warden",
+   "name": "Melee",
+   "name_ru": "Ближний бой",
+   "type": "melee",
+   "image": "file://{images}/hud/abilities/melee_damage.psd"
+  },
+  {
+   "id": 1192327851,
+   "key": "citadel_ability_melee_wraith",
+   "name": "Melee",
+   "name_ru": "Ближний бой",
+   "type": "melee",
+   "image": "file://{images}/hud/abilities/melee_damage.psd"
+  },
+  {
+   "id": 3571834135,
+   "key": "citadel_ability_melee_yakuza",
+   "type": "melee",
+   "image": "file://{images}/hud/abilities/melee_damage.psd"
+  },
+  {
+   "id": 2142734020,
+   "key": "citadel_ability_mobile_resupply",
+   "name": "Medicinal Specter",
+   "name_ru": "Лечебный призрак",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/engineer_resupply.psd"
+  },
+  {
+   "id": 492030745,
+   "key": "citadel_ability_nikuman",
+   "name": "Rejuvenating Aurora",
+   "name_ru": "Восстановительное сияние",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/sumo/sumo_pork_bun.psd"
+  },
+  {
+   "id": 715762406,
+   "key": "citadel_ability_passive_beefy",
+   "name": "Infernal Resilience",
+   "name_ru": "Адская устойчивость",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/bull_beef.psd"
+  },
+  {
+   "id": 3255651252,
+   "key": "citadel_ability_power_slash",
+   "name": "Power Slash",
+   "name_ru": "Мощное рассечение",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/yamato/yamato_power_slash.psd"
+  },
+  {
+   "id": 4147641675,
+   "key": "citadel_ability_projectmind",
+   "name": "Project Mind",
+   "name_ru": "Проекция разума",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/wraith_teleport.psd"
+  },
+  {
+   "id": 2981692841,
+   "key": "citadel_ability_psychic_lift",
+   "name": "Telekinesis",
+   "name_ru": "Телекинез",
+   "type": "ultimate",
+   "image": "file://{images}/hud/abilities/wraith_lift.psd"
+  },
+  {
+   "id": 3503044146,
+   "key": "citadel_ability_rocket_barrage",
+   "name": "Heavy Barrage",
+   "name_ru": "Тяжёлый обстрел",
+   "type": "ultimate",
+   "image": "file://{images}/hud/abilities/engineer_rockets.psd"
+  },
+  {
+   "id": 249410288,
+   "key": "citadel_ability_self_vacuum",
+   "name": "Singularity",
+   "name_ru": "Сингулярность",
+   "type": "ultimate",
+   "image": "file://{images}/hud/abilities/sumo/sumo_vacuum.psd"
+  },
+  {
+   "id": 3133377790,
+   "key": "citadel_ability_shieldedsentry",
+   "name": "Mini Turret",
+   "name_ru": "Мини-турель",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/engineer_turret.psd"
+  },
+  {
+   "id": 2460791803,
+   "key": "citadel_ability_shiv_dagger",
+   "name": "Serrated Knives",
+   "name_ru": "Зазубренные ножи",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/shiv/shiv_toss.psd"
+  },
+  {
+   "id": 1458044103,
+   "key": "citadel_ability_shiv_dash",
+   "name": "Slice and Dice",
+   "name_ru": "Режущий рывок",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/shiv/shiv_flash.psd"
+  },
+  {
+   "id": 1537272748,
+   "key": "citadel_ability_shiv_defer_damage",
+   "name": "Bloodletting",
+   "name_ru": "Кровопускание",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/shiv/shiv_bloodletting.psd"
+  },
+  {
+   "id": 1835738020,
+   "key": "citadel_ability_shiv_killing_blow",
+   "name": "Killing Blow",
+   "name_ru": "Добивающий удар",
+   "type": "ultimate",
+   "image": "file://{images}/hud/abilities/shiv/shiv_killing_blow.psd"
+  },
+  {
+   "id": 2335418656,
+   "key": "citadel_ability_slide",
+   "name": "Slide",
+   "name_ru": "Скольжение",
+   "type": "innate"
+  },
+  {
+   "id": 1443159618,
+   "key": "citadel_ability_sprint",
+   "type": "innate",
+   "image": "file://{images}/hud/icons/icon_speed.svg"
+  },
+  {
+   "id": 1074714947,
+   "key": "citadel_ability_static_charge",
+   "name": "Static Charge",
+   "name_ru": "Статический заряд",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/giga_static.psd"
+  },
+  {
+   "id": 1939833676,
+   "key": "citadel_ability_static_charge_v2",
+   "name": "Static Charge",
+   "name_ru": "Статический заряд",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/giga_static.psd"
+  },
+  {
+   "id": 2521902222,
+   "key": "citadel_ability_sticky_bomb",
+   "name": "Sticky Bomb",
+   "name_ru": "Бомба-липучка",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/bebop/bebop_sticky_bomb.psd"
+  },
+  {
+   "id": 3760705623,
+   "key": "citadel_ability_stomp",
+   "name": "Kinetic Pulse",
+   "name_ru": "Кинетический импульс",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/sumo/sumo_stomp.psd"
+  },
+  {
+   "id": 2061574352,
+   "key": "citadel_ability_storm_cloud",
+   "name": "Storm Cloud",
+   "name_ru": "Грозовое облако",
+   "type": "ultimate",
+   "image": "file://{images}/hud/abilities/giga_storm.psd"
+  },
+  {
+   "id": 1531378655,
+   "key": "citadel_ability_tangotether",
+   "name": "Kudzu Connection",
+   "name_ru": "Кудзу-связь",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/tengu/tengu_tether.psd"
+  },
+  {
+   "id": 3491113888,
+   "key": "citadel_ability_tangotether_trigger",
+   "type": "innate",
+   "image": "file://{images}/hud/abilities/astro/gravity_lasso.psd"
+  },
+  {
+   "id": 1247583368,
+   "key": "citadel_ability_tengu_airlift",
+   "name": "Air Drop",
+   "name_ru": "Поддержка с воздуха",
+   "type": "ultimate",
+   "image": "file://{images}/hud/abilities/tengu/tengu_lightning_crash.psd"
+  },
+  {
+   "id": 3642273386,
+   "key": "citadel_ability_tengu_stone_form",
+   "name": "Stone Form",
+   "name_ru": "Каменный облик",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/tengu/tengu_stone_form.psd"
+  },
+  {
+   "id": 4111222521,
+   "key": "citadel_ability_tengu_urn",
+   "name": "Entangling Thorns",
+   "name_ru": "Опутывающие терния",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/tengu/tengu_storm_flask.psd"
+  },
+  {
+   "id": 1083734528,
+   "key": "citadel_ability_tier2boss_aoe_wave",
+   "type": "ultimate",
+   "image": "file://{images}/hud/abilities/sumo/sumo_stomp.psd"
+  },
+  {
+   "id": 4101890370,
+   "key": "citadel_ability_tier2boss_laser_beam",
+   "name": "Laser",
+   "name_ru": "Лазер",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/engineer_rockets.psd"
+  },
+  {
+   "id": 1792983333,
+   "key": "citadel_ability_tier2boss_rocket_barrage",
+   "name": "Rocket Barrage",
+   "name_ru": "Шквал ракет",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/engineer_rockets.psd"
+  },
+  {
+   "id": 1233550373,
+   "key": "citadel_ability_tier2boss_stomp",
+   "name": "Stomp",
+   "name_ru": "Топот",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/sumo/sumo_stomp.psd"
+  },
+  {
+   "id": 1440185561,
+   "key": "citadel_ability_tier3boss_aoe_wave",
+   "name": "Patron",
+   "name_ru": "Покровитель",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/sumo/sumo_stomp.psd"
+  },
+  {
+   "id": 10116178,
+   "key": "citadel_ability_tier3boss_drop_bombs",
+   "name": "Patron",
+   "name_ru": "Покровитель",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/spectre/blood_bomb.psd"
+  },
+  {
+   "id": 337723920,
+   "key": "citadel_ability_tier3boss_laser_beam",
+   "name": "Patron Laser",
+   "name_ru": "Лазер покровителя",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/engineer_rockets.psd"
+  },
+  {
+   "id": 1681330920,
+   "key": "citadel_ability_tier3boss_rocket_barrage",
+   "name": "Patron",
+   "name_ru": "Покровитель",
+   "type": "ultimate",
+   "image": "file://{images}/hud/abilities/engineer_rockets.psd"
+  },
+  {
+   "id": 1751980904,
+   "key": "citadel_ability_trooper_zip_line",
+   "type": "innate"
+  },
+  {
+   "id": 3089858203,
+   "key": "citadel_ability_uppercut",
+   "name": "Exploding Uppercut",
+   "name_ru": "Взрывной апперкот",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/bebop/bebop_uppercut.psd"
+  },
+  {
+   "id": 916959628,
+   "key": "citadel_ability_vandal_overflow",
+   "type": "ultimate",
+   "image": "file://{images}/hud/abilities/wraith_lift.psd"
+  },
+  {
+   "id": 1288133032,
+   "key": "citadel_ability_vandal_surge",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/wraith_lift.psd"
+  },
+  {
+   "id": 2031714424,
+   "key": "citadel_ability_void_sphere",
+   "name": "Quantum Entanglement",
+   "name_ru": "Квантовое запутывание",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/sumo/sumo_quantum.psd"
+  },
+  {
+   "id": 1842576017,
+   "key": "citadel_ability_wraith_rapidfire",
+   "name": "Full Auto",
+   "name_ru": "Сверхбыстрая стрельба",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/wraith_aura.psd"
+  },
+  {
+   "id": 2153275594,
+   "key": "citadel_ability_wrecker_bouldergrenade",
+   "name": "Wrecking Ball",
+   "name_ru": "Разрушительный шар",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/wrecker/wrecking_ball.psd"
+  },
+  {
+   "id": 3426178920,
+   "key": "citadel_ability_wrecker_garbage_suck",
+   "name": "Overload",
+   "name_ru": "Перегрузка",
+   "type": "ultimate",
+   "image": "file://{images}/hud/abilities/mirage/mirage_sunfire_cataclysm.psd"
+  },
+  {
+   "id": 2573821048,
+   "key": "citadel_ability_zip_line",
+   "name": "Knocked off Zipline",
+   "name_ru": "Падение с зиплайна",
+   "type": "innate"
+  },
+  {
+   "id": 875395762,
+   "key": "citadel_ability_zipline_boost",
+   "type": "innate",
+   "image": "file://{images}/upgrades/mods_utility/zipline_mastery.psd"
+  },
+  {
+   "id": 1165827104,
+   "key": "citadel_base_lockon_ability",
+   "type": "signature"
+  },
+  {
+   "id": 3483755040,
+   "key": "citadel_base_tiered_lockon_ability",
+   "type": "signature"
+  },
+  {
+   "id": 3152711215,
+   "key": "citadel_hold_melee",
+   "type": "melee",
+   "image": "file://{images}/hud/abilities/melee_damage.psd"
+  },
+  {
+   "id": 2402901451,
+   "key": "citadel_weapon_archer_set",
+   "type": "weapon",
+   "image": "file://{images}/hud/abilities/weapon_damage.psd"
+  },
+  {
+   "id": 3033433915,
+   "key": "citadel_weapon_architect_set",
+   "type": "weapon",
+   "image": "file://{images}/hud/abilities/weapon_damage.psd"
+  },
+  {
+   "id": 1789967856,
+   "key": "citadel_weapon_artist_projectile",
+   "type": "weapon",
+   "image": "file://{images}/hud/abilities/weapon_damage.psd"
+  },
+  {
+   "id": 2482363834,
+   "key": "citadel_weapon_artist_set",
+   "name": "Creative Solutions",
+   "name_ru": "Творческий подход",
+   "type": "weapon",
+   "image": "file://{images}/hud/abilities/weapon_damage.psd"
+  },
+  {
+   "id": 2082220949,
+   "key": "citadel_weapon_astro_set",
+   "name": "Doc's Orders",
+   "name_ru": "То, что Док прописал",
+   "type": "weapon",
+   "image": "file://{images}/hud/abilities/weapon_damage.psd"
+  },
+  {
+   "id": 2919934227,
+   "key": "citadel_weapon_baba_set",
+   "name": "Bunko-Night Special",
+   "name_ru": "Особое угощение",
+   "type": "weapon",
+   "image": "file://{images}/hud/abilities/weapon_damage.psd"
+  },
+  {
+   "id": 1755130750,
+   "key": "citadel_weapon_base_defense_turret",
+   "type": "weapon",
+   "image": "file://{images}/hud/abilities/weapon_damage.psd"
+  },
+  {
+   "id": 3764085067,
+   "key": "citadel_weapon_bebop_set",
+   "name": "Humble Pie",
+   "name_ru": "Глоток смирения",
+   "type": "weapon",
+   "image": "file://{images}/hud/abilities/weapon_damage.psd"
+  },
+  {
+   "id": 1590129566,
+   "key": "citadel_weapon_boho_set",
+   "type": "weapon",
+   "image": "file://{images}/hud/abilities/weapon_damage.psd"
+  },
+  {
+   "id": 2605652378,
+   "key": "citadel_weapon_bomber_set",
+   "type": "weapon",
+   "image": "file://{images}/hud/abilities/weapon_damage.psd"
+  },
+  {
+   "id": 353851685,
+   "key": "citadel_weapon_bookworm_set",
+   "name": "Chapter's End",
+   "name_ru": "Конец главы",
+   "type": "weapon",
+   "image": "file://{images}/hud/abilities/weapon_damage.psd"
+  },
+  {
+   "id": 4260448939,
+   "key": "citadel_weapon_bookworm_set2",
+   "type": "weapon",
+   "image": "file://{images}/hud/abilities/weapon_damage.psd"
+  },
+  {
+   "id": 2976789773,
+   "key": "citadel_weapon_bosstier2_set",
+   "type": "weapon",
+   "image": "file://{images}/hud/abilities/weapon_damage.psd"
+  },
+  {
+   "id": 3317486525,
+   "key": "citadel_weapon_bosstier3_set",
+   "type": "weapon",
+   "image": "file://{images}/hud/abilities/weapon_damage.psd"
+  },
+  {
+   "id": 3609948706,
+   "key": "citadel_weapon_bull_set",
+   "type": "weapon",
+   "image": "file://{images}/hud/abilities/weapon_damage.psd"
+  },
+  {
+   "id": 3155417712,
+   "key": "citadel_weapon_cadence_set",
+   "type": "weapon",
+   "image": "file://{images}/hud/abilities/weapon_damage.psd"
+  },
+  {
+   "id": 2344748155,
+   "key": "citadel_weapon_chessmaster_set",
+   "name": "Alekhine's Gun",
+   "name_ru": "Пушка Алёхина",
+   "type": "weapon",
+   "image": "file://{images}/hud/abilities/weapon_damage.psd"
+  },
+  {
+   "id": 963532193,
+   "key": "citadel_weapon_chessmaster_shotgun",
+   "type": "weapon",
+   "image": "file://{images}/hud/abilities/weapon_damage.psd"
+  },
+  {
+   "id": 2390964381,
+   "key": "citadel_weapon_chrono_set",
+   "name": "Trade Secret",
+   "name_ru": "Секрет фирмы",
+   "type": "weapon",
+   "image": "file://{images}/hud/abilities/weapon_damage.psd"
+  },
+  {
+   "id": 1895060499,
+   "key": "citadel_weapon_digger_set",
+   "type": "weapon",
+   "image": "file://{images}/hud/abilities/weapon_damage.psd"
+  },
+  {
+   "id": 1273162367,
+   "key": "citadel_weapon_digger_set2",
+   "type": "weapon",
+   "image": "file://{images}/hud/abilities/weapon_damage.psd"
+  },
+  {
+   "id": 4144812912,
+   "key": "citadel_weapon_doorman_alt",
+   "type": "weapon",
+   "image": "file://{images}/hud/abilities/weapon_damage.psd"
+  },
+  {
+   "id": 3409956698,
+   "key": "citadel_weapon_doorman_set",
+   "name": "Service With A Smile",
+   "name_ru": "Приветливый сервис",
+   "type": "weapon",
+   "image": "file://{images}/hud/abilities/weapon_damage.psd"
+  },
+  {
+   "id": 2201766712,
+   "key": "citadel_weapon_drifter_alt",
+   "name": "Drifter Alt Weapon",
+   "name_ru": "Альт. оружие Скитальца",
+   "type": "weapon",
+   "image": "file://{images}/hud/abilities/weapon_damage.psd"
+  },
+  {
+   "id": 160782216,
+   "key": "citadel_weapon_drifter_set",
+   "name": "Crimson Grasp",
+   "name_ru": "Багровый хват",
+   "type": "weapon",
+   "image": "file://{images}/hud/abilities/weapon_damage.psd"
+  },
+  {
+   "id": 122168569,
+   "key": "citadel_weapon_druid_set",
+   "type": "weapon",
+   "image": "file://{images}/hud/abilities/weapon_damage.psd"
+  },
+  {
+   "id": 1975078202,
+   "key": "citadel_weapon_engineer_set",
+   "type": "weapon",
+   "image": "file://{images}/hud/abilities/weapon_damage.psd"
+  },
+  {
+   "id": 1470169038,
+   "key": "citadel_weapon_fencer_alt",
+   "type": "weapon",
+   "image": "file://{images}/hud/abilities/weapon_damage.psd"
+  },
+  {
+   "id": 1769657144,
+   "key": "citadel_weapon_fencer_set",
+   "name": "Pride of Ixia",
+   "name_ru": "Гордость Иксии",
+   "type": "weapon",
+   "image": "file://{images}/hud/abilities/weapon_damage.psd"
+  },
+  {
+   "id": 3877402249,
+   "key": "citadel_weapon_fortuna_set",
+   "type": "weapon",
+   "image": "file://{images}/hud/abilities/weapon_damage.psd"
+  },
+  {
+   "id": 2079380905,
+   "key": "citadel_weapon_frank_set2",
+   "type": "weapon",
+   "image": "file://{images}/hud/abilities/weapon_damage.psd"
+  },
+  {
+   "id": 1150061901,
+   "key": "citadel_weapon_genericperson_set",
+   "type": "weapon",
+   "image": "file://{images}/hud/abilities/weapon_damage.psd"
+  },
+  {
+   "id": 1558668879,
+   "key": "citadel_weapon_ghost_set",
+   "name": "Johann's Gift",
+   "name_ru": "Подарок Иоганна",
+   "type": "weapon",
+   "image": "file://{images}/hud/abilities/weapon_damage.psd"
+  },
+  {
+   "id": 2695625322,
+   "key": "citadel_weapon_gigawatt_set",
+   "name": "Cold Calculus",
+   "name_ru": "Холодный расчёт",
+   "type": "weapon",
+   "image": "file://{images}/hud/abilities/weapon_damage.psd"
+  },
+  {
+   "id": 581038282,
+   "key": "citadel_weapon_graf_set",
+   "type": "weapon",
+   "image": "file://{images}/hud/abilities/weapon_damage.psd"
+  },
+  {
+   "id": 3318975115,
+   "key": "citadel_weapon_gunslinger2_set",
+   "type": "weapon",
+   "image": "file://{images}/hud/abilities/weapon_damage.psd"
+  },
+  {
+   "id": 2790538565,
+   "key": "citadel_weapon_gunslinger_set",
+   "type": "weapon",
+   "image": "file://{images}/hud/abilities/weapon_damage.psd"
+  },
+  {
+   "id": 2679155647,
+   "key": "citadel_weapon_haze_set",
+   "name": "Censure \u0026 Penance",
+   "name_ru": "Осуждение и искупление",
+   "type": "weapon",
+   "image": "file://{images}/hud/abilities/weapon_damage.psd"
+  },
+  {
+   "id": 3510968490,
+   "key": "citadel_weapon_hornet_set",
+   "name": "Wallflower's Revenge",
+   "name_ru": "Месть тихони",
+   "type": "weapon",
+   "image": "file://{images}/hud/abilities/weapon_damage.psd"
+  },
+  {
+   "id": 556186193,
+   "key": "citadel_weapon_inferno_set",
+   "name": "Incendiary Remarks",
+   "name_ru": "Разжигатель споров",
+   "type": "weapon",
+   "image": "file://{images}/hud/abilities/weapon_damage.psd"
+  },
+  {
+   "id": 1115497205,
+   "key": "citadel_weapon_kali_set",
+   "type": "weapon",
+   "image": "file://{images}/hud/abilities/weapon_damage.psd"
+  },
+  {
+   "id": 3576988085,
+   "key": "citadel_weapon_kelvin_set",
+   "name": "Expedition's End",
+   "name_ru": "Крах экспедиции",
+   "type": "weapon",
+   "image": "file://{images}/hud/abilities/weapon_damage.psd"
+  },
+  {
+   "id": 2896288811,
+   "key": "citadel_weapon_lash_set",
+   "name": "Tale of The Tape",
+   "name_ru": "Боксёрские габариты",
+   "type": "weapon",
+   "image": "file://{images}/hud/abilities/weapon_damage.psd"
+  },
+  {
+   "id": 2014234803,
+   "key": "citadel_weapon_magician_set",
+   "name": "The Prestige",
+   "name_ru": "Престиж",
+   "type": "weapon",
+   "image": "file://{images}/hud/abilities/weapon_damage.psd"
+  },
+  {
+   "id": 2942562744,
+   "key": "citadel_weapon_mirage_set",
+   "name": "Promises Kept",
+   "name_ru": "Сдержанные обещания",
+   "type": "weapon",
+   "image": "file://{images}/hud/abilities/weapon_damage.psd"
+  },
+  {
+   "id": 3386449071,
+   "key": "citadel_weapon_nano_alt",
+   "type": "weapon",
+   "image": "file://{images}/hud/abilities/weapon_damage.psd"
+  },
+  {
+   "id": 3108987282,
+   "key": "citadel_weapon_nano_set",
+   "name": "Sweetest Lie",
+   "name_ru": "Сладчайшая ложь",
+   "type": "weapon",
+   "image": "file://{images}/hud/abilities/weapon_damage.psd"
+  },
+  {
+   "id": 2834635521,
+   "key": "citadel_weapon_necro_set",
+   "name": "The Teacher",
+   "name_ru": "Учитель",
+   "type": "weapon",
+   "image": "file://{images}/hud/abilities/weapon_damage.psd"
+  },
+  {
+   "id": 3018958015,
+   "key": "citadel_weapon_nurse_healing_needles",
+   "type": "weapon",
+   "image": "file://{images}/hud/abilities/weapon_damage.psd"
+  },
+  {
+   "id": 4180982524,
+   "key": "citadel_weapon_nurse_set",
+   "name": "Code Blue",
+   "name_ru": "Реаниматор",
+   "type": "weapon",
+   "image": "file://{images}/hud/abilities/weapon_damage.psd"
+  },
+  {
+   "id": 1866303329,
+   "key": "citadel_weapon_opera_set",
+   "name": "Opera Gun",
+   "name_ru": "Opera Gun",
+   "type": "weapon",
+   "image": "file://{images}/hud/abilities/weapon_damage.psd"
+  },
+  {
+   "id": 3294175151,
+   "key": "citadel_weapon_operative_set",
+   "name": "Umbrella Gun",
+   "name_ru": "Пушка-зонт",
+   "type": "weapon",
+   "image": "file://{images}/hud/abilities/weapon_damage.psd"
+  },
+  {
+   "id": 519002049,
+   "key": "citadel_weapon_priest_crossbow",
+   "name": "Ira Domini",
+   "name_ru": "Гнев Божий",
+   "type": "weapon",
+   "image": "file://{images}/hud/abilities/weapon_damage.psd"
+  },
+  {
+   "id": 2029849853,
+   "key": "citadel_weapon_priest_set",
+   "name": "51:20",
+   "name_ru": "51:20",
+   "type": "weapon",
+   "image": "file://{images}/hud/abilities/weapon_damage.psd"
+  },
+  {
+   "id": 3395613043,
+   "key": "citadel_weapon_punkgoat_set",
+   "name": "Biquette",
+   "name_ru": "Бикетт",
+   "type": "weapon",
+   "image": "file://{images}/hud/abilities/weapon_damage.psd"
+  },
+  {
+   "id": 3435805738,
+   "key": "citadel_weapon_ratking_set",
+   "name": "Sovereign's Decree",
+   "name_ru": "Королевский указ",
+   "type": "weapon",
+   "image": "file://{images}/hud/abilities/weapon_damage.psd"
+  },
+  {
+   "id": 2470199706,
+   "key": "citadel_weapon_rutger_set",
+   "type": "weapon",
+   "image": "file://{images}/hud/abilities/weapon_damage.psd"
+  },
+  {
+   "id": 215719738,
+   "key": "citadel_weapon_shieldguy_set",
+   "type": "weapon",
+   "image": "file://{images}/hud/abilities/weapon_damage.psd"
+  },
+  {
+   "id": 225271804,
+   "key": "citadel_weapon_shiv_alt",
+   "type": "weapon",
+   "image": "file://{images}/hud/abilities/weapon_damage.psd"
+  },
+  {
+   "id": 3121968594,
+   "key": "citadel_weapon_shiv_set",
+   "name": "Busted Flush",
+   "name_ru": "Дохлый номер",
+   "type": "weapon",
+   "image": "file://{images}/hud/abilities/weapon_damage.psd"
+  },
+  {
+   "id": 2330506722,
+   "key": "citadel_weapon_skyrunner_alt",
+   "type": "weapon",
+   "image": "file://{images}/hud/abilities/weapon_damage.psd"
+  },
+  {
+   "id": 3977811669,
+   "key": "citadel_weapon_skyrunner_set",
+   "type": "weapon",
+   "image": "file://{images}/hud/abilities/weapon_damage.psd"
+  },
+  {
+   "id": 2080724972,
+   "key": "citadel_weapon_slork_set",
+   "name": "Riptide",
+   "name_ru": "Разрывное течение",
+   "type": "weapon",
+   "image": "file://{images}/hud/abilities/weapon_damage.psd"
+  },
+  {
+   "id": 602440127,
+   "key": "citadel_weapon_sumo_set",
+   "type": "weapon",
+   "image": "file://{images}/hud/abilities/weapon_damage.psd"
+  },
+  {
+   "id": 1761919638,
+   "key": "citadel_weapon_swan_set",
+   "type": "weapon",
+   "image": "file://{images}/hud/abilities/weapon_damage.psd"
+  },
+  {
+   "id": 3383556212,
+   "key": "citadel_weapon_synth_set",
+   "name": "The Black Sheep",
+   "name_ru": "Белая ворона",
+   "type": "weapon",
+   "image": "file://{images}/hud/abilities/weapon_damage.psd"
+  },
+  {
+   "id": 1875978329,
+   "key": "citadel_weapon_targetdummy_set",
+   "name": "Dummy Gun",
+   "name_ru": "Оружие манекена",
+   "type": "weapon",
+   "image": "file://{images}/hud/abilities/weapon_damage.psd"
+  },
+  {
+   "id": 1961353863,
+   "key": "citadel_weapon_tengu_set",
+   "name": "Protector's Hand",
+   "name_ru": "Рука защитника",
+   "type": "weapon",
+   "image": "file://{images}/hud/abilities/weapon_damage.psd"
+  },
+  {
+   "id": 2914777625,
+   "key": "citadel_weapon_thumper_set",
+   "type": "weapon",
+   "image": "file://{images}/hud/abilities/weapon_damage.psd"
+  },
+  {
+   "id": 2390247986,
+   "key": "citadel_weapon_trapper_set",
+   "name": "Civil Servant",
+   "name_ru": "Госслужащий",
+   "type": "weapon",
+   "image": "file://{images}/hud/abilities/weapon_damage.psd"
+  },
+  {
+   "id": 3744272782,
+   "key": "citadel_weapon_unicorn_set",
+   "name": "Carny Life",
+   "name_ru": "Карнавал",
+   "type": "weapon",
+   "image": "file://{images}/hud/abilities/weapon_damage.psd"
+  },
+  {
+   "id": 2502155040,
+   "key": "citadel_weapon_vampirebat_set",
+   "name": "New Money",
+   "name_ru": "Нувориш",
+   "type": "weapon",
+   "image": "file://{images}/hud/abilities/weapon_damage.psd"
+  },
+  {
+   "id": 57866690,
+   "key": "citadel_weapon_vampirebat_set2",
+   "type": "weapon",
+   "image": "file://{images}/hud/abilities/weapon_damage.psd"
+  },
+  {
+   "id": 2207852489,
+   "key": "citadel_weapon_vandal_set",
+   "type": "weapon",
+   "image": "file://{images}/hud/abilities/weapon_damage.psd"
+  },
+  {
+   "id": 988091080,
+   "key": "citadel_weapon_viper_set",
+   "name": "The Rattler",
+   "name_ru": "Трещотка",
+   "type": "weapon",
+   "image": "file://{images}/hud/abilities/weapon_damage.psd"
+  },
+  {
+   "id": 3413773852,
+   "key": "citadel_weapon_viscous_set",
+   "name": "Deep Sea Interpreter",
+   "name_ru": "Толкователь глубин",
+   "type": "weapon",
+   "image": "file://{images}/hud/abilities/weapon_damage.psd"
+  },
+  {
+   "id": 3819944797,
+   "key": "citadel_weapon_viscous_set_2",
+   "type": "weapon",
+   "image": "file://{images}/hud/abilities/weapon_damage.psd"
+  },
+  {
+   "id": 816395058,
+   "key": "citadel_weapon_warden_set",
+   "name": "Freedom's Cost",
+   "name_ru": "Цена свободы",
+   "type": "weapon",
+   "image": "file://{images}/hud/abilities/weapon_damage.psd"
+  },
+  {
+   "id": 3995444919,
+   "key": "citadel_weapon_werewolf_claws",
+   "name": "Lycan Claws",
+   "name_ru": "Когти оборотня",
+   "type": "weapon",
+   "image": "file://{images}/hud/abilities/weapon_damage.psd"
+  },
+  {
+   "id": 3922245490,
+   "key": "citadel_weapon_werewolf_rifle",
+   "type": "weapon",
+   "image": "file://{images}/hud/abilities/weapon_damage.psd"
+  },
+  {
+   "id": 1427059555,
+   "key": "citadel_weapon_wraith_set",
+   "name": "The Rake",
+   "name_ru": "Рейк",
+   "type": "weapon",
+   "image": "file://{images}/hud/abilities/weapon_damage.psd"
+  },
+  {
+   "id": 495487721,
+   "key": "citadel_weapon_wrecker_set",
+   "name": "The Butcher's Hand",
+   "name_ru": "Рука мясника",
+   "type": "weapon",
+   "image": "file://{images}/hud/abilities/weapon_damage.psd"
+  },
+  {
+   "id": 2772141905,
+   "key": "citadel_weapon_yakuza_set",
+   "type": "weapon",
+   "image": "file://{images}/hud/abilities/weapon_damage.psd"
+  },
+  {
+   "id": 2725537392,
+   "key": "citadel_weapon_yamato_alt",
+   "type": "weapon",
+   "image": "file://{images}/hud/abilities/weapon_damage.psd"
+  },
+  {
+   "id": 440716503,
+   "key": "citadel_weapon_yamato_set",
+   "name": "Sister's Lament",
+   "name_ru": "Плач сестры",
+   "type": "weapon",
+   "image": "file://{images}/hud/abilities/weapon_damage.psd"
+  },
+  {
+   "id": 186380338,
+   "key": "cosmetic_ability_emote",
+   "type": "cosmetic",
+   "image": "file://{images}/icons/icon_star.svg"
+  },
+  {
+   "id": 2253088558,
+   "key": "cosmetic_ability_snowball",
+   "name": "Snowball",
+   "name_ru": "Снежок",
+   "type": "cosmetic",
+   "image": "file://{images}/items/seasonal/2025_snowball.psd"
+  },
+  {
+   "id": 2885754951,
+   "key": "cosmetic_ability_voting_poster",
+   "type": "cosmetic",
+   "image": "file://{images}/items/seasonal/voting_poster.psd"
+  },
+  {
+   "id": 2148720612,
+   "key": "cosmetic_base",
+   "type": "cosmetic"
+  },
+  {
+   "id": 3120550633,
+   "key": "drifter_blood_blast",
+   "name": "Rend",
+   "name_ru": "Раздирание",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/drifter/drifter_claw.psd"
+  },
+  {
+   "id": 1168182161,
+   "key": "drifter_darkness",
+   "name": "Eternal Night",
+   "name_ru": "Вечная ночь",
+   "type": "ultimate",
+   "image": "file://{images}/hud/abilities/drifter/darkness.psd"
+  },
+  {
+   "id": 1264175662,
+   "key": "drifter_shadow_mark",
+   "name": "Stalker's Mark",
+   "name_ru": "Метка преследователя",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/drifter/drifter_stalkersmark.psd"
+  },
+  {
+   "id": 3534684567,
+   "key": "drifter_shadow_mark_teleport",
+   "name": "Ambush",
+   "name_ru": "Засада",
+   "type": "innate",
+   "image": "file://{images}/hud/abilities/drifter/drifter_teleport.psd"
+  },
+  {
+   "id": 2732213553,
+   "key": "fathom_breach",
+   "name": "Breach",
+   "name_ru": "Прорыв",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/tokamak/tokamak_dying_star.psd"
+  },
+  {
+   "id": 2611201292,
+   "key": "fathom_defer_damage",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/rutger/rutger_cheat_death.psd"
+  },
+  {
+   "id": 1851171544,
+   "key": "fathom_lurkers_ambush",
+   "name": "Lurker's Ambush",
+   "name_ru": "Засада",
+   "type": "ultimate",
+   "image": "file://{images}/hud/abilities/slork/slork_invis.psd"
+  },
+  {
+   "id": 1898352041,
+   "key": "fathom_reefdweller_harpoon",
+   "name": "Reefdweller Harpoon",
+   "name_ru": "Рифовый гарпун",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/haze/haze_sleep_dagger.psd"
+  },
+  {
+   "id": 347080770,
+   "key": "fathom_scalding_spray",
+   "name": "Scalding Spray",
+   "name_ru": "Жгучие брызги",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/slork/slork_scald.psd"
+  },
+  {
+   "id": 1087935946,
+   "key": "genericperson_ability_1",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/genericperson/genericperson_ability_1.psd"
+  },
+  {
+   "id": 451176394,
+   "key": "genericperson_ability_2",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/genericperson/genericperson_ability_2.psd"
+  },
+  {
+   "id": 2046089634,
+   "key": "genericperson_ability_3",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/genericperson/genericperson_ability_3.psd"
+  },
+  {
+   "id": 1254152082,
+   "key": "genericperson_ability_4",
+   "type": "ultimate",
+   "image": "file://{images}/hud/abilities/genericperson/genericperson_ability_4.psd"
+  },
+  {
+   "id": 3673718559,
+   "key": "gunslinger_demonMark",
+   "name": "Infernal Brand",
+   "name_ru": "Адское клеймо",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/hornet/hornet_assassinate.psd"
+  },
+  {
+   "id": 289749826,
+   "key": "gunslinger_knockbackblast",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/tokamak/tokamak_hot_shot.psd"
+  },
+  {
+   "id": 2219528978,
+   "key": "gunslinger_rapid_fire",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/sumo/sumo_stomp.psd"
+  },
+  {
+   "id": 809682515,
+   "key": "gunslinger_rocket_launcher",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/sumo/sumo_stomp.psd"
+  },
+  {
+   "id": 948328221,
+   "key": "gunslinger_sleep_bomb",
+   "type": "ultimate",
+   "image": "file://{images}/hud/abilities/sumo/sumo_stomp.psd"
+  },
+  {
+   "id": 3359246481,
+   "key": "gunslinger_tenacity",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/sumo/sumo_stomp.psd"
+  },
+  {
+   "id": 3764360584,
+   "key": "held_base",
+   "type": "held"
+  },
+  {
+   "id": 2690571895,
+   "key": "hero_shotgun_base",
+   "type": "weapon",
+   "image": "file://{images}/hud/abilities/weapon_damage.psd"
+  },
+  {
+   "id": 2413562093,
+   "key": "hero_weapon_base",
+   "type": "weapon",
+   "image": "file://{images}/hud/abilities/weapon_damage.psd"
+  },
+  {
+   "id": 46922526,
+   "key": "inherent_base",
+   "type": "innate"
+  },
+  {
+   "id": 264187235,
+   "key": "item_projectile_test_01",
+   "type": "item",
+   "slot": "weapon",
+   "tier": 1
+  },
+  {
+   "id": 1014700451,
+   "key": "item_projectile_test_02",
+   "type": "item",
+   "slot": "weapon",
+   "tier": 1
+  },
+  {
+   "id": 2414315232,
+   "key": "item_projectile_test_03",
+   "type": "item",
+   "slot": "weapon",
+   "tier": 1
+  },
+  {
+   "id": 3418358054,
+   "key": "item_projectile_test_04",
+   "type": "item",
+   "slot": "weapon",
+   "tier": 1
+  },
+  {
+   "id": 3130661899,
+   "key": "item_projectile_test_05",
+   "type": "item",
+   "slot": "weapon",
+   "tier": 1
+  },
+  {
+   "id": 3744513303,
+   "key": "item_projectile_test_06",
+   "type": "item",
+   "slot": "weapon",
+   "tier": 1
+  },
+  {
+   "id": 139875686,
+   "key": "melee_base",
+   "type": "melee",
+   "image": "file://{images}/hud/abilities/melee_damage.psd"
+  },
+  {
+   "id": 3733594387,
+   "key": "mirage_fire_beetles",
+   "name": "Fire Scarabs",
+   "name_ru": "Огненные скарабеи",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/mirage/mirage_fire_beetles.psd"
+  },
+  {
+   "id": 2221949202,
+   "key": "mirage_sand_phantom",
+   "name": "Djinn's Mark",
+   "name_ru": "Метка джинна",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/mirage/mirage_sand_phantom.psd"
+  },
+  {
+   "id": 2604653402,
+   "key": "mirage_teleport",
+   "name": "Traveler",
+   "name_ru": "Путник",
+   "type": "ultimate",
+   "image": "file://{images}/hud/abilities/mirage/mirage_teleport.psd"
+  },
+  {
+   "id": 1336069669,
+   "key": "mirage_tornado",
+   "name": "Dust Devil",
+   "name_ru": "Пылевой дьявол",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/mirage/mirage_tornado.psd"
+  },
+  {
+   "id": 3396600226,
+   "key": "npc_base",
+   "type": "signature"
+  },
+  {
+   "id": 2636226819,
+   "key": "npc_ultimate_base",
+   "type": "ultimate"
+  },
+  {
+   "id": 1773588524,
+   "key": "operative_blindside",
+   "name": "Blindside",
+   "name_ru": "Удар исподтишка",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/operative/operative_blindside.psd"
+  },
+  {
+   "id": 1101238302,
+   "key": "operative_revelation",
+   "name": "Revelation",
+   "name_ru": "Откровение",
+   "type": "ultimate",
+   "image": "file://{images}/hud/abilities/sumo/sumo_pork_bun.psd"
+  },
+  {
+   "id": 4210991587,
+   "key": "operative_umbrella_maneuver",
+   "name": "Umbrella Maneuver",
+   "name_ru": "Манёвр с зонтом",
+   "type": "signature",
+   "image": "file://{images}/upgrades/mods_utility/springy_boots.psd"
+  },
+  {
+   "id": 1613872264,
+   "key": "rutger_cheat_death",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/rutger/rutger_cheat_death.psd"
+  },
+  {
+   "id": 639385332,
+   "key": "rutger_force_field",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/rutger/rutger_force_field.psd"
+  },
+  {
+   "id": 363299194,
+   "key": "rutger_pulse",
+   "type": "ultimate",
+   "image": "file://{images}/hud/abilities/rutger/rutger_pulse.psd"
+  },
+  {
+   "id": 4182904284,
+   "key": "rutger_rocket",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/rutger/rutger_rocket_launcher.psd"
+  },
+  {
+   "id": 616118051,
+   "key": "seasonal_ability_eat_halloween_candy",
+   "name": "Eat Candy",
+   "name_ru": "Поедание конфет",
+   "type": "cosmetic",
+   "image": "file://{images}/items/seasonal/2026_candy.psd"
+  },
+  {
+   "id": 3080889384,
+   "key": "signature_base",
+   "type": "signature"
+  },
+  {
+   "id": 3500436034,
+   "key": "super_neutral_charge",
+   "name": "Mid Boss Charge",
+   "name_ru": "Заряд центрального босса",
+   "type": "signature"
+  },
+  {
+   "id": 1880975512,
+   "key": "super_neutral_shield",
+   "type": "signature"
+  },
+  {
+   "id": 2954330093,
+   "key": "synth_affliction",
+   "name": "Affliction",
+   "name_ru": "Недуг",
+   "type": "ultimate",
+   "image": "file://{images}/hud/abilities/synth/synth_affliction.psd"
+  },
+  {
+   "id": 938149308,
+   "key": "synth_barrage",
+   "name": "Barrage",
+   "name_ru": "Шквал",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/synth/synth_barrage.psd"
+  },
+  {
+   "id": 1976701714,
+   "key": "synth_plasma_flux",
+   "name": "Flying Cloak",
+   "name_ru": "Летающий плащ",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/synth/synth_plasma_flux.psd"
+  },
+  {
+   "id": 15584241,
+   "key": "synth_plasma_flux_trigger",
+   "type": "innate",
+   "image": "file://{images}/hud/abilities/ability_activate.psd"
+  },
+  {
+   "id": 3747867012,
+   "key": "synth_pulse",
+   "name": "Enchanter's Satchel",
+   "name_ru": "Чемодан заклинателя",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/synth/synth_pulse.psd"
+  },
+  {
+   "id": 3433393074,
+   "key": "targetdummy_ability_1",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/targetdummy/targetdummy_ability_1.psd"
+  },
+  {
+   "id": 1420202211,
+   "key": "targetdummy_ability_2",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/targetdummy/targetdummy_ability_2.psd"
+  },
+  {
+   "id": 983726794,
+   "key": "targetdummy_ability_3",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/targetdummy/targetdummy_ability_3.psd"
+  },
+  {
+   "id": 3440874880,
+   "key": "targetdummy_ability_4",
+   "type": "ultimate",
+   "image": "file://{images}/hud/abilities/targetdummy/targetdummy_ability_4.psd"
+  },
+  {
+   "id": 2981063858,
+   "key": "tech_upgrade_base",
+   "type": "item",
+   "slot": "spirit"
+  },
+  {
+   "id": 1239500246,
+   "key": "tech_upgrade_t1",
+   "type": "item",
+   "slot": "spirit",
+   "tier": 1
+  },
+  {
+   "id": 2938348616,
+   "key": "tech_upgrade_t2",
+   "type": "item",
+   "slot": "spirit",
+   "tier": 2
+  },
+  {
+   "id": 562994648,
+   "key": "tech_upgrade_t3",
+   "type": "item",
+   "slot": "spirit",
+   "tier": 3
+  },
+  {
+   "id": 2729670681,
+   "key": "tech_upgrade_t4",
+   "type": "item",
+   "slot": "spirit",
+   "tier": 4
+  },
+  {
+   "id": 4121208447,
+   "key": "tech_upgrade_t5",
+   "type": "item",
+   "slot": "spirit",
+   "tier": 5
+  },
+  {
+   "id": 348689004,
+   "key": "thumper_ability_1",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/thumper/thumper_ability_1.psd"
+  },
+  {
+   "id": 2086284285,
+   "key": "thumper_ability_2",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/thumper/thumper_ability_2.psd"
+  },
+  {
+   "id": 2489807574,
+   "key": "thumper_ability_3",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/thumper/thumper_ability_3.psd"
+  },
+  {
+   "id": 2563620507,
+   "key": "thumper_ability_4",
+   "type": "ultimate",
+   "image": "file://{images}/hud/abilities/thumper/thumper_ability_4.psd"
+  },
+  {
+   "id": 44956743,
+   "key": "trooper_boss_grenade",
+   "name": "Stun Grenade",
+   "name_ru": "Оглушающая граната",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/engineer_rockets.psd"
+  },
+  {
+   "id": 3145617851,
+   "key": "trooper_grenade",
+   "type": "signature"
+  },
+  {
+   "id": 2952062675,
+   "key": "ultimate_base",
+   "type": "ultimate"
+  },
+  {
+   "id": 630839635,
+   "key": "upgrade_ability_power_shard",
+   "name": "Echo Shard",
+   "name_ru": "Осколок эха",
+   "type": "item",
+   "slot": "spirit",
+   "tier": 4,
+   "image": "file://{images}/upgrades/mods_tech/echo_shard.psd"
+  },
+  {
+   "id": 677738769,
+   "key": "upgrade_ability_refresher",
+   "name": "Refresher",
+   "name_ru": "Обновитель",
+   "type": "item",
+   "slot": "spirit",
+   "tier": 4,
+   "image": "file://{images}/upgrades/mods_tech/refresher_module.psd"
+  },
+  {
+   "id": 3028234315,
+   "key": "upgrade_absorbing_armor",
+   "name": "Witchmail",
+   "name_ru": "Ведьмовской доспех",
+   "type": "item",
+   "slot": "vitality",
+   "tier": 4,
+   "image": "file://{images}/upgrades/mods_tech/arcane_medallion.psd"
+  },
+  {
+   "id": 465043967,
+   "key": "upgrade_acolytes_glove",
+   "name": "Spirit Strike",
+   "name_ru": "Спиритический удар",
+   "type": "item",
+   "slot": "spirit",
+   "tier": 1,
+   "image": "file://{images}/upgrades/mods_tech/acolytes_glove.psd"
+  },
+  {
+   "id": 1319649491,
+   "key": "upgrade_active_bullet_shield",
+   "type": "item",
+   "slot": "vitality",
+   "tier": 4,
+   "image": "file://{images}/upgrades/mods_armor/bullet_shield.psd"
+  },
+  {
+   "id": 381961617,
+   "key": "upgrade_active_reload",
+   "name": "Active Reload",
+   "name_ru": "Активная перезарядка",
+   "type": "item",
+   "slot": "weapon",
+   "tier": 2,
+   "image": "file://{images}/upgrades/mods_utility/deployable_bullet_shield.psd"
+  },
+  {
+   "id": 271801138,
+   "key": "upgrade_aerial_assault",
+   "type": "item",
+   "slot": "vitality",
+   "tier": 4,
+   "image": "file://{images}/upgrades/mods_utility/springy_boots.psd"
+  },
+  {
+   "id": 564937160,
+   "key": "upgrade_aerial_supremacy",
+   "name": "Aerial Supremacy",
+   "name_ru": "Воздушное превосходство",
+   "type": "item",
+   "slot": "vitality",
+   "tier": 5,
+   "image": "file://{images}/upgrades/mods_armor/superior_stamina.psd"
+  },
+  {
+   "id": 1248737459,
+   "key": "upgrade_ammo_scavenger",
+   "name": "Ammo Scavenger",
+   "name_ru": "Собиратель патронов",
+   "type": "item",
+   "slot": "spirit",
+   "tier": 1,
+   "image": "file://{images}/upgrades/mods_weapon/ammo_scavenger.psd"
+  },
+  {
+   "id": 4238249888,
+   "key": "upgrade_ancient_shield",
+   "name": "Ancient Shield",
+   "name_ru": "Древний щит",
+   "type": "item",
+   "slot": "vitality",
+   "tier": 5,
+   "image": "file://{images}/upgrades/mods_armor/improved_bullet_armor.psd"
+  },
+  {
+   "id": 1152158042,
+   "key": "upgrade_aoe_root",
+   "name": "Vortex Web",
+   "name_ru": "Паутинный вихрь",
+   "type": "item",
+   "slot": "spirit",
+   "tier": 4,
+   "image": "file://{images}/upgrades/mods_tech/area_immobilize.psd"
+  },
+  {
+   "id": 486220748,
+   "key": "upgrade_aoe_silence",
+   "type": "item",
+   "slot": "spirit",
+   "tier": 3,
+   "image": "file://{images}/upgrades/mods_utility/emp_wave.psd"
+  },
+  {
+   "id": 937242723,
+   "key": "upgrade_aoe_smoke_bomb",
+   "type": "item",
+   "slot": "spirit",
+   "tier": 3,
+   "image": "file://{images}/upgrades/mods_utility/smoke.psd"
+  },
+  {
+   "id": 776145721,
+   "key": "upgrade_aoe_tech_shield",
+   "type": "item",
+   "slot": "spirit",
+   "tier": 2,
+   "image": "file://{images}/upgrades/mods_tech/tech_shield_pulse.psd"
+  },
+  {
+   "id": 4149380528,
+   "key": "upgrade_apex_combat",
+   "name": "Apex Combat",
+   "name_ru": "Вершина боя",
+   "type": "item",
+   "slot": "weapon",
+   "tier": 5,
+   "image": "file://{images}/upgrades/mods_weapon/ricochet.psd"
+  },
+  {
+   "id": 673001892,
+   "key": "upgrade_aprounds",
+   "name": "Armor Piercer",
+   "name_ru": "Бронебой",
+   "type": "item",
+   "slot": "weapon",
+   "tier": 4,
+   "image": "file://{images}/upgrades/mods_weapon/armor_breaking_bullets.psd"
+  },
+  {
+   "id": 2717142638,
+   "key": "upgrade_arcane_eater",
+   "type": "item",
+   "slot": "weapon",
+   "tier": 2,
+   "image": "file://{images}/upgrades/mods_weapon/arcane_eater.psd"
+  },
+  {
+   "id": 2951612397,
+   "key": "upgrade_arcane_extension",
+   "name": "Duration Extender",
+   "name_ru": "Увеличитель длительности",
+   "type": "item",
+   "slot": "spirit",
+   "tier": 2,
+   "image": "file://{images}/upgrades/mods_tech/duration_extender.psd"
+  },
+  {
+   "id": 1052584266,
+   "key": "upgrade_arcane_medallion",
+   "type": "item",
+   "slot": "spirit",
+   "tier": 3,
+   "image": "file://{images}/upgrades/mods_tech/arcane_medallion.psd"
+  },
+  {
+   "id": 1150006784,
+   "key": "upgrade_arcane_surge",
+   "name": "Arcane Surge",
+   "name_ru": "Колдовской порыв",
+   "type": "item",
+   "slot": "spirit",
+   "tier": 2,
+   "image": "file://{images}/upgrades/mods_tech/arcane_surge.psd"
+  },
+  {
+   "id": 3812615317,
+   "key": "upgrade_arctic_blast",
+   "name": "Arctic Blast",
+   "name_ru": "Арктический взрыв",
+   "type": "item",
+   "slot": "spirit",
+   "tier": 4,
+   "image": "file://{images}/upgrades/mods_utility/ice_blast.psd"
+  },
+  {
+   "id": 1109351073,
+   "key": "upgrade_attack_speed_1",
+   "type": "item",
+   "slot": "weapon",
+   "tier": 2,
+   "image": "file://{images}/upgrades/mods_weapon/fire_rate_plus.psd"
+  },
+  {
+   "id": 3791295884,
+   "key": "upgrade_attack_speed_2",
+   "type": "item",
+   "slot": "weapon",
+   "tier": 3,
+   "image": "file://{images}/upgrades/mods_weapon/fire_rate_plus_plus.psd"
+  },
+  {
+   "id": 951866250,
+   "key": "upgrade_auto_cleanse",
+   "name": "Indomitable",
+   "name_ru": "Непреклонность",
+   "type": "item",
+   "slot": "vitality",
+   "tier": 4,
+   "image": "file://{images}/items/vitality/indomitable.psd"
+  },
+  {
+   "id": 3884003354,
+   "key": "upgrade_banshee_slugs",
+   "name": "Crippling Headshot",
+   "name_ru": "Калечащий выстрел в голову",
+   "type": "item",
+   "slot": "weapon",
+   "tier": 4,
+   "image": "file://{images}/upgrades/mods_weapon/banshee_slugs.psd"
+  },
+  {
+   "id": 4113832715,
+   "key": "upgrade_base",
+   "type": "item"
+  },
+  {
+   "id": 1326137213,
+   "key": "upgrade_belt_fed_magazine",
+   "type": "item",
+   "slot": "weapon",
+   "tier": 4,
+   "image": "file://{images}/upgrades/mods_weapon/auto_reloader.psd"
+  },
+  {
+   "id": 1414319208,
+   "key": "upgrade_berserker",
+   "name": "Berserker",
+   "name_ru": "Берсерк",
+   "type": "item",
+   "slot": "weapon",
+   "tier": 3,
+   "image": "file://{images}/upgrades/mods_weapon/berserker.psd"
+  },
+  {
+   "id": 4104549924,
+   "key": "upgrade_blitz_bullets",
+   "name": "Swift Striker",
+   "name_ru": "Быстрый стрелок",
+   "type": "item",
+   "slot": "weapon",
+   "tier": 2,
+   "image": "file://{images}/upgrades/mods_weapon/fire_rate_plus.psd"
+  },
+  {
+   "id": 989206714,
+   "key": "upgrade_blood_tribute",
+   "name": "Blood Tribute",
+   "name_ru": "Кровавая дань",
+   "type": "item",
+   "slot": "weapon",
+   "tier": 3
+  },
+  {
+   "id": 1288322878,
+   "key": "upgrade_bonus_ability_charge_3",
+   "type": "item",
+   "slot": "spirit",
+   "tier": 3,
+   "image": "file://{images}/upgrades/mods_tech/extra_charge.psd"
+  },
+  {
+   "id": 2519598785,
+   "key": "upgrade_boundless_spirit",
+   "name": "Boundless Spirit",
+   "name_ru": "Безграничный спиритизм",
+   "type": "item",
+   "slot": "spirit",
+   "tier": 4,
+   "image": "file://{images}/upgrades/mods_tech/boundless_spirit.psd"
+  },
+  {
+   "id": 1252627263,
+   "key": "upgrade_boxing_glove",
+   "name": "Lifestrike",
+   "name_ru": "Витальный удар",
+   "type": "item",
+   "slot": "vitality",
+   "tier": 3,
+   "image": "file://{images}/upgrades/mods_armor/boxing_glove.psd"
+  },
+  {
+   "id": 3713423303,
+   "key": "upgrade_bullet_armor",
+   "name": "Bullet Armor",
+   "name_ru": "Пулевая броня",
+   "type": "item",
+   "slot": "vitality",
+   "tier": 2,
+   "image": "file://{images}/upgrades/mods_armor/bullet_armor.psd"
+  },
+  {
+   "id": 2481177645,
+   "key": "upgrade_bullet_armor_reduction_aura",
+   "name": "Hunter's Aura",
+   "name_ru": "Аура охотника",
+   "type": "item",
+   "slot": "weapon",
+   "tier": 3,
+   "image": "file://{images}/upgrades/mods_armor/bullet_armor_reduction_aura.psd"
+  },
+  {
+   "id": 1298427343,
+   "key": "upgrade_bullet_damage_reduction_aura",
+   "type": "item",
+   "slot": "vitality",
+   "tier": 2,
+   "image": "file://{images}/upgrades/mods_armor/weapon_jammer.psd"
+  },
+  {
+   "id": 2971868509,
+   "key": "upgrade_bullet_resist_shredder",
+   "name": "Bullet Resist Shredder",
+   "name_ru": "Измельчитель пулестойкости",
+   "type": "item",
+   "slot": "spirit",
+   "tier": 2,
+   "image": "file://{images}/upgrades/mods_tech/bullet_resist_shredder.psd"
+  },
+  {
+   "id": 3294954488,
+   "key": "upgrade_bulletshredimbue",
+   "name": "Ballistic Enchantment",
+   "name_ru": "Баллистические чары",
+   "type": "item",
+   "slot": "weapon",
+   "tier": 3,
+   "image": "file://{images}/upgrades/mods_weapon/fire_rate_plus.psd"
+  },
+  {
+   "id": 2739107182,
+   "key": "upgrade_burst_fire",
+   "name": "Burst Fire",
+   "name_ru": "Шквальный огонь",
+   "type": "item",
+   "slot": "weapon",
+   "tier": 3,
+   "image": "file://{images}/upgrades/mods_weapon/fire_rate_plus_plus.psd"
+  },
+  {
+   "id": 253917113,
+   "key": "upgrade_burst_fire_actuator",
+   "type": "item",
+   "slot": "weapon",
+   "tier": 2,
+   "image": "file://{images}/upgrades/mods_utility/fast_reload.psd"
+  },
+  {
+   "id": 1962740586,
+   "key": "upgrade_camouflage",
+   "type": "item",
+   "slot": "vitality",
+   "tier": 2,
+   "image": "file://{images}/upgrades/mods_armor/camouflage_suit.psd"
+  },
+  {
+   "id": 710436191,
+   "key": "upgrade_capacitor",
+   "name": "Capacitor",
+   "name_ru": "Конденсатор",
+   "type": "item",
+   "slot": "weapon",
+   "tier": 4,
+   "image": "file://{images}/upgrades/mods_weapon/electrified_bullets.psd"
+  },
+  {
+   "id": 2447176615,
+   "key": "upgrade_cardio_calibrator",
+   "name": "Enduring Speed",
+   "name_ru": "Скоростная стойкость",
+   "type": "item",
+   "slot": "vitality",
+   "tier": 2,
+   "image": "file://{images}/upgrades/mods_utility/sprint_booster.psd"
+  },
+  {
+   "id": 3729138568,
+   "key": "upgrade_celestial_guidance",
+   "name": "Celestial Blessing",
+   "name_ru": "Небесное благословение",
+   "type": "item",
+   "slot": "vitality",
+   "tier": 5,
+   "image": "file://{images}/upgrades/mods_armor/debuff_reducer.psd"
+  },
+  {
+   "id": 811521119,
+   "key": "upgrade_chain_lightning",
+   "name": "Tesla Bullets",
+   "name_ru": "Тесла-пули",
+   "type": "item",
+   "slot": "weapon",
+   "tier": 3,
+   "image": "file://{images}/upgrades/mods_weapon/electrified_bullets.psd"
+  },
+  {
+   "id": 4245766497,
+   "key": "upgrade_charge_mastery",
+   "type": "item",
+   "slot": "spirit",
+   "tier": 4,
+   "image": "file://{images}/upgrades/mods_tech/extra_charge.psd"
+  },
+  {
+   "id": 3572021243,
+   "key": "upgrade_charmed_wraps",
+   "type": "item",
+   "slot": "spirit",
+   "tier": 2,
+   "image": "file://{images}/upgrades/mods_tech/charmed_wraps.psd"
+  },
+  {
+   "id": 3361811174,
+   "key": "upgrade_cheat_death",
+   "name": "Cheat Death",
+   "name_ru": "Обман смерти",
+   "type": "item",
+   "slot": "vitality",
+   "tier": 4,
+   "image": "file://{images}/upgrades/mods_tech/torment_aura.psd"
+  },
+  {
+   "id": 3585132399,
+   "key": "upgrade_chonky",
+   "name": "Fortitude",
+   "name_ru": "Выдержка",
+   "type": "item",
+   "slot": "vitality",
+   "tier": 3,
+   "image": "file://{images}/upgrades/mods_armor/revitalizer.psd"
+  },
+  {
+   "id": 1548066885,
+   "key": "upgrade_clip_size",
+   "name": "Extended Magazine",
+   "name_ru": "Увеличенный магазин",
+   "type": "item",
+   "slot": "weapon",
+   "tier": 1,
+   "image": "file://{images}/upgrades/mods_weapon/clip_size.psd"
+  },
+  {
+   "id": 4284855775,
+   "key": "upgrade_clip_size_2",
+   "type": "item",
+   "slot": "weapon",
+   "tier": 2
+  },
+  {
+   "id": 3449296332,
+   "key": "upgrade_clip_size_3",
+   "type": "item",
+   "slot": "weapon",
+   "tier": 3
+  },
+  {
+   "id": 3535785353,
+   "key": "upgrade_clip_size_fixed",
+   "type": "item",
+   "slot": "weapon",
+   "tier": 2,
+   "image": "file://{images}/upgrades/mods_weapon/clip_size.psd"
+  },
+  {
+   "id": 2861048274,
+   "key": "upgrade_clip_size_fixed_t3",
+   "type": "item",
+   "slot": "weapon",
+   "tier": 3
+  },
+  {
+   "id": 3523480953,
+   "key": "upgrade_cloak_of_opportunity",
+   "name": "Cloak of Opportunity",
+   "name_ru": "Плащ возможностей",
+   "type": "item",
+   "slot": "vitality",
+   "tier": 5
+  },
+  {
+   "id": 2560018361,
+   "key": "upgrade_cloaking_device",
+   "type": "item",
+   "slot": "vitality",
+   "tier": 3,
+   "image": "file://{images}/upgrades/mods_utility/cloaking_device.psd"
+  },
+  {
+   "id": 1798666702,
+   "key": "upgrade_cloaking_device_active",
+   "name": "Shadow Weave",
+   "name_ru": "Сплетение теней",
+   "type": "item",
+   "slot": "weapon",
+   "tier": 3,
+   "image": "file://{images}/upgrades/mods_utility/cloaking_device.psd"
+  },
+  {
+   "id": 2095565695,
+   "key": "upgrade_close_quarter_combat",
+   "name": "Point Blank",
+   "name_ru": "Стрельба в упор",
+   "type": "item",
+   "slot": "weapon",
+   "tier": 3,
+   "image": "file://{images}/upgrades/mods_weapon/point_blank.psd"
+  },
+  {
+   "id": 1342610602,
+   "key": "upgrade_close_range",
+   "name": "Close Quarters",
+   "name_ru": "Ближняя дистанция",
+   "type": "item",
+   "slot": "weapon",
+   "tier": 1,
+   "image": "file://{images}/upgrades/mods_weapon/close_range.psd"
+  },
+  {
+   "id": 1976391348,
+   "key": "upgrade_cold_front",
+   "name": "Cold Front",
+   "name_ru": "Холодный фронт",
+   "type": "item",
+   "slot": "spirit",
+   "tier": 2,
+   "image": "file://{images}/upgrades/mods_utility/ice_blast.psd"
+  },
+  {
+   "id": 2407781327,
+   "key": "upgrade_colossus",
+   "name": "Colossus",
+   "name_ru": "Колосс",
+   "type": "item",
+   "slot": "vitality",
+   "tier": 4,
+   "image": "file://{images}/upgrades/mods_armor/colossus.psd"
+  },
+  {
+   "id": 1813726886,
+   "key": "upgrade_containment",
+   "name": "Slowing Hex",
+   "name_ru": "Замедляющие чары",
+   "type": "item",
+   "slot": "spirit",
+   "tier": 2,
+   "image": "file://{images}/upgrades/mods_tech/immobilize.psd"
+  },
+  {
+   "id": 3261353684,
+   "key": "upgrade_cooldown_reduction",
+   "name": "Superior Cooldown",
+   "name_ru": "Превосходная перезарядка умений",
+   "type": "item",
+   "slot": "spirit",
+   "tier": 3,
+   "image": "file://{images}/upgrades/mods_tech/spiritual_flow.psd"
+  },
+  {
+   "id": 3913864662,
+   "key": "upgrade_corpse_explosion",
+   "name": "Soul Explosion",
+   "name_ru": "Взрыв души",
+   "type": "item",
+   "slot": "spirit",
+   "tier": 3,
+   "image": "file://{images}/upgrades/mods_utility/smoke.psd"
+  },
+  {
+   "id": 1414025773,
+   "key": "upgrade_counterspell",
+   "name": "Counterspell",
+   "name_ru": "Контрчары",
+   "type": "item",
+   "slot": "vitality",
+   "tier": 3,
+   "image": "file://{images}/hud/modifiers/icon_parry.svg"
+  },
+  {
+   "id": 395867183,
+   "key": "upgrade_crackshot",
+   "name": "Mystic Shot",
+   "name_ru": "Мистический выстрел",
+   "type": "item",
+   "slot": "weapon",
+   "tier": 2,
+   "image": "file://{images}/upgrades/mods_weapon/explosive_bullets.psd"
+  },
+  {
+   "id": 1396247347,
+   "key": "upgrade_critshot",
+   "name": "Lucky Shot",
+   "name_ru": "Удачный выстрел",
+   "type": "item",
+   "slot": "weapon",
+   "tier": 4,
+   "image": "file://{images}/upgrades/mods_weapon/crit_damage.psd"
+  },
+  {
+   "id": 800008313,
+   "key": "upgrade_crushing_fists",
+   "name": "Crushing Fists",
+   "name_ru": "Сокрушительные кулаки",
+   "type": "item",
+   "slot": "weapon",
+   "tier": 4,
+   "image": "file://{images}/upgrades/mods_weapon/melee_charge.psd"
+  },
+  {
+   "id": 865846625,
+   "key": "upgrade_damage_recycler",
+   "name": "Leech",
+   "name_ru": "Кровопийца",
+   "type": "item",
+   "slot": "vitality",
+   "tier": 4,
+   "image": "file://{images}/upgrades/mods_armor/leech.psd"
+  },
+  {
+   "id": 1047818222,
+   "key": "upgrade_debuff_reducer",
+   "name": "Debuff Reducer",
+   "name_ru": "Уменьшитель эффектов",
+   "type": "item",
+   "slot": "vitality",
+   "tier": 2,
+   "image": "file://{images}/upgrades/mods_armor/debuff_reducer.psd"
+  },
+  {
+   "id": 3491236900,
+   "key": "upgrade_deflecting_armor",
+   "name": "Plated Armor",
+   "name_ru": "Латная броня",
+   "type": "item",
+   "slot": "vitality",
+   "tier": 4,
+   "image": "file://{images}/upgrades/mods_tech/arcane_medallion.psd"
+  },
+  {
+   "id": 2645639421,
+   "key": "upgrade_disarm",
+   "type": "item",
+   "slot": "spirit",
+   "tier": 1,
+   "image": "file://{images}/upgrades/mods_tech/disarm.psd"
+  },
+  {
+   "id": 2417568017,
+   "key": "upgrade_discord",
+   "name": "Scourge",
+   "name_ru": "Кара",
+   "type": "item",
+   "slot": "spirit",
+   "tier": 4,
+   "image": "file://{images}/upgrades/mods_tech/rupture.psd"
+  },
+  {
+   "id": 1662311306,
+   "key": "upgrade_divine_barrier",
+   "name": "Divine Barrier",
+   "name_ru": "Божественный барьер",
+   "type": "item",
+   "slot": "vitality",
+   "tier": 4,
+   "image": "file://{images}/upgrades/mods_armor/savior.psd"
+  },
+  {
+   "id": 2820116164,
+   "key": "upgrade_diviners_kevlar",
+   "name": "Diviner's Kevlar",
+   "name_ru": "Доспех прорицателя",
+   "type": "item",
+   "slot": "vitality",
+   "tier": 4,
+   "image": "file://{images}/upgrades/mods_armor/bullet_shield.psd"
+  },
+  {
+   "id": 790496977,
+   "key": "upgrade_double_jump",
+   "type": "item",
+   "slot": "vitality",
+   "tier": 1,
+   "image": "file://{images}/upgrades/mods_armor/double_jump.psd"
+  },
+  {
+   "id": 2108215830,
+   "key": "upgrade_dps_aura",
+   "name": "Heroic Aura",
+   "name_ru": "Героическая аура",
+   "type": "item",
+   "slot": "weapon",
+   "tier": 3,
+   "image": "file://{images}/upgrades/mods_weapon/bullet_damage_aura.psd"
+  },
+  {
+   "id": 4190165534,
+   "key": "upgrade_drum_magazine",
+   "type": "item",
+   "slot": "weapon",
+   "tier": 3,
+   "image": "file://{images}/upgrades/mods_weapon/auto_reloader.psd"
+  },
+  {
+   "id": 3789823638,
+   "key": "upgrade_duration_extender",
+   "type": "item",
+   "slot": "spirit",
+   "tier": 2,
+   "image": "file://{images}/upgrades/mods_tech/tech_duration_extender.psd"
+  },
+  {
+   "id": 3568217437,
+   "key": "upgrade_eldritch_shot",
+   "name": "Haunting Shot",
+   "name_ru": "Терзающий выстрел",
+   "type": "item",
+   "slot": "weapon",
+   "tier": 5,
+   "image": "file://{images}/upgrades/mods_weapon/explosive_bullets.psd"
+  },
+  {
+   "id": 1825399334,
+   "key": "upgrade_electric_slippers",
+   "name": "Electric Slippers",
+   "name_ru": "Электротапки",
+   "type": "item",
+   "slot": "vitality",
+   "tier": 5
+  },
+  {
+   "id": 2221211450,
+   "key": "upgrade_enchanted_holsters",
+   "name": "Spellslinger",
+   "name_ru": "Метатель чар",
+   "type": "item",
+   "slot": "weapon",
+   "tier": 4
+  },
+  {
+   "id": 2829638276,
+   "key": "upgrade_endurance",
+   "name": "Extra Regen",
+   "name_ru": "Добавочное восстановление",
+   "type": "item",
+   "slot": "vitality",
+   "tier": 1,
+   "image": "file://{images}/upgrades/mods_armor/endurance.psd"
+  },
+  {
+   "id": 3005970438,
+   "key": "upgrade_escalating_exposure",
+   "name": "Escalating Exposure",
+   "name_ru": "Растущее воздействие",
+   "type": "item",
+   "slot": "spirit",
+   "tier": 4,
+   "image": "file://{images}/upgrades/mods_tech/escalating_exposure.psd"
+  },
+  {
+   "id": 230297145,
+   "key": "upgrade_eternal_gift",
+   "name": "Eternal Gift",
+   "name_ru": "Вечный дар",
+   "type": "item",
+   "slot": "vitality",
+   "tier": 5
+  },
+  {
+   "id": 3919289022,
+   "key": "upgrade_ethereal_bullets",
+   "name": "Mercurial Magnum",
+   "name_ru": "Ртутный Магнум",
+   "type": "item",
+   "slot": "spirit",
+   "tier": 4,
+   "image": "file://{images}/upgrades/mods_weapon/fire_rate_plus.psd"
+  },
+  {
+   "id": 690458959,
+   "key": "upgrade_express_shot",
+   "name": "Express Shot",
+   "name_ru": "Экспресс-выстрел",
+   "type": "item",
+   "slot": "weapon",
+   "tier": 3
+  },
+  {
+   "id": 3776945997,
+   "key": "upgrade_extra_charge",
+   "name": "Extra Charge",
+   "name_ru": "Добавочные заряды",
+   "type": "item",
+   "slot": "spirit",
+   "tier": 1,
+   "image": "file://{images}/upgrades/mods_tech/extra_charge.psd"
+  },
+  {
+   "id": 339443430,
+   "key": "upgrade_fervor",
+   "name": "Frenzy",
+   "name_ru": "Ярость",
+   "type": "item",
+   "slot": "weapon",
+   "tier": 4,
+   "image": "file://{images}/upgrades/mods_weapon/fervor.psd"
+  },
+  {
+   "id": 3662153307,
+   "key": "upgrade_fire_rate_aura",
+   "type": "item",
+   "slot": "weapon",
+   "tier": 2,
+   "image": "file://{images}/upgrades/mods_utility/fire_rate_aura.psd"
+  },
+  {
+   "id": 3403085434,
+   "key": "upgrade_fleetfoot_boots",
+   "name": "Fleetfoot",
+   "name_ru": "Проворная поступь",
+   "type": "item",
+   "slot": "weapon",
+   "tier": 2,
+   "image": "file://{images}/upgrades/mods_weapon/fleetfoot_boots.psd"
+  },
+  {
+   "id": 2142980412,
+   "key": "upgrade_focus_lens",
+   "name": "Focus Lens",
+   "name_ru": "Фокусная линза",
+   "type": "item",
+   "slot": "spirit",
+   "tier": 4,
+   "image": "file://{images}/upgrades/mods_tech/focused_silence.psd"
+  },
+  {
+   "id": 2039312305,
+   "key": "upgrade_frenzy",
+   "type": "item",
+   "slot": "vitality",
+   "tier": 4,
+   "image": "file://{images}/upgrades/mods_armor/health_stealing_bullets.psd"
+  },
+  {
+   "id": 3064545951,
+   "key": "upgrade_full_spectrum",
+   "type": "item",
+   "slot": "spirit",
+   "tier": 4,
+   "image": "file://{images}/upgrades/mods_tech/tech_range.psd"
+  },
+  {
+   "id": 1409190604,
+   "key": "upgrade_fury_trance",
+   "name": "Fury Trance",
+   "name_ru": "Яростный экстаз",
+   "type": "item",
+   "slot": "vitality",
+   "tier": 3,
+   "image": "file://{images}/upgrades/mods_weapon/vampiric_burst.psd"
+  },
+  {
+   "id": 3316018900,
+   "key": "upgrade_galvanic_storm",
+   "type": "item",
+   "slot": "weapon",
+   "tier": 4,
+   "image": "file://{images}/upgrades/mods_weapon/electrified_bullets.psd"
+  },
+  {
+   "id": 365620721,
+   "key": "upgrade_glass_cannon",
+   "name": "Glass Cannon",
+   "name_ru": "Стеклянная пушка",
+   "type": "item",
+   "slot": "weapon",
+   "tier": 4,
+   "image": "file://{images}/upgrades/mods_weapon/glass_cannon.psd"
+  },
+  {
+   "id": 1497973293,
+   "key": "upgrade_glass_cannon2",
+   "name": "Glass Cannon v2",
+   "name_ru": "Стеклянная пушка, вер. 2",
+   "type": "item",
+   "slot": "weapon",
+   "tier": 4,
+   "image": "file://{images}/upgrades/mods_weapon/glass_cannon.psd"
+  },
+  {
+   "id": 2617435668,
+   "key": "upgrade_glitch",
+   "name": "Cursed Relic",
+   "name_ru": "Проклятая реликвия",
+   "type": "item",
+   "slot": "spirit",
+   "tier": 4,
+   "image": "file://{images}/upgrades/mods_tech/glitch.psd"
+  },
+  {
+   "id": 2462046703,
+   "key": "upgrade_goose_egg",
+   "name": "Golden Goose Egg",
+   "name_ru": "Золотое гусиное яйцо",
+   "type": "item",
+   "slot": "spirit",
+   "tier": 1,
+   "image": "file://{images}/upgrades/mods_tech/tech_damage.psd"
+  },
+  {
+   "id": 2061878743,
+   "key": "upgrade_greater_withering_whip",
+   "name": "Disarming Hex",
+   "name_ru": "Чары обезоруживания",
+   "type": "item",
+   "slot": "spirit",
+   "tier": 3,
+   "image": "file://{images}/upgrades/mods_tech/disarm.psd"
+  },
+  {
+   "id": 1672893796,
+   "key": "upgrade_grit",
+   "name": "Grit",
+   "name_ru": "Крепость",
+   "type": "item",
+   "slot": "vitality",
+   "tier": 1,
+   "image": "file://{images}/upgrades/mods_armor/bullet_shield.psd"
+  },
+  {
+   "id": 857669956,
+   "key": "upgrade_guardian_ward",
+   "name": "Guardian Ward",
+   "name_ru": "Заслон стража",
+   "type": "item",
+   "slot": "vitality",
+   "tier": 2,
+   "image": "file://{images}/upgrades/mods_armor/savior.psd"
+  },
+  {
+   "id": 3927044172,
+   "key": "upgrade_haunting_scream",
+   "name": "Haunting Scream",
+   "name_ru": "Терзающий крик",
+   "type": "item",
+   "slot": "spirit",
+   "tier": 5,
+   "image": "file://{images}/upgrades/mods_weapon/targeted_silence.psd"
+  },
+  {
+   "id": 4053935515,
+   "key": "upgrade_headhunter",
+   "name": "Headhunter",
+   "name_ru": "Охотник за головами",
+   "type": "item",
+   "slot": "weapon",
+   "tier": 3,
+   "image": "file://{images}/upgrades/mods_weapon/headhunter.psd"
+  },
+  {
+   "id": 2010028405,
+   "key": "upgrade_headshot_booster",
+   "name": "Headshot Booster",
+   "name_ru": "Усилитель выстрелов в голову",
+   "type": "item",
+   "slot": "weapon",
+   "tier": 1,
+   "image": "file://{images}/upgrades/mods_weapon/headshot_booster.psd"
+  },
+  {
+   "id": 1770441818,
+   "key": "upgrade_headshot_booster2",
+   "name": "Weakening Headshot",
+   "name_ru": "Ослабляющий выстрел в голову",
+   "type": "item",
+   "slot": "weapon",
+   "tier": 2,
+   "image": "file://{images}/upgrades/mods_weapon/headshot_booster.psd"
+  },
+  {
+   "id": 138320648,
+   "key": "upgrade_heal_on_level",
+   "name": "Patron's Healing",
+   "name_ru": "Лечение покровителя",
+   "type": "item",
+   "slot": "vitality",
+   "tier": 1,
+   "image": "file://{images}/upgrades/mods_armor/last_stand.psd"
+  },
+  {
+   "id": 2603935618,
+   "key": "upgrade_healbane",
+   "name": "Healbane",
+   "name_ru": "Гроза целителей",
+   "type": "item",
+   "slot": "vitality",
+   "tier": 2,
+   "image": "file://{images}/upgrades/mods_tech/healbane.psd"
+  },
+  {
+   "id": 1427630806,
+   "key": "upgrade_healbuff",
+   "name": "Healing Tempo",
+   "name_ru": "Целебный темп",
+   "type": "item",
+   "slot": "vitality",
+   "tier": 4,
+   "image": "file://{images}/upgrades/aura_icon.psd"
+  },
+  {
+   "id": 2566692615,
+   "key": "upgrade_healing_booster",
+   "name": "Healing Booster",
+   "name_ru": "Усилитель лечения",
+   "type": "item",
+   "slot": "vitality",
+   "tier": 2,
+   "image": "file://{images}/upgrades/mods_armor/healing_booster.psd"
+  },
+  {
+   "id": 3633614685,
+   "key": "upgrade_health",
+   "name": "Extra Health",
+   "name_ru": "Добавочное здоровье",
+   "type": "item",
+   "slot": "vitality",
+   "tier": 1,
+   "image": "file://{images}/upgrades/mods_armor/health.psd"
+  },
+  {
+   "id": 2858617477,
+   "key": "upgrade_health_2",
+   "name": "Toughness",
+   "name_ru": "Твёрдость",
+   "type": "item",
+   "slot": "vitality",
+   "tier": 2,
+   "image": "file://{images}/upgrades/mods_armor/health.psd"
+  },
+  {
+   "id": 2956256701,
+   "key": "upgrade_health_nova",
+   "name": "Healing Nova",
+   "name_ru": "Вспышка исцеления",
+   "type": "item",
+   "slot": "vitality",
+   "tier": 3,
+   "image": "file://{images}/upgrades/mods_utility/health_nova.psd"
+  },
+  {
+   "id": 1575167590,
+   "key": "upgrade_health_regen_1",
+   "type": "item",
+   "slot": "vitality",
+   "tier": 1,
+   "image": "file://{images}/upgrades/mods_armor/health_regen.psd"
+  },
+  {
+   "id": 3321728133,
+   "key": "upgrade_health_regen_aura",
+   "type": "item",
+   "slot": "vitality",
+   "tier": 3,
+   "image": "file://{images}/upgrades/mods_armor/health_regen_aura.psd"
+  },
+  {
+   "id": 876563814,
+   "key": "upgrade_health_stealing_magic",
+   "name": "Spirit Lifesteal",
+   "name_ru": "Спиритическая кража здоровья",
+   "type": "item",
+   "slot": "vitality",
+   "tier": 2,
+   "image": "file://{images}/upgrades/mods_tech/health_stealing_tech.psd"
+  },
+  {
+   "id": 1710079648,
+   "key": "upgrade_health_stimpak",
+   "name": "Healing Rite",
+   "name_ru": "Обряд лечения",
+   "type": "item",
+   "slot": "vitality",
+   "tier": 1,
+   "image": "file://{images}/upgrades/mods_armor/stimpak.psd"
+  },
+  {
+   "id": 1825391146,
+   "key": "upgrade_high_impact_armor",
+   "type": "item",
+   "slot": "vitality",
+   "tier": 2,
+   "image": "file://{images}/upgrades/mods_armor/bullet_armor.psd"
+  },
+  {
+   "id": 3077079169,
+   "key": "upgrade_high_velocity_mag",
+   "name": "High-Velocity Rounds",
+   "name_ru": "Скоростные патроны",
+   "type": "item",
+   "slot": "weapon",
+   "tier": 1,
+   "image": "file://{images}/upgrades/mods_weapon/high_velocity_mag.psd"
+  },
+  {
+   "id": 2678489038,
+   "key": "upgrade_hollow_point_rounds",
+   "name": "Hollow Point",
+   "name_ru": "Разрывник",
+   "type": "item",
+   "slot": "weapon",
+   "tier": 3,
+   "image": "file://{images}/upgrades/mods_weapon/hollow_point.psd"
+  },
+  {
+   "id": 1736094134,
+   "key": "upgrade_icarus_wings",
+   "name": "Seraphim Wings",
+   "name_ru": "Крылья серафима",
+   "type": "item",
+   "slot": "vitality",
+   "tier": 5,
+   "image": "file://{images}/upgrades/mods_utility/sprint_booster.psd"
+  },
+  {
+   "id": 1959600032,
+   "key": "upgrade_imbued_ability",
+   "type": "item",
+   "slot": "spirit",
+   "tier": 4,
+   "image": "file://{images}/upgrades/mods_tech/tech_damage.psd"
+  },
+  {
+   "id": 2717651715,
+   "key": "upgrade_imbued_duration_extender",
+   "name": "Superior Duration",
+   "name_ru": "Превосходная длительность",
+   "type": "item",
+   "slot": "spirit",
+   "tier": 3,
+   "image": "file://{images}/upgrades/mods_tech/arcane_persistance.psd"
+  },
+  {
+   "id": 3140772621,
+   "key": "upgrade_improved_bullet_armor",
+   "name": "Bullet Resilience",
+   "name_ru": "Пулевая стойкость",
+   "type": "item",
+   "slot": "vitality",
+   "tier": 3,
+   "image": "file://{images}/upgrades/mods_armor/improved_bullet_armor.psd"
+  },
+  {
+   "id": 968099481,
+   "key": "upgrade_improved_spirit",
+   "name": "Extra Spirit",
+   "name_ru": "Добавочный спиритизм",
+   "type": "item",
+   "slot": "spirit",
+   "tier": 1,
+   "image": "file://{images}/upgrades/mods_tech/tech_damage.psd"
+  },
+  {
+   "id": 4139877411,
+   "key": "upgrade_improved_stamina",
+   "name": "Extra Stamina",
+   "name_ru": "Добавочная выносливость",
+   "type": "item",
+   "slot": "vitality",
+   "tier": 1,
+   "image": "file://{images}/upgrades/mods_armor/improved_stamina.psd"
+  },
+  {
+   "id": 3269957497,
+   "key": "upgrade_infinite_rounds",
+   "name": "Infinite Rounds",
+   "name_ru": "Бесконечные патроны",
+   "type": "item",
+   "slot": "weapon",
+   "tier": 5,
+   "image": "file://{images}/upgrades/mods_weapon/armor_breaking_bullets.psd"
+  },
+  {
+   "id": 3346798998,
+   "key": "upgrade_infinitemagazine",
+   "name": "Endless Magazine",
+   "name_ru": "Бесконечный магазин",
+   "type": "item",
+   "slot": "weapon",
+   "tier": 4,
+   "image": "file://{images}/hud/abilities/wraith_daggers.psd"
+  },
+  {
+   "id": 1797283378,
+   "key": "upgrade_infuser",
+   "name": "Infuser",
+   "name_ru": "Насытитель",
+   "type": "item",
+   "slot": "vitality",
+   "tier": 4,
+   "image": "file://{images}/upgrades/mods_tech/infuser.psd"
+  },
+  {
+   "id": 2037039379,
+   "key": "upgrade_inhibitor",
+   "name": "Inhibitor",
+   "name_ru": "Ограничитель",
+   "type": "item",
+   "slot": "vitality",
+   "tier": 4,
+   "image": "file://{images}/upgrades/mods_weapon/inhibitor.psd"
+  },
+  {
+   "id": 2407033488,
+   "key": "upgrade_intensifying_clip",
+   "name": "Intensifying Magazine",
+   "name_ru": "Усиливающий магазин",
+   "type": "item",
+   "slot": "weapon",
+   "tier": 2,
+   "image": "file://{images}/upgrades/mods_weapon/auto_reloader.psd"
+  },
+  {
+   "id": 1250307611,
+   "key": "upgrade_juggernaut",
+   "name": "Juggernaut",
+   "name_ru": "Громила",
+   "type": "item",
+   "slot": "vitality",
+   "tier": 4,
+   "image": "file://{images}/items/vitality/juggernaut.psd"
+  },
+  {
+   "id": 3977876567,
+   "key": "upgrade_kinetic_sash",
+   "name": "Kinetic Dash",
+   "name_ru": "Кинетический рывок",
+   "type": "item",
+   "slot": "weapon",
+   "tier": 2,
+   "image": "file://{images}/upgrades/mods_weapon/kinetic_sash.psd"
+  },
+  {
+   "id": 1437614329,
+   "key": "upgrade_lifestrike_gauntlets",
+   "name": "Melee Lifesteal",
+   "name_ru": "Ударная кража здоровья",
+   "type": "item",
+   "slot": "vitality",
+   "tier": 1,
+   "image": "file://{images}/upgrades/mods_weapon/lifestrike_gauntlets.psd"
+  },
+  {
+   "id": 3331811235,
+   "key": "upgrade_long_range",
+   "name": "Long Range",
+   "name_ru": "Дальняя дистанция",
+   "type": "item",
+   "slot": "weapon",
+   "tier": 2,
+   "image": "file://{images}/upgrades/mods_weapon/long_range.psd"
+  },
+  {
+   "id": 1993213427,
+   "key": "upgrade_long_range_slowing_tech",
+   "type": "item",
+   "slot": "spirit",
+   "tier": 3,
+   "image": "file://{images}/upgrades/mods_tech/tech_range.psd"
+  },
+  {
+   "id": 1998374645,
+   "key": "upgrade_magic_burst",
+   "name": "Mystic Burst",
+   "name_ru": "Мистический импульс",
+   "type": "item",
+   "slot": "spirit",
+   "tier": 1,
+   "image": "file://{images}/upgrades/mods_tech/magic_burst.psd"
+  },
+  {
+   "id": 2800629741,
+   "key": "upgrade_magic_carpet",
+   "name": "Magic Carpet",
+   "name_ru": "Ковёр-самолёт",
+   "type": "item",
+   "slot": "spirit",
+   "tier": 4,
+   "image": "file://{images}/hud/abilities/kelvin/ice_path.psd"
+  },
+  {
+   "id": 2985482185,
+   "key": "upgrade_magic_clarity",
+   "type": "item",
+   "slot": "spirit",
+   "tier": 2,
+   "image": "file://{images}/upgrades/mods_tech/clarity.psd"
+  },
+  {
+   "id": 194116661,
+   "key": "upgrade_magic_missile",
+   "name": "Conjure Missiles",
+   "name_ru": "Призыв ракет",
+   "type": "item",
+   "slot": "weapon",
+   "tier": 4,
+   "image": "file://{images}/upgrades/mods_weapon/glass_cannon.psd"
+  },
+  {
+   "id": 754480263,
+   "key": "upgrade_magic_reach",
+   "name": "Mystic Expansion",
+   "name_ru": "Мистическое расширение",
+   "type": "item",
+   "slot": "spirit",
+   "tier": 1,
+   "image": "file://{images}/upgrades/mods_tech/tech_range.psd"
+  },
+  {
+   "id": 3970837787,
+   "key": "upgrade_magic_shield",
+   "name": "Enchanter's Emblem",
+   "name_ru": "Эмблема заклинателя",
+   "type": "item",
+   "slot": "vitality",
+   "tier": 2,
+   "image": "file://{images}/upgrades/mods_tech/tech_shield_pulse.psd"
+  },
+  {
+   "id": 2121044373,
+   "key": "upgrade_magic_shock",
+   "name": "Tankbuster",
+   "name_ru": "Гроза танков",
+   "type": "item",
+   "slot": "spirit",
+   "tier": 3,
+   "image": "file://{images}/upgrades/mods_tech/magic_shock.psd"
+  },
+  {
+   "id": 1102081447,
+   "key": "upgrade_magic_slow",
+   "name": "Mystic Slow",
+   "name_ru": "Мистическое замедление",
+   "type": "item",
+   "slot": "spirit",
+   "tier": 2,
+   "image": "file://{images}/upgrades/mods_tech/slowing_tech.psd"
+  },
+  {
+   "id": 1292979587,
+   "key": "upgrade_magic_storm",
+   "name": "Surge of Power",
+   "name_ru": "Прилив мощи",
+   "type": "item",
+   "slot": "spirit",
+   "tier": 3,
+   "image": "file://{images}/upgrades/mods_tech/magic_storm.psd"
+  },
+  {
+   "id": 380806748,
+   "key": "upgrade_magic_tempo",
+   "name": "Compress Cooldown",
+   "name_ru": "Сжатая перезарядка умения",
+   "type": "item",
+   "slot": "spirit",
+   "tier": 2,
+   "image": "file://{images}/upgrades/mods_utility/advanced_recharge.psd"
+  },
+  {
+   "id": 2081037738,
+   "key": "upgrade_magic_vulnerability",
+   "name": "Mystic Vulnerability",
+   "name_ru": "Мистическая уязвимость",
+   "type": "item",
+   "slot": "spirit",
+   "tier": 2,
+   "image": "file://{images}/upgrades/mods_tech/tech_vulnerability.psd"
+  },
+  {
+   "id": 3862866912,
+   "key": "upgrade_medic_bullets",
+   "name": "Restorative Shot",
+   "name_ru": "Живительный выстрел",
+   "type": "item",
+   "slot": "weapon",
+   "tier": 1,
+   "image": "file://{images}/upgrades/mods_weapon/medic_bullets.psd"
+  },
+  {
+   "id": 26002154,
+   "key": "upgrade_melee_charge",
+   "name": "Melee Charge",
+   "name_ru": "Удар с зарядом",
+   "type": "item",
+   "slot": "weapon",
+   "tier": 2,
+   "image": "file://{images}/upgrades/mods_weapon/melee_charge.psd"
+  },
+  {
+   "id": 4204808176,
+   "key": "upgrade_melee_rebuttal",
+   "name": "Rebuttal",
+   "name_ru": "Отпор",
+   "type": "item",
+   "slot": "vitality",
+   "tier": 1,
+   "image": "file://{images}/hud/modifiers/icon_parry.svg"
+  },
+  {
+   "id": 1378931225,
+   "key": "upgrade_metal_skin",
+   "name": "Metal Skin",
+   "name_ru": "Металлическая кожа",
+   "type": "item",
+   "slot": "vitality",
+   "tier": 3,
+   "image": "file://{images}/upgrades/mods_armor/metal_skin.psd"
+  },
+  {
+   "id": 481022061,
+   "key": "upgrade_mod_disruptor",
+   "type": "item",
+   "slot": "spirit",
+   "tier": 4,
+   "image": "file://{images}/upgrades/mods_weapon/thermal_detonator.psd"
+  },
+  {
+   "id": 1439347412,
+   "key": "upgrade_mystic_regeneration",
+   "name": "Mystic Regeneration",
+   "name_ru": "Мистическое восстановление",
+   "type": "item",
+   "slot": "spirit",
+   "tier": 1,
+   "image": "file://{images}/upgrades/mods_armor/endurance.psd"
+  },
+  {
+   "id": 3577481646,
+   "key": "upgrade_mystic_reverb",
+   "name": "Mystic Reverb",
+   "name_ru": "Мистический отзвук",
+   "type": "item",
+   "slot": "spirit",
+   "tier": 4,
+   "image": "file://{images}/upgrades/mods_tech/magic_reverb.psd"
+  },
+  {
+   "id": 2054088113,
+   "key": "upgrade_mystical_piano",
+   "name": "Mystical Piano",
+   "name_ru": "Мистическое фортепиано",
+   "type": "item",
+   "slot": "spirit",
+   "tier": 5,
+   "image": "file://{images}/upgrades/mods_tech/knockdown.psd"
+  },
+  {
+   "id": 1100809516,
+   "key": "upgrade_nearby_enemy_boost",
+   "type": "item",
+   "slot": "weapon",
+   "tier": 3,
+   "image": "file://{images}/upgrades/mods_weapon/adrenaline_rush.psd"
+  },
+  {
+   "id": 1009965641,
+   "key": "upgrade_non_player_bonus",
+   "name": "Monster Rounds",
+   "name_ru": "Чудовищные патроны",
+   "type": "item",
+   "slot": "weapon",
+   "tier": 1,
+   "image": "file://{images}/upgrades/mods_weapon/reaper_rounds.psd"
+  },
+  {
+   "id": 709540378,
+   "key": "upgrade_non_player_bonus_sacrifice",
+   "name": "Cultist Sacrifice",
+   "name_ru": "Жертвенный ритуал",
+   "type": "item",
+   "slot": "weapon",
+   "tier": 3
+  },
+  {
+   "id": 3949773228,
+   "key": "upgrade_nullification_aura",
+   "name": "Nullification Burst",
+   "name_ru": "Обнуляющий импульс",
+   "type": "item",
+   "slot": "vitality",
+   "tier": 5,
+   "image": "file://{images}/upgrades/mods_armor/bullet_armor_reduction_aura.psd"
+  },
+  {
+   "id": 424779525,
+   "key": "upgrade_omnicharge_pendant",
+   "name": "Omnicharge Signet",
+   "name_ru": "Всезарядная печать",
+   "type": "item",
+   "slot": "spirit",
+   "tier": 5,
+   "image": "file://{images}/upgrades/mods_tech/rapid_recharge.psd"
+  },
+  {
+   "id": 4050602737,
+   "key": "upgrade_patrons_blessing",
+   "name": "Mystic Conduit",
+   "name_ru": "Мистическая связь",
+   "type": "item",
+   "slot": "spirit",
+   "tier": 5
+  },
+  {
+   "id": 2329546537,
+   "key": "upgrade_personal_rejuvenator",
+   "name": "Rebirth",
+   "name_ru": "Перерождение",
+   "type": "item",
+   "slot": "spirit",
+   "tier": 3,
+   "image": "file://{images}/upgrades/mods_tech/rebirth.psd"
+  },
+  {
+   "id": 1371725689,
+   "key": "upgrade_phantom_strike",
+   "name": "Phantom Strike",
+   "name_ru": "Фантомный удар",
+   "type": "item",
+   "slot": "vitality",
+   "tier": 4,
+   "image": "file://{images}/upgrades/mods_armor/phantom_strike.psd"
+  },
+  {
+   "id": 2574520834,
+   "key": "upgrade_predator_precision",
+   "type": "item",
+   "slot": "weapon",
+   "tier": 2,
+   "image": "file://{images}/upgrades/mods_weapon/close_range.psd"
+  },
+  {
+   "id": 1132564516,
+   "key": "upgrade_prism_blast",
+   "name": "Prism Blast",
+   "name_ru": "Призматический взрыв",
+   "type": "item",
+   "slot": "spirit",
+   "tier": 5,
+   "image": "file://{images}/items/spirit/ethereal_shift.psd"
+  },
+  {
+   "id": 2064029594,
+   "key": "upgrade_pristine_emblem",
+   "name": "Opening Rounds",
+   "name_ru": "Вскрывающие патроны",
+   "type": "item",
+   "slot": "weapon",
+   "tier": 2,
+   "image": "file://{images}/upgrades/mods_weapon/pristine_emblem.psd"
+  },
+  {
+   "id": 1503218332,
+   "key": "upgrade_proc_disarm",
+   "type": "item",
+   "slot": "weapon",
+   "tier": 2,
+   "image": "file://{images}/upgrades/mods_tech/disarm.psd"
+  },
+  {
+   "id": 1113837674,
+   "key": "upgrade_proc_silence",
+   "name": "Silencer",
+   "name_ru": "Глушитель",
+   "type": "item",
+   "slot": "weapon",
+   "tier": 4,
+   "image": "file://{images}/upgrades/mods_weapon/emp_bullets.psd"
+  },
+  {
+   "id": 184951197,
+   "key": "upgrade_proc_tech_damage",
+   "type": "item",
+   "slot": "weapon",
+   "tier": 3,
+   "image": "file://{images}/upgrades/mods_tech/tech_imbued_bullets.psd"
+  },
+  {
+   "id": 1641353616,
+   "key": "upgrade_quarantine",
+   "type": "item",
+   "slot": "spirit",
+   "tier": 2,
+   "image": "file://{images}/upgrades/mods_utility/stasis.psd"
+  },
+  {
+   "id": 84321454,
+   "key": "upgrade_quick_silver",
+   "name": "Quicksilver Reload",
+   "name_ru": "Ртутная перезарядка",
+   "type": "item",
+   "slot": "spirit",
+   "tier": 2,
+   "image": "file://{images}/upgrades/mods_weapon/fire_rate_plus.psd"
+  },
+  {
+   "id": 787198704,
+   "key": "upgrade_rapid_recharge",
+   "name": "Rapid Recharge",
+   "name_ru": "Спешные заряды",
+   "type": "item",
+   "slot": "spirit",
+   "tier": 3,
+   "image": "file://{images}/upgrades/mods_tech/rapid_recharge.psd"
+  },
+  {
+   "id": 668299740,
+   "key": "upgrade_rapid_rounds",
+   "name": "Rapid Rounds",
+   "name_ru": "Спешная стрельба",
+   "type": "item",
+   "slot": "weapon",
+   "tier": 1,
+   "image": "file://{images}/upgrades/mods_weapon/rapid_rounds.psd"
+  },
+  {
+   "id": 4003032160,
+   "key": "upgrade_rebirth",
+   "name": "Soul Rebirth",
+   "name_ru": "Перерождение души",
+   "type": "item",
+   "slot": "vitality",
+   "tier": 4,
+   "image": "file://{images}/upgrades/mods_tech/rebirth.psd"
+  },
+  {
+   "id": 1763073141,
+   "key": "upgrade_rechargingbullets",
+   "name": "Recharging Rush",
+   "name_ru": "Прилив зарядов",
+   "type": "item",
+   "slot": "weapon",
+   "tier": 2,
+   "image": "file://{images}/upgrades/mods_tech/arcane_medallion.psd"
+  },
+  {
+   "id": 3731635960,
+   "key": "upgrade_reduce_debuff_duration",
+   "name": "Dispel Magic",
+   "name_ru": "Развеивание магии",
+   "type": "item",
+   "slot": "vitality",
+   "tier": 3,
+   "image": "file://{images}/upgrades/mods_armor/debuff_remover.psd"
+  },
+  {
+   "id": 1235347618,
+   "key": "upgrade_regenerating_bullet_shield",
+   "name": "Battle Vest",
+   "name_ru": "Боевой жилет",
+   "type": "item",
+   "slot": "vitality",
+   "tier": 2,
+   "image": "file://{images}/upgrades/mods_armor/bullet_shield.psd"
+  },
+  {
+   "id": 3038950099,
+   "key": "upgrade_regenerative_armor",
+   "type": "item",
+   "slot": "vitality",
+   "tier": 2,
+   "image": "file://{images}/upgrades/mods_armor/last_stand.psd"
+  },
+  {
+   "id": 2463960640,
+   "key": "upgrade_reinforcing_casings",
+   "name": "Escalating Resilience",
+   "name_ru": "Растущая стойкость",
+   "type": "item",
+   "slot": "weapon",
+   "tier": 3,
+   "image": "file://{images}/upgrades/mods_armor/bullet_armor_plus.psd"
+  },
+  {
+   "id": 3276909180,
+   "key": "upgrade_reload_speed",
+   "type": "item",
+   "slot": "weapon",
+   "tier": 2,
+   "image": "file://{images}/upgrades/mods_utility/fast_reload.psd"
+  },
+  {
+   "id": 1804594021,
+   "key": "upgrade_rescue_beam",
+   "name": "Rescue Beam",
+   "name_ru": "Спасательный луч",
+   "type": "item",
+   "slot": "vitality",
+   "tier": 3,
+   "image": "file://{images}/upgrades/mods_tech/medic_beam.psd"
+  },
+  {
+   "id": 558396679,
+   "key": "upgrade_resilience",
+   "name": "Enduring Spirit",
+   "name_ru": "Спиритическая стойкость",
+   "type": "item",
+   "slot": "vitality",
+   "tier": 1,
+   "image": "file://{images}/upgrades/mods_armor/resilience.psd"
+  },
+  {
+   "id": 2947183272,
+   "key": "upgrade_resonant_healing",
+   "name": "Radiant Regeneration",
+   "name_ru": "Сияющее восстановление",
+   "type": "item",
+   "slot": "spirit",
+   "tier": 3,
+   "image": "file://{images}/upgrades/mods_tech/boundless_spirit.psd"
+  },
+  {
+   "id": 2059712766,
+   "key": "upgrade_restorative_locket",
+   "name": "Restorative Locket",
+   "name_ru": "Живительный медальон",
+   "type": "item",
+   "slot": "vitality",
+   "tier": 2,
+   "image": "file://{images}/upgrades/mods_armor/restorative_locket.psd"
+  },
+  {
+   "id": 3361075077,
+   "key": "upgrade_return_fire",
+   "name": "Return Fire",
+   "name_ru": "Обратный огонь",
+   "type": "item",
+   "slot": "vitality",
+   "tier": 2,
+   "image": "file://{images}/upgrades/mods_tech/return_fire.psd"
+  },
+  {
+   "id": 2480592370,
+   "key": "upgrade_ricochet",
+   "name": "Ricochet",
+   "name_ru": "Рикошет",
+   "type": "item",
+   "slot": "weapon",
+   "tier": 4,
+   "image": "file://{images}/upgrades/mods_weapon/ricochet.psd"
+  },
+  {
+   "id": 600033864,
+   "key": "upgrade_rocket_booster",
+   "name": "Majestic Leap",
+   "name_ru": "Грациозный скачок",
+   "type": "item",
+   "slot": "vitality",
+   "tier": 3,
+   "image": "file://{images}/hud/abilities/lash/lash_death_slam.psd"
+  },
+  {
+   "id": 3830846077,
+   "key": "upgrade_rocket_boots",
+   "name": "Majestic Leap - Disabled",
+   "name_ru": "Грациозный скачок — отключён",
+   "type": "item",
+   "slot": "vitality",
+   "tier": 3,
+   "image": "file://{images}/upgrades/mods_utility/springy_boots.psd"
+  },
+  {
+   "id": 64550694,
+   "key": "upgrade_runed_gauntlets",
+   "name": "Runed Gauntlets",
+   "name_ru": "Рунные рукавицы",
+   "type": "item",
+   "slot": "weapon",
+   "tier": 5
+  },
+  {
+   "id": 3144988365,
+   "key": "upgrade_rupture",
+   "name": "Decay",
+   "name_ru": "Разложение",
+   "type": "item",
+   "slot": "spirit",
+   "tier": 3,
+   "image": "file://{images}/upgrades/mods_tech/rupture.psd"
+  },
+  {
+   "id": 2533252781,
+   "key": "upgrade_self_bubble",
+   "name": "Ethereal Shift",
+   "name_ru": "Развоплощение",
+   "type": "item",
+   "slot": "spirit",
+   "tier": 4,
+   "image": "file://{images}/items/spirit/ethereal_shift.psd"
+  },
+  {
+   "id": 3456645009,
+   "key": "upgrade_shadow_step",
+   "name": "Shadow Step",
+   "name_ru": "Теневая поступь",
+   "type": "item",
+   "slot": "vitality",
+   "tier": 5,
+   "image": "file://{images}/upgrades/mods_weapon/warp_stone.psd"
+  },
+  {
+   "id": 2319629810,
+   "key": "upgrade_shadow_strike",
+   "name": "Shadow Strike",
+   "name_ru": "Теневой удар",
+   "type": "item",
+   "slot": "vitality",
+   "tier": 5
+  },
+  {
+   "id": 2152872419,
+   "key": "upgrade_sharpshooter",
+   "name": "Sharpshooter",
+   "name_ru": "Прицельная стрельба",
+   "type": "item",
+   "slot": "weapon",
+   "tier": 3,
+   "image": "file://{images}/upgrades/mods_weapon/longshot.psd"
+  },
+  {
+   "id": 2068250483,
+   "key": "upgrade_shivas_bracelet",
+   "name": "Frostbite Charm",
+   "name_ru": "Морозящий амулет",
+   "type": "item",
+   "slot": "spirit",
+   "tier": 5
+  },
+  {
+   "id": 4121584236,
+   "key": "upgrade_shrink_ray",
+   "name": "Shrink Ray",
+   "name_ru": "Луч уменьшения",
+   "type": "item",
+   "slot": "spirit",
+   "tier": 5,
+   "image": "file://{images}/upgrades/mods_armor/stimpak.psd"
+  },
+  {
+   "id": 3133167885,
+   "key": "upgrade_silencer",
+   "name": "Silencer",
+   "name_ru": "Глушитель",
+   "type": "item",
+   "slot": "weapon",
+   "tier": 4,
+   "image": "file://{images}/upgrades/mods_weapon/emp_bullets.psd"
+  },
+  {
+   "id": 1282141666,
+   "key": "upgrade_siphon_bullets",
+   "name": "Siphon Bullets",
+   "name_ru": "Вытягивающие пули",
+   "type": "item",
+   "slot": "vitality",
+   "tier": 4,
+   "image": "file://{images}/upgrades/mods_weapon/siphon_bullets.psd"
+  },
+  {
+   "id": 1711193274,
+   "key": "upgrade_slow_immunity",
+   "type": "item",
+   "slot": "vitality",
+   "tier": 2,
+   "image": "file://{images}/upgrades/mods_utility/sprint_booster.psd"
+  },
+  {
+   "id": 393974127,
+   "key": "upgrade_slowing_bullets",
+   "name": "Slowing Bullets",
+   "name_ru": "Замедляющие пули",
+   "type": "item",
+   "slot": "weapon",
+   "tier": 2,
+   "image": "file://{images}/upgrades/mods_weapon/slowing_bullets.psd"
+  },
+  {
+   "id": 3013879715,
+   "key": "upgrade_slowing_tech",
+   "type": "item",
+   "slot": "spirit",
+   "tier": 1,
+   "image": "file://{images}/upgrades/mods_tech/slowing_tech.psd"
+  },
+  {
+   "id": 1889400890,
+   "key": "upgrade_small_attack_speed",
+   "type": "item",
+   "slot": "weapon",
+   "tier": 1,
+   "image": "file://{images}/upgrades/mods_weapon/fire_rate.psd"
+  },
+  {
+   "id": 7409189,
+   "key": "upgrade_soaring_spirit",
+   "name": "Improved Spirit",
+   "name_ru": "Улучшенный спиритизм",
+   "type": "item",
+   "slot": "spirit",
+   "tier": 2,
+   "image": "file://{images}/upgrades/mods_tech/soaring_spirit.psd"
+  },
+  {
+   "id": 1955841979,
+   "key": "upgrade_spellbreaker",
+   "name": "Spellbreaker",
+   "name_ru": "Разрушитель чар",
+   "type": "item",
+   "slot": "vitality",
+   "tier": 4
+  },
+  {
+   "id": 1200177229,
+   "key": "upgrade_spellshield",
+   "name": "Hexafoil Ward",
+   "name_ru": "Шестилистный заслон",
+   "type": "item",
+   "slot": "vitality",
+   "tier": 3,
+   "image": "file://{images}/upgrades/mods_armor/restorative_locket.psd"
+  },
+  {
+   "id": 4075861416,
+   "key": "upgrade_spellslinger_headshots",
+   "name": "Spirit Rend",
+   "name_ru": "Спиритический разрыв",
+   "type": "item",
+   "slot": "weapon",
+   "tier": 3,
+   "image": "file://{images}/upgrades/mods_weapon/spellslinger_headshots.psd"
+  },
+  {
+   "id": 112198670,
+   "key": "upgrade_spirit_bubble",
+   "name": "Spirit Shielding",
+   "name_ru": "Спиритическая защита",
+   "type": "item",
+   "slot": "vitality",
+   "tier": 2,
+   "image": "file://{images}/upgrades/mods_armor/bullet_shield.psd"
+  },
+  {
+   "id": 343572757,
+   "key": "upgrade_spirit_burn",
+   "name": "Spirit Burn",
+   "name_ru": "Спиритический ожог",
+   "type": "item",
+   "slot": "spirit",
+   "tier": 4,
+   "image": "file://{images}/upgrades/mods_tech/escalating_exposure.psd"
+  },
+  {
+   "id": 1219329868,
+   "key": "upgrade_spirit_sap",
+   "name": "Spirit Sap",
+   "name_ru": "Спиритическое истощение",
+   "type": "item",
+   "slot": "spirit",
+   "tier": 2,
+   "image": "file://{images}/upgrades/mods_tech/focused_silence.psd"
+  },
+  {
+   "id": 3190916303,
+   "key": "upgrade_spirit_snatch",
+   "name": "Spirit Snatch",
+   "name_ru": "Похищение спиритизма",
+   "type": "item",
+   "slot": "spirit",
+   "tier": 3,
+   "image": "file://{images}/upgrades/mods_tech/spirit_snatch.psd"
+  },
+  {
+   "id": 3647584222,
+   "key": "upgrade_split_shot",
+   "name": "Split Shot",
+   "name_ru": "Веерный выстрел",
+   "type": "item",
+   "slot": "weapon",
+   "tier": 2,
+   "image": "file://{images}/upgrades/mods_weapon/titanic_magazine.psd"
+  },
+  {
+   "id": 3399065363,
+   "key": "upgrade_sprint_booster",
+   "name": "Sprint Boots",
+   "name_ru": "Беговые ботинки",
+   "type": "item",
+   "slot": "vitality",
+   "tier": 1,
+   "image": "file://{images}/upgrades/mods_utility/sprint_booster.psd"
+  },
+  {
+   "id": 1544322593,
+   "key": "upgrade_stabilizer",
+   "type": "item",
+   "slot": "weapon",
+   "tier": 1,
+   "image": "file://{images}/upgrades/mods_weapon/stabilizer.psd"
+  },
+  {
+   "id": 385745034,
+   "key": "upgrade_stasis_bomb",
+   "type": "item",
+   "slot": "vitality",
+   "tier": 4,
+   "image": "file://{images}/upgrades/mods_utility/stasis.psd"
+  },
+  {
+   "id": 2331566268,
+   "key": "upgrade_superacolytes_glove",
+   "name": "Hex-Sealed Knuckles",
+   "name_ru": "Заколдованные кастеты",
+   "type": "item",
+   "slot": "spirit",
+   "tier": 3,
+   "image": "file://{images}/upgrades/mods_tech/acolytes_glove.psd"
+  },
+  {
+   "id": 334300056,
+   "key": "upgrade_superior_stamina",
+   "name": "Stamina Mastery",
+   "name_ru": "Превосходная выносливость",
+   "type": "item",
+   "slot": "vitality",
+   "tier": 3,
+   "image": "file://{images}/upgrades/mods_armor/superior_stamina.psd"
+  },
+  {
+   "id": 1925087134,
+   "key": "upgrade_suppressor",
+   "name": "Suppressor",
+   "name_ru": "Подавитель",
+   "type": "item",
+   "slot": "spirit",
+   "tier": 2,
+   "image": "file://{images}/upgrades/mods_armor/weapon_jammer.psd"
+  },
+  {
+   "id": 1055679805,
+   "key": "upgrade_surging_power",
+   "name": "Vampiric Burst",
+   "name_ru": "Порыв вампиризма",
+   "type": "item",
+   "slot": "vitality",
+   "tier": 4,
+   "image": "file://{images}/upgrades/mods_weapon/vampiric_burst.psd"
+  },
+  {
+   "id": 1254091416,
+   "key": "upgrade_target_stun",
+   "name": "Knockdown",
+   "name_ru": "Нокдаун",
+   "type": "item",
+   "slot": "spirit",
+   "tier": 3,
+   "image": "file://{images}/upgrades/mods_tech/knockdown.psd"
+  },
+  {
+   "id": 619484391,
+   "key": "upgrade_targeted_silence",
+   "name": "Silence Wave",
+   "name_ru": "Волна безмолвия",
+   "type": "item",
+   "slot": "spirit",
+   "tier": 3,
+   "image": "file://{images}/upgrades/mods_weapon/targeted_silence.psd"
+  },
+  {
+   "id": 223594321,
+   "key": "upgrade_tech_armor",
+   "name": "Spirit Armor",
+   "name_ru": "Спиритическая броня",
+   "type": "item",
+   "slot": "vitality",
+   "tier": 2,
+   "image": "file://{images}/upgrades/mods_armor/tech_armor.psd"
+  },
+  {
+   "id": 4249800570,
+   "key": "upgrade_tech_cleave",
+   "type": "item",
+   "slot": "spirit",
+   "tier": 3,
+   "image": "file://{images}/upgrades/mods_tech/quantum_chimaera.psd"
+  },
+  {
+   "id": 395944548,
+   "key": "upgrade_tech_damage_pulse",
+   "name": "Torment Pulse",
+   "name_ru": "Терзающий пульс",
+   "type": "item",
+   "slot": "spirit",
+   "tier": 3,
+   "image": "file://{images}/upgrades/mods_tech/torment_aura.psd"
+  },
+  {
+   "id": 1144549437,
+   "key": "upgrade_tech_defense_shredders",
+   "name": "Spirit Shredder",
+   "name_ru": "Душегубные пули",
+   "type": "item",
+   "slot": "weapon",
+   "tier": 2,
+   "image": "file://{images}/upgrades/mods_weapon/tech_resist_shredder.psd"
+  },
+  {
+   "id": 2226497419,
+   "key": "upgrade_tech_overflow",
+   "name": "Spiritual Overflow",
+   "name_ru": "Спиритическое переполнение",
+   "type": "item",
+   "slot": "weapon",
+   "tier": 4,
+   "image": "file://{images}/upgrades/mods_weapon/magic_overflow.psd"
+  },
+  {
+   "id": 2163598980,
+   "key": "upgrade_tech_purge",
+   "name": "Spirit Resilience",
+   "name_ru": "Спиритическая стойкость",
+   "type": "item",
+   "slot": "vitality",
+   "tier": 3,
+   "image": "file://{images}/upgrades/mods_armor/tech_purge.psd"
+  },
+  {
+   "id": 1193964439,
+   "key": "upgrade_tech_range",
+   "name": "Greater Expansion",
+   "name_ru": "Усиленное расширение",
+   "type": "item",
+   "slot": "spirit",
+   "tier": 3,
+   "image": "file://{images}/upgrades/mods_tech/spiritual_dominion.psd"
+  },
+  {
+   "id": 1932939246,
+   "key": "upgrade_thermal_detonator",
+   "name": "Alchemical Fire",
+   "name_ru": "Алхимический огонь",
+   "type": "item",
+   "slot": "weapon",
+   "tier": 3,
+   "image": "file://{images}/upgrades/mods_weapon/thermal_detonator.psd"
+  },
+  {
+   "id": 3893702034,
+   "key": "upgrade_timeless_emblem",
+   "name": "Timeless Emblem",
+   "name_ru": "Вневременная эмблема",
+   "type": "item",
+   "slot": "spirit",
+   "tier": 5
+  },
+  {
+   "id": 2356412290,
+   "key": "upgrade_titan_round",
+   "name": "Titanic Magazine",
+   "name_ru": "Титанический магазин",
+   "type": "item",
+   "slot": "weapon",
+   "tier": 2,
+   "image": "file://{images}/upgrades/mods_weapon/titanic_magazine.psd"
+  },
+  {
+   "id": 1448361452,
+   "key": "upgrade_toughness_3",
+   "type": "item",
+   "slot": "vitality",
+   "tier": 2,
+   "image": "file://{images}/upgrades/mods_armor/base_armor.psd"
+  },
+  {
+   "id": 3696726732,
+   "key": "upgrade_toxic_bullets",
+   "name": "Toxic Bullets",
+   "name_ru": "Токсичные пули",
+   "type": "item",
+   "slot": "weapon",
+   "tier": 3,
+   "image": "file://{images}/upgrades/mods_weapon/serrated_bullets.psd"
+  },
+  {
+   "id": 915014646,
+   "key": "upgrade_transcendent_cooldown",
+   "name": "Transcendent Cooldown",
+   "name_ru": "Трансцендентная перезарядка",
+   "type": "item",
+   "slot": "spirit",
+   "tier": 4
+  },
+  {
+   "id": 3074274290,
+   "key": "upgrade_trophy_collector",
+   "name": "Trophy Collector",
+   "name_ru": "Собиратель трофеев",
+   "type": "item",
+   "slot": "vitality",
+   "tier": 2,
+   "image": "file://{images}/upgrades/mods_utility/sprint_booster.psd"
+  },
+  {
+   "id": 493591231,
+   "key": "upgrade_ultimate_burst",
+   "name": "Lightning Scroll",
+   "name_ru": "Свиток молнии",
+   "type": "item",
+   "slot": "spirit",
+   "tier": 4,
+   "image": "file://{images}/upgrades/mods_weapon/adrenaline_rush.psd"
+  },
+  {
+   "id": 1558545403,
+   "key": "upgrade_unstable_concoction",
+   "name": "Unstable Concoction",
+   "name_ru": "Нестабильный отвар",
+   "type": "item",
+   "slot": "spirit",
+   "tier": 5
+  },
+  {
+   "id": 3357231760,
+   "key": "upgrade_unstoppable",
+   "name": "Unstoppable",
+   "name_ru": "Неудержимость",
+   "type": "item",
+   "slot": "vitality",
+   "tier": 4,
+   "image": "file://{images}/upgrades/mods_armor/unstoppable.psd"
+  },
+  {
+   "id": 499683006,
+   "key": "upgrade_vampire",
+   "name": "Bullet Lifesteal",
+   "name_ru": "Пулевая кража здоровья",
+   "type": "item",
+   "slot": "vitality",
+   "tier": 2,
+   "image": "file://{images}/upgrades/mods_armor/health_stealing_bullets.psd"
+  },
+  {
+   "id": 865958998,
+   "key": "upgrade_veil_walker",
+   "name": "Veil Walker",
+   "name_ru": "Незримый покров",
+   "type": "item",
+   "slot": "vitality",
+   "tier": 3,
+   "image": "file://{images}/upgrades/mods_utility/veil_walker.psd"
+  },
+  {
+   "id": 1644605047,
+   "key": "upgrade_vex_barrier",
+   "name": "Reactive Barrier",
+   "name_ru": "Барьерная реакция",
+   "type": "item",
+   "slot": "vitality",
+   "tier": 2,
+   "image": "file://{images}/upgrades/mods_armor/last_stand.psd"
+  },
+  {
+   "id": 3270001687,
+   "key": "upgrade_warp_stone",
+   "name": "Warp Stone",
+   "name_ru": "Камень переноса",
+   "type": "item",
+   "slot": "vitality",
+   "tier": 3,
+   "image": "file://{images}/upgrades/mods_weapon/warp_stone.psd"
+  },
+  {
+   "id": 98582110,
+   "key": "upgrade_weapon_backstabber",
+   "name": "Stalker",
+   "name_ru": "Преследователь",
+   "type": "item",
+   "slot": "weapon",
+   "tier": 2
+  },
+  {
+   "id": 775925321,
+   "key": "upgrade_weapon_detention_ammo",
+   "type": "item",
+   "slot": "weapon",
+   "tier": 4,
+   "image": "file://{images}/upgrades/mods_weapon/detention_rounds.psd"
+  },
+  {
+   "id": 389243496,
+   "key": "upgrade_weapon_eater",
+   "type": "item",
+   "slot": "weapon",
+   "tier": 2,
+   "image": "file://{images}/upgrades/mods_weapon/advanced_weaponry.psd"
+  },
+  {
+   "id": 315518818,
+   "key": "upgrade_weapon_instant_reload",
+   "type": "item",
+   "slot": "weapon",
+   "tier": 3,
+   "image": "file://{images}/upgrades/mods_utility/fast_reload.psd"
+  },
+  {
+   "id": 607292868,
+   "key": "upgrade_weapon_overdrive_clip",
+   "type": "item",
+   "slot": "weapon",
+   "tier": 3,
+   "image": "file://{images}/upgrades/mods_armor/overdrive.psd"
+  },
+  {
+   "id": 471704443,
+   "key": "upgrade_weapon_power_and_health_drain",
+   "type": "item",
+   "slot": "vitality",
+   "tier": 2,
+   "image": "file://{images}/upgrades/mods_armor/overdrive.psd"
+  },
+  {
+   "id": 805079544,
+   "key": "upgrade_weapon_shielding",
+   "name": "Weapon Shielding",
+   "name_ru": "Оружейная защита",
+   "type": "item",
+   "slot": "vitality",
+   "tier": 2,
+   "image": "file://{images}/upgrades/mods_armor/bullet_shield.psd"
+  },
+  {
+   "id": 3791587546,
+   "key": "upgrade_weighted_shots",
+   "name": "Weighted Shots",
+   "name_ru": "Утяжелённые выстрелы",
+   "type": "item",
+   "slot": "weapon",
+   "tier": 3,
+   "image": "file://{images}/upgrades/mods_armor/improved_bullet_armor.psd"
+  },
+  {
+   "id": 2922054143,
+   "key": "upgrade_withering_whip",
+   "name": "Rusted Barrel",
+   "name_ru": "Ржавый ствол",
+   "type": "item",
+   "slot": "spirit",
+   "tier": 1,
+   "image": "file://{images}/upgrades/mods_tech/slowing_tech.psd"
+  },
+  {
+   "id": 239553513,
+   "key": "vanguard_aoe_buff",
+   "type": "signature",
+   "image": "file://{images}/npcs/vanguard_aoe_buff.psd"
+  },
+  {
+   "id": 4206531918,
+   "key": "viscous_goo_bowling_ball",
+   "name": "Goo Ball",
+   "name_ru": "Шар из слизи",
+   "type": "ultimate",
+   "image": "file://{images}/hud/abilities/viscous/viscous_goo_sphere.psd"
+  },
+  {
+   "id": 3247040238,
+   "key": "viscous_goo_grenade",
+   "name": "Splatter",
+   "name_ru": "Брызги",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/viscous/viscous_goo_ball.psd"
+  },
+  {
+   "id": 3788152387,
+   "key": "viscous_restorative_goo",
+   "name": "The Cube",
+   "name_ru": "Куб",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/viscous/viscous_restorative_goo.psd"
+  },
+  {
+   "id": 1020817390,
+   "key": "viscous_telepunch",
+   "name": "Puddle Punch",
+   "name_ru": "Удар из лужи",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/viscous/viscous_goo_punch.psd"
+  },
+  {
+   "id": 1983361803,
+   "key": "weapon_alternative_rmb+lmb_activate",
+   "type": "weapon",
+   "image": "file://{images}/hud/abilities/weapon_damage.psd"
+  },
+  {
+   "id": 2826225210,
+   "key": "weapon_alternative_rmb_activate",
+   "type": "weapon",
+   "image": "file://{images}/hud/abilities/weapon_damage.psd"
+  },
+  {
+   "id": 768565940,
+   "key": "weapon_base",
+   "type": "weapon",
+   "image": "file://{images}/hud/abilities/weapon_damage.psd"
+  },
+  {
+   "id": 4130874468,
+   "key": "weapon_upgrade_base",
+   "type": "item",
+   "slot": "weapon"
+  },
+  {
+   "id": 10546756,
+   "key": "weapon_upgrade_t1",
+   "type": "item",
+   "slot": "weapon",
+   "tier": 1
+  },
+  {
+   "id": 1620942471,
+   "key": "weapon_upgrade_t2",
+   "type": "item",
+   "slot": "weapon",
+   "tier": 2
+  },
+  {
+   "id": 506109244,
+   "key": "weapon_upgrade_t3",
+   "type": "item",
+   "slot": "weapon",
+   "tier": 3
+  },
+  {
+   "id": 361904051,
+   "key": "weapon_upgrade_t4",
+   "type": "item",
+   "slot": "weapon",
+   "tier": 4
+  },
+  {
+   "id": 349524508,
+   "key": "weapon_upgrade_t5",
+   "type": "item",
+   "slot": "weapon",
+   "tier": 5
+  },
+  {
+   "id": 3176860010,
+   "key": "yakuza_fealty",
+   "type": "signature"
+  },
+  {
+   "id": 2250508707,
+   "key": "yakuza_gang_activity",
+   "type": "signature"
+  },
+  {
+   "id": 1685078091,
+   "key": "yakuza_gang_activity_cancel",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/duo/duo_cancel.psd"
+  },
+  {
+   "id": 2984400727,
+   "key": "yakuza_kobun",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/theboss/the_boss_hired_muscle.psd"
+  },
+  {
+   "id": 1584495732,
+   "key": "yakuza_protection_racket",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/theboss/the_boss_protection_racket.psd"
+  },
+  {
+   "id": 3908497730,
+   "key": "yakuza_setting_sun",
+   "type": "ultimate",
+   "image": "file://{images}/hud/abilities/theboss/the_boss_setting_sun.psd"
+  },
+  {
+   "id": 3108273022,
+   "key": "yakuza_shakedown",
+   "type": "innate",
+   "image": "file://{images}/hud/abilities/engineer_rockets.psd"
+  },
+  {
+   "id": 3577477084,
+   "key": "yakuza_shakedown_target",
+   "type": "signature",
+   "image": "file://{images}/hud/abilities/theboss/the_boss_shakedown.psd"
+  },
+  {
+   "id": 523691429,
+   "key": "yakuza_summon_gangster",
+   "type": "signature"
+  },
+  {
+   "id": 2340315673,
+   "key": "yakuza_teleport_to_gangster",
+   "type": "signature"
+  }
+ ]
+}

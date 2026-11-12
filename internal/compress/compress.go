@@ -9,7 +9,7 @@ import (
 	"compress/bzip2"
 	"io"
 
-	"deadlock_ideas/internal/zstd"
+	"github.com/obsessed-gopher/deadlock/internal/zstd"
 )
 
 var (

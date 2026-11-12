@@ -9,7 +9,11 @@ package source
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"math"
+	"strconv"
+	"strings"
 )
 
 // Salts identifies replay artifacts for one match on Valve's CDN.
@@ -66,8 +70,34 @@ type HistoryProvider interface {
 	MatchHistory(ctx context.Context, accountID uint32) ([]MatchSummary, error)
 }
 
+// ErrNotFound means the provider has no data for the request (e.g. salts for
+// a match too old to still be hosted).
+var ErrNotFound = errors.New("not found")
+
+// steamID64Base is the SteamID64 of account id 0 (individual, public universe).
+const steamID64Base = 76561197960265728
+
 // SteamID64ToAccountID converts a 64-bit SteamID to the 32-bit account id
 // used everywhere in Deadlock data.
 func SteamID64ToAccountID(id uint64) uint32 {
-	return uint32(id - 76561197960265728)
+	return uint32(id - steamID64Base)
+}
+
+// ParseAccountID accepts either a 32-bit account id or a SteamID64 and
+// returns the account id. Zero is not a valid account.
+func ParseAccountID(s string) (uint32, error) {
+	v, err := strconv.ParseUint(strings.TrimSpace(s), 10, 64)
+	if err != nil {
+		return 0, fmt.Errorf("bad account id %q", s)
+	}
+	switch {
+	case v == 0:
+		return 0, fmt.Errorf("bad account id %q", s)
+	case v <= math.MaxUint32:
+		return uint32(v), nil
+	case v > steamID64Base && v-steamID64Base <= math.MaxUint32:
+		return SteamID64ToAccountID(v), nil
+	default:
+		return 0, fmt.Errorf("bad account id %q: neither an account id nor a SteamID64", s)
+	}
 }

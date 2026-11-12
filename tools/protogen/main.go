@@ -1,21 +1,25 @@
-// Command protogen regenerates Go code for the Deadlock protobufs.
+// Command protogen regenerates all Go code from .proto files.
 //
-// Valve's .proto files (vendored from SteamDatabase/Protobufs into
-// proto/deadlock) are dumped from game binaries and use custom options
-// (boxed_type, additional_includes, ...) that stock protoc rejects. protogen
-// copies the import closure of the root files into a temp dir, strips every
-// non-standard option, and runs protoc + protoc-gen-go into internal/pb.
+//  1. Game protos (proto/deadlock, vendored from SteamDatabase/Protobufs) ->
+//     internal/pb. Valve's files are dumped from binaries and use custom
+//     options (boxed_type, additional_includes, ...) that stock protoc
+//     rejects, so the import closure is copied to a temp dir and sanitized.
+//  2. Our API (proto/api) -> gen/go (messages, gRPC, grpc-gateway) and
+//     gen/openapi (OpenAPI v2 spec, used to generate frontend types).
 //
 // Usage (from repo root):
 //
 //	go run ./tools/protogen
 //
-// Requires protoc and protoc-gen-go on PATH (or PROTOC env var).
+// Requires protoc (PATH, $PROTOC or winget location) and plugins in
+// $GOPATH/bin: protoc-gen-go, protoc-gen-go-grpc, protoc-gen-grpc-gateway,
+// protoc-gen-openapiv2.
 package main
 
 import (
 	"bufio"
 	"fmt"
+	"io/fs"
 	"log"
 	"os"
 	"os/exec"
@@ -25,13 +29,18 @@ import (
 )
 
 const (
-	srcDir    = "proto/deadlock"
-	outDir    = "internal/pb"
-	goPackage = "deadlock_ideas/internal/pb"
+	gameSrcDir    = "proto/deadlock"
+	gameOutDir    = "internal/pb"
+	gameGoPackage = "deadlock_ideas/internal/pb"
+
+	apiSrcDir     = "proto/api"
+	thirdPartyDir = "proto/third_party"
+	apiOutDir     = "gen/go"
+	openapiOutDir = "gen/openapi"
 )
 
-// Root files; everything they import (transitively) is generated too.
-var roots = []string{
+// Game root files; everything they import (transitively) is generated too.
+var gameRoots = []string{
 	"citadel_gcmessages_common.proto", // match metadata
 	"demo.proto",                      // demo container
 }
@@ -47,52 +56,98 @@ var (
 
 func main() {
 	log.SetFlags(0)
-
-	files, err := closure(roots)
+	protoc, include, err := findProtoc()
 	if err != nil {
 		log.Fatal(err)
 	}
+	// Make sure protoc finds the Go plugins even if GOPATH/bin isn't on PATH.
+	if gopath, err := exec.Command("go", "env", "GOPATH").Output(); err == nil {
+		bin := filepath.Join(strings.TrimSpace(string(gopath)), "bin")
+		os.Setenv("PATH", bin+string(os.PathListSeparator)+os.Getenv("PATH"))
+	}
 
+	genGame(protoc, include)
+	genAPI(protoc, include)
+}
+
+func genGame(protoc, include string) {
+	files, err := closure(gameRoots)
+	if err != nil {
+		log.Fatal(err)
+	}
 	tmp, err := os.MkdirTemp("", "protogen-*")
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer os.RemoveAll(tmp)
-
 	for _, f := range files {
-		if err := sanitize(filepath.Join(srcDir, f), filepath.Join(tmp, f)); err != nil {
+		if err := sanitize(filepath.Join(gameSrcDir, f), filepath.Join(tmp, f)); err != nil {
 			log.Fatalf("%s: %v", f, err)
 		}
 	}
+	resetDir(gameOutDir, "*.pb.go")
 
-	protoc, include, err := findProtoc()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	if err := os.MkdirAll(outDir, 0o755); err != nil {
-		log.Fatal(err)
-	}
-	old, _ := filepath.Glob(filepath.Join(outDir, "*.pb.go"))
-	for _, f := range old {
-		os.Remove(f)
-	}
-
-	args := []string{"-I", tmp, "--go_out=" + outDir, "--go_opt=paths=source_relative"}
+	args := []string{"-I", tmp, "--go_out=" + gameOutDir, "--go_opt=paths=source_relative"}
 	if include != "" {
 		args = append(args, "-I", include)
 	}
 	for _, f := range files {
-		args = append(args, "--go_opt=M"+f+"="+goPackage)
+		args = append(args, "--go_opt=M"+f+"="+gameGoPackage)
 	}
-	args = append(args, files...)
+	run(protoc, append(args, files...)...)
+	fmt.Printf("game: %d files -> %s\n", len(files), gameOutDir)
+}
 
-	cmd := exec.Command(protoc, args...)
+func genAPI(protoc, include string) {
+	var files []string
+	err := filepath.WalkDir(apiSrcDir, func(p string, d fs.DirEntry, err error) error {
+		if err == nil && !d.IsDir() && strings.HasSuffix(p, ".proto") {
+			rel, _ := filepath.Rel(apiSrcDir, p)
+			files = append(files, filepath.ToSlash(rel))
+		}
+		return err
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+	os.RemoveAll(apiOutDir)
+	os.RemoveAll(openapiOutDir)
+	for _, d := range []string{apiOutDir, openapiOutDir} {
+		if err := os.MkdirAll(d, 0o755); err != nil {
+			log.Fatal(err)
+		}
+	}
+
+	args := []string{
+		"-I", apiSrcDir, "-I", thirdPartyDir,
+		"--go_out=" + apiOutDir, "--go_opt=paths=source_relative",
+		"--go-grpc_out=" + apiOutDir, "--go-grpc_opt=paths=source_relative",
+		"--grpc-gateway_out=" + apiOutDir, "--grpc-gateway_opt=paths=source_relative",
+		"--openapiv2_out=" + openapiOutDir, "--openapiv2_opt=allow_merge=true,merge_file_name=api",
+	}
+	if include != "" {
+		args = append(args, "-I", include)
+	}
+	run(protoc, append(args, files...)...)
+	fmt.Printf("api: %d files -> %s, %s\n", len(files), apiOutDir, openapiOutDir)
+}
+
+func run(bin string, args ...string) {
+	cmd := exec.Command(bin, args...)
 	cmd.Stdout, cmd.Stderr = os.Stdout, os.Stderr
 	if err := cmd.Run(); err != nil {
 		log.Fatalf("protoc: %v", err)
 	}
-	fmt.Printf("generated %d files into %s\n", len(files), outDir)
+}
+
+func resetDir(dir, pattern string) {
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		log.Fatal(err)
+	}
+	old, _ := filepath.Glob(filepath.Join(dir, pattern))
+	for _, f := range old {
+		os.Remove(f)
+	}
 }
 
 // closure returns roots plus all transitively imported local files.
@@ -106,7 +161,7 @@ func closure(roots []string) ([]string, error) {
 		}
 		seen[f] = true
 		order = append(order, f)
-		fh, err := os.Open(filepath.Join(srcDir, f))
+		fh, err := os.Open(filepath.Join(gameSrcDir, f))
 		if err != nil {
 			return err
 		}

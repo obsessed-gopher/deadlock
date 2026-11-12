@@ -9,6 +9,7 @@ package source
 
 import (
 	"context"
+	"errors"
 	"fmt"
 )
 
@@ -65,6 +66,10 @@ type SaltProvider interface {
 type HistoryProvider interface {
 	MatchHistory(ctx context.Context, accountID uint32) ([]MatchSummary, error)
 }
+
+// ErrNotFound means the provider has no data for the request (e.g. salts for
+// a match too old to still be hosted).
+var ErrNotFound = errors.New("not found")
 
 // SteamID64ToAccountID converts a 64-bit SteamID to the 32-bit account id
 // used everywhere in Deadlock data.

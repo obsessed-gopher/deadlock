@@ -10,3 +10,6 @@
 # frontend (later)
 node_modules/
 .next/
+
+# local env
+.env

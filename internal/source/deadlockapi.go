@@ -28,7 +28,7 @@ func (c *DeadlockAPI) Salts(ctx context.Context, matchID uint64) (Salts, error) 
 	var s Salts
 	err := c.getJSON(ctx, fmt.Sprintf("/v1/matches/%d/salts", matchID), &s)
 	if err == nil && s.MetadataSalt == 0 && s.ReplaySalt == 0 {
-		err = fmt.Errorf("deadlock-api: no salts for match %d", matchID)
+		err = fmt.Errorf("deadlock-api: no salts for match %d: %w", matchID, ErrNotFound)
 	}
 	return s, err
 }
@@ -50,6 +50,9 @@ func (c *DeadlockAPI) getJSON(ctx context.Context, path string, v any) error {
 		return fmt.Errorf("deadlock-api %s: %w", path, err)
 	}
 	defer resp.Body.Close()
+	if resp.StatusCode == http.StatusNotFound {
+		return fmt.Errorf("deadlock-api %s: %w", path, ErrNotFound)
+	}
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(io.LimitReader(resp.Body, 512))
 		return fmt.Errorf("deadlock-api %s: %s: %s", path, resp.Status, body)

@@ -199,7 +199,6 @@ func mmss(s uint32) string {
 	return fmt.Sprintf("%d:%02d", s/60, s%60)
 }
 
-
 // parseInterspersed lets flags appear before or after positional args.
 func parseInterspersed(fs *flag.FlagSet, in []string) []string {
 	var pos []string

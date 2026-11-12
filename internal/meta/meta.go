@@ -14,18 +14,25 @@ import (
 
 // Decode parses decompressed .meta bytes.
 func Decode(raw []byte) (*pb.CMsgMatchMetaDataContents_MatchInfo, error) {
+	_, mi, err := DecodeWithVersion(raw)
+	return mi, err
+}
+
+// DecodeWithVersion parses decompressed .meta bytes and also returns the
+// container format version.
+func DecodeWithVersion(raw []byte) (uint32, *pb.CMsgMatchMetaDataContents_MatchInfo, error) {
 	var outer pb.CMsgMatchMetaData
 	if err := proto.Unmarshal(raw, &outer); err != nil {
-		return nil, fmt.Errorf("meta: outer: %w", err)
+		return 0, nil, fmt.Errorf("meta: outer: %w", err)
 	}
 	var contents pb.CMsgMatchMetaDataContents
 	if err := proto.Unmarshal(outer.GetMatchDetails(), &contents); err != nil {
-		return nil, fmt.Errorf("meta: contents: %w", err)
+		return 0, nil, fmt.Errorf("meta: contents: %w", err)
 	}
 	if contents.GetMatchInfo() == nil {
-		return nil, fmt.Errorf("meta: no match_info (version %d)", outer.GetVersion())
+		return 0, nil, fmt.Errorf("meta: no match_info (version %d)", outer.GetVersion())
 	}
-	return contents.GetMatchInfo(), nil
+	return outer.GetVersion(), contents.GetMatchInfo(), nil
 }
 
 // ReadFile opens a (possibly compressed) .meta file and decodes it.

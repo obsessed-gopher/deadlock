@@ -1,0 +1,223 @@
+syntax = "proto3";
+
+package deadlock.v1;
+
+import "google/api/annotations.proto";
+
+option go_package = "deadlock_ideas/gen/go/deadlock/v1;deadlockv1";
+
+// StatsService serves per-player and per-match analytics built from Valve
+// match metadata. REST mapping is provided by grpc-gateway.
+service StatsService {
+  // Player profile and sync state.
+  rpc GetPlayer(GetPlayerRequest) returns (Player) {
+    option (google.api.http) = {get: "/v1/players/{account_id}"};
+  }
+
+  // Player's match history, newest first.
+  rpc ListPlayerMatches(ListPlayerMatchesRequest) returns (ListPlayerMatchesResponse) {
+    option (google.api.http) = {get: "/v1/players/{account_id}/matches"};
+  }
+
+  // Pull fresh match history and queue metadata downloads for new matches.
+  rpc SyncPlayer(SyncPlayerRequest) returns (SyncPlayerResponse) {
+    option (google.api.http) = {
+      post: "/v1/players/{account_id}:sync"
+      body: "*"
+    };
+  }
+
+  // Scoreboard of all players in a match.
+  rpc GetMatch(GetMatchRequest) returns (Match) {
+    option (google.api.http) = {get: "/v1/matches/{match_id}"};
+  }
+
+  // Detailed breakdown of one player in one match: timelines, items, deaths.
+  rpc GetPlayerMatch(GetPlayerMatchRequest) returns (PlayerMatch) {
+    option (google.api.http) = {get: "/v1/matches/{match_id}/players/{account_id}"};
+  }
+}
+
+// ---------- enums ----------
+
+enum MetaStatus {
+  META_STATUS_UNSPECIFIED = 0;
+  META_STATUS_PENDING = 1;   // queued for download
+  META_STATUS_OK = 2;        // parsed and stored
+  META_STATUS_EXPIRED = 3;   // Valve no longer hosts the replay
+  META_STATUS_FAILED = 4;    // gave up after retries
+}
+
+enum SyncState {
+  SYNC_STATE_UNSPECIFIED = 0;
+  SYNC_STATE_NEVER = 1;
+  SYNC_STATE_RUNNING = 2;
+  SYNC_STATE_IDLE = 3;
+  SYNC_STATE_ERROR = 4;
+}
+
+// ---------- player ----------
+
+message GetPlayerRequest {
+  uint32 account_id = 1;
+}
+
+message Player {
+  uint32 account_id = 1;
+  SyncState sync_state = 2;
+  string sync_error = 3;
+  int64 last_synced_at = 4;   // unix seconds, 0 if never
+  uint32 matches_total = 5;
+  uint32 matches_with_meta = 6;
+  uint32 matches_pending = 7;
+  uint32 wins = 8;
+}
+
+message ListPlayerMatchesRequest {
+  uint32 account_id = 1;
+  uint32 page_size = 2;       // default 50, max 200
+  string page_token = 3;      // opaque, from previous response
+  uint32 hero_id = 4;         // optional filter
+}
+
+message ListPlayerMatchesResponse {
+  repeated PlayerMatchRow matches = 1;
+  string next_page_token = 2;
+}
+
+message PlayerMatchRow {
+  uint64 match_id = 1;
+  int64 start_time = 2;       // unix seconds
+  uint32 duration_s = 3;
+  int32 game_mode = 4;
+  int32 match_mode = 5;
+  uint32 hero_id = 6;
+  int32 team = 7;
+  bool won = 8;
+  uint32 kills = 9;
+  uint32 deaths = 10;
+  uint32 assists = 11;
+  uint32 net_worth = 12;
+  uint32 last_hits = 13;
+  uint32 denies = 14;
+  uint32 hero_level = 15;
+  MetaStatus meta_status = 16;
+}
+
+message SyncPlayerRequest {
+  uint32 account_id = 1;
+}
+
+message SyncPlayerResponse {
+  uint32 new_matches = 1;
+  uint32 queued_meta = 2;
+}
+
+// ---------- match ----------
+
+message GetMatchRequest {
+  uint64 match_id = 1;
+}
+
+message Match {
+  uint64 match_id = 1;
+  int64 start_time = 2;
+  uint32 duration_s = 3;
+  int32 game_mode = 4;
+  int32 match_mode = 5;
+  int32 winning_team = 6;
+  MetaStatus meta_status = 7;
+  repeated MatchPlayer players = 8;
+}
+
+message MatchPlayer {
+  uint32 slot = 1;
+  uint32 account_id = 2;
+  int32 team = 3;
+  uint32 hero_id = 4;
+  uint32 lane = 5;
+  uint32 kills = 6;
+  uint32 deaths = 7;
+  uint32 assists = 8;
+  uint32 net_worth = 9;
+  uint32 last_hits = 10;
+  uint32 denies = 11;
+  uint32 level = 12;
+  uint32 player_damage = 13;
+  uint32 player_healing = 14;
+  uint32 abandon_time_s = 15;
+}
+
+// ---------- player in match ----------
+
+message GetPlayerMatchRequest {
+  uint64 match_id = 1;
+  uint32 account_id = 2;
+}
+
+message PlayerMatch {
+  Match match = 1;            // scoreboard, so one call renders the page
+  uint32 slot = 2;
+  repeated StatSnapshot timeline = 3;
+  repeated ItemEvent items = 4;
+  repeated Death deaths = 5;
+  // Net worth timelines of every player, keyed by slot, for comparison charts.
+  repeated SlotTimeline net_worth_by_slot = 6;
+}
+
+message StatSnapshot {
+  uint32 t = 1;               // game time, seconds
+  uint32 net_worth = 2;
+  uint32 level = 3;
+  uint32 kills = 4;
+  uint32 deaths = 5;
+  uint32 assists = 6;
+  uint32 creep_kills = 7;
+  uint32 neutral_kills = 8;
+  uint32 denies = 9;
+  uint32 player_damage = 10;
+  uint32 player_damage_taken = 11;
+  uint32 player_healing = 12;
+  uint32 self_healing = 13;
+  uint32 gold_player = 14;    // souls from hero kills
+  uint32 gold_lane_creep = 15;
+  uint32 gold_neutral_creep = 16;
+  uint32 gold_boss = 17;
+  uint32 gold_treasure = 18;
+  uint32 gold_death_loss = 19;
+  uint32 shots_hit = 20;
+  uint32 shots_missed = 21;
+}
+
+message ItemEvent {
+  uint32 t = 1;
+  uint32 item_id = 2;
+  uint32 sold_t = 3;          // 0 if kept
+  uint32 upgrade_id = 4;
+  uint32 flags = 5;
+}
+
+message Death {
+  uint32 t = 1;
+  uint32 killer_slot = 2;
+  Vec3 pos = 3;
+  Vec3 killer_pos = 4;
+  uint32 respawn_s = 5;
+  float time_to_kill_s = 6;
+}
+
+message Vec3 {
+  float x = 1;
+  float y = 2;
+  float z = 3;
+}
+
+message SlotTimeline {
+  uint32 slot = 1;
+  repeated TimePoint points = 2;
+}
+
+message TimePoint {
+  uint32 t = 1;
+  uint32 v = 2;
+}

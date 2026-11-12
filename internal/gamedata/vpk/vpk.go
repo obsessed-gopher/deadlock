@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path/filepath"
 	"strings"
 )
 
@@ -154,9 +153,11 @@ func cstring(r *bufio.Reader) (string, error) {
 	return s[:len(s)-1], nil
 }
 
-// Entry returns the entry for a path like "scripts/heroes.vdata_c".
+// Entry returns the entry for a path like "scripts/heroes.vdata_c". Case and
+// slash direction do not matter on any OS: archive paths never contain a
+// backslash, and filepath.ToSlash would only convert them on Windows.
 func (a *Archive) Entry(path string) (*Entry, bool) {
-	e, ok := a.entries[strings.ToLower(filepath.ToSlash(path))]
+	e, ok := a.entries[strings.ToLower(strings.ReplaceAll(path, `\`, "/"))]
 	return e, ok
 }
 

@@ -6,11 +6,12 @@
 //
 // Commands:
 //
-//	setup     install pinned tools into .tools/bin and enable git hooks
+//	setup|fmt|lint|test|test-db|test-linux|gen     install pinned tools into .tools/bin and enable git hooks
 //	fmt       format code (gofumpt + goimports via golangci-lint)
 //	lint      run golangci-lint (extra args are passed through, e.g. --fix)
 //	test      unit tests (extra args are passed to go test, e.g. -race -run X)
 //	test-db   integration tests against Postgres from docker compose
+//	test-linux  unit tests with the race detector in a Linux container (what CI runs)
 //	gen       regenerate code from .proto files
 //	vuln      scan dependencies with govulncheck
 //	check     everything required before a commit: tidy, fmt, build, lint, test
@@ -54,6 +55,9 @@ var (
 const (
 	toolsDir = ".tools/bin"
 
+	// Same toolchain as the Dockerfile build stage, on glibc so -race works.
+	linuxImage = "golang:1.27"
+
 	// Matches docker-compose.yml.
 	defaultTestDB = "postgres://deadlock:deadlock@localhost:5432/deadlock?sslmode=disable" //nolint:gosec // local docker-compose credentials, not a secret
 )
@@ -68,15 +72,16 @@ func main() {
 	cmd, args := os.Args[1], os.Args[2:]
 
 	commands := map[string]func([]string) error{
-		"setup":   setup,
-		"fmt":     format,
-		"lint":    lint,
-		"test":    test,
-		"test-db": testDB,
-		"gen":     gen,
-		"vuln":    vuln,
-		"check":   check,
-		"ci":      ci,
+		"setup":      setup,
+		"fmt":        format,
+		"lint":       lint,
+		"test":       test,
+		"test-db":    testDB,
+		"test-linux": testLinux,
+		"gen":        gen,
+		"vuln":       vuln,
+		"check":      check,
+		"ci":         ci,
 	}
 	fn, ok := commands[cmd]
 	if !ok {
@@ -137,6 +142,24 @@ func testDB(args []string) error {
 	}
 	// -count=1: results depend on the database, never serve them from cache.
 	return run("go", append([]string{"test", "-count=1"}, append(args, "./internal/db/...")...)...)
+}
+
+// testLinux runs the unit tests the way CI does: on Linux, with the race
+// detector. Windows cannot run -race without gcc and hides bugs that depend
+// on the path separator or file modes.
+func testLinux(args []string) error {
+	wd, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+	docker := []string{
+		"run", "--rm",
+		"-v", wd + ":/src", "-w", "/src",
+		"-v", "deadlock-gomod:/go/pkg/mod", "-v", "deadlock-gobuild:/root/.cache/go-build",
+		linuxImage,
+		"go", "test", "-race", "-shuffle=on",
+	}
+	return run("docker", append(docker, append(args, "./...")...)...)
 }
 
 func gen([]string) error {

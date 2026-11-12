@@ -21,6 +21,7 @@ go run ./tools/dev fmt       # отформатировать (gofumpt + goimpor
 go run ./tools/dev lint      # golangci-lint; аргументы пробрасываются (--fix)
 go run ./tools/dev test      # юнит-тесты; аргументы пробрасываются: test -run TestX
 go run ./tools/dev test-db   # интеграционные тесты БД (сам поднимает postgres из compose)
+go run ./tools/dev test-linux  # юнит-тесты в Linux-контейнере с -race — то, что гоняет CI
 go run ./tools/dev gen       # кодогенерация из .proto
 go run ./tools/dev vuln      # govulncheck
 go run ./tools/dev setup     # один раз на новой машине: инструменты в .tools/bin + git-хук
@@ -34,6 +35,7 @@ go run ./tools/dev setup     # один раз на новой машине: и�
 
 1. `go run ./tools/dev check` проходит. Не «должно проходить» — запусти и посмотри вывод.
 2. Менялся `internal/db` (SQL, миграции) → прошёл `go run ./tools/dev test-db`.
+   Менялась работа с путями, файлами или горутинами → прошёл `go run ./tools/dev test-linux` (локальный `check` на Windows таких ошибок не видит).
 3. Менялись `.proto` → выполнен `go run ./tools/dev gen`, сгенерированные файлы в том же коммите.
 4. Новое поведение покрыто тестом; исправленный баг — тестом, который без исправления падает.
 5. Видимое пользователю изменение записано в `CHANGELOG.md` → `[Unreleased]`.

@@ -31,12 +31,12 @@ import (
 	"google.golang.org/grpc/reflection"
 	"google.golang.org/protobuf/encoding/protojson"
 
-	v1 "deadlock_ideas/gen/go/deadlock/v1"
-	"deadlock_ideas/internal/db"
-	"deadlock_ideas/internal/gamedata"
-	"deadlock_ideas/internal/server"
-	"deadlock_ideas/internal/source"
-	"deadlock_ideas/internal/syncer"
+	v1 "github.com/obsessed-gopher/deadlock/gen/go/deadlock/v1"
+	"github.com/obsessed-gopher/deadlock/internal/db"
+	"github.com/obsessed-gopher/deadlock/internal/gamedata"
+	"github.com/obsessed-gopher/deadlock/internal/server"
+	"github.com/obsessed-gopher/deadlock/internal/source"
+	"github.com/obsessed-gopher/deadlock/internal/syncer"
 )
 
 func main() {

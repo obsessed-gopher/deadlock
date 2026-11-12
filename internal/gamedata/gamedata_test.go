@@ -6,7 +6,7 @@ import (
 	"reflect"
 	"testing"
 
-	"deadlock_ideas/internal/meta"
+	"github.com/obsessed-gopher/deadlock/internal/meta"
 )
 
 func TestHashKey(t *testing.T) {

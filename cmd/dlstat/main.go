@@ -17,10 +17,10 @@ import (
 	"text/tabwriter"
 	"time"
 
-	"deadlock_ideas/internal/gamedata"
-	"deadlock_ideas/internal/meta"
-	"deadlock_ideas/internal/pb"
-	"deadlock_ideas/internal/source"
+	"github.com/obsessed-gopher/deadlock/internal/gamedata"
+	"github.com/obsessed-gopher/deadlock/internal/meta"
+	"github.com/obsessed-gopher/deadlock/internal/pb"
+	"github.com/obsessed-gopher/deadlock/internal/source"
 )
 
 func main() {

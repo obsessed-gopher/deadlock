@@ -13,7 +13,7 @@ import (
 	"io"
 	"math"
 
-	"deadlock_ideas/internal/zstd"
+	"github.com/obsessed-gopher/deadlock/internal/zstd"
 )
 
 // Object is a KV3 object preserving key order.

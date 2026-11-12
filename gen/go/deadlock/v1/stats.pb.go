@@ -2089,7 +2089,7 @@ const file_deadlock_v1_stats_proto_rawDesc = "" +
 	"SyncPlayer\x12\x1e.deadlock.v1.SyncPlayerRequest\x1a\x1f.deadlock.v1.SyncPlayerResponse\"(\x82\xd3\xe4\x93\x02\":\x01*\"\x1d/v1/players/{account_id}:sync\x12\\\n" +
 	"\bGetMatch\x12\x1c.deadlock.v1.GetMatchRequest\x1a\x12.deadlock.v1.Match\"\x1e\x82\xd3\xe4\x93\x02\x18\x12\x16/v1/matches/{match_id}\x12\x83\x01\n" +
 	"\x0eGetPlayerMatch\x12\".deadlock.v1.GetPlayerMatchRequest\x1a\x18.deadlock.v1.PlayerMatch\"3\x82\xd3\xe4\x93\x02-\x12+/v1/matches/{match_id}/players/{account_id}\x12[\n" +
-	"\vGetGameData\x12\x1f.deadlock.v1.GetGameDataRequest\x1a\x15.deadlock.v1.GameData\"\x14\x82\xd3\xe4\x93\x02\x0e\x12\f/v1/gamedataB.Z,deadlock_ideas/gen/go/deadlock/v1;deadlockv1b\x06proto3"
+	"\vGetGameData\x12\x1f.deadlock.v1.GetGameDataRequest\x1a\x15.deadlock.v1.GameData\"\x14\x82\xd3\xe4\x93\x02\x0e\x12\f/v1/gamedataBCZAgithub.com/obsessed-gopher/deadlock/gen/go/deadlock/v1;deadlockv1b\x06proto3"
 
 var (
 	file_deadlock_v1_stats_proto_rawDescOnce sync.Once

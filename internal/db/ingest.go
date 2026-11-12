@@ -8,8 +8,8 @@ import (
 
 	"github.com/jackc/pgx/v5"
 
-	"deadlock_ideas/internal/pb"
-	"deadlock_ideas/internal/source"
+	"github.com/obsessed-gopher/deadlock/internal/pb"
+	"github.com/obsessed-gopher/deadlock/internal/source"
 )
 
 // Meta statuses stored in matches.meta_status.

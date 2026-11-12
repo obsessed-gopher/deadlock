@@ -7,7 +7,7 @@ import (
 	"errors"
 	"fmt"
 
-	"deadlock_ideas/internal/gamedata/kv3"
+	"github.com/obsessed-gopher/deadlock/internal/gamedata/kv3"
 )
 
 // Blocks maps block type ("DATA", "RERL", ...) to its raw bytes.

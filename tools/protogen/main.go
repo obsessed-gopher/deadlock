@@ -31,7 +31,7 @@ import (
 const (
 	gameSrcDir    = "proto/deadlock"
 	gameOutDir    = "internal/pb"
-	gameGoPackage = "deadlock_ideas/internal/pb"
+	gameGoPackage = "github.com/obsessed-gopher/deadlock/internal/pb"
 
 	apiSrcDir     = "proto/api"
 	thirdPartyDir = "proto/third_party"

@@ -13,8 +13,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"deadlock_ideas/internal/gamedata"
-	"deadlock_ideas/internal/meta"
+	"github.com/obsessed-gopher/deadlock/internal/gamedata"
+	"github.com/obsessed-gopher/deadlock/internal/meta"
 )
 
 const defaultGameDir = `C:\Program Files (x86)\Steam\steamapps\common\Deadlock\game\citadel`

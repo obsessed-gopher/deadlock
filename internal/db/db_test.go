@@ -6,9 +6,9 @@ import (
 	"testing"
 	"time"
 
-	"deadlock_ideas/internal/compress"
-	"deadlock_ideas/internal/meta"
-	"deadlock_ideas/internal/source"
+	"github.com/obsessed-gopher/deadlock/internal/compress"
+	"github.com/obsessed-gopher/deadlock/internal/meta"
+	"github.com/obsessed-gopher/deadlock/internal/source"
 )
 
 // Integration test against a real Postgres. Run with e.g.

@@ -8,8 +8,8 @@ import (
 
 	"google.golang.org/protobuf/proto"
 
-	"deadlock_ideas/internal/compress"
-	"deadlock_ideas/internal/pb"
+	"github.com/obsessed-gopher/deadlock/internal/compress"
+	"github.com/obsessed-gopher/deadlock/internal/pb"
 )
 
 // Decode parses decompressed .meta bytes.

@@ -4,7 +4,7 @@ package deadlock.v1;
 
 import "google/api/annotations.proto";
 
-option go_package = "deadlock_ideas/gen/go/deadlock/v1;deadlockv1";
+option go_package = "github.com/obsessed-gopher/deadlock/gen/go/deadlock/v1;deadlockv1";
 
 // StatsService serves per-player and per-match analytics built from Valve
 // match metadata. REST mapping is provided by grpc-gateway.

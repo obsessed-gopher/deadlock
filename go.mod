@@ -1,4 +1,4 @@
-module deadlock_ideas
+module github.com/obsessed-gopher/deadlock
 
 go 1.27
 

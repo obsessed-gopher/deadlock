@@ -7,7 +7,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 
-	v1 "deadlock_ideas/gen/go/deadlock/v1"
+	v1 "github.com/obsessed-gopher/deadlock/gen/go/deadlock/v1"
 )
 
 // ErrNotFound is returned when the requested row doesn't exist.

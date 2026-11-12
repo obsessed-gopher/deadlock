@@ -13,9 +13,9 @@ import (
 	"sort"
 	"strings"
 
-	"deadlock_ideas/internal/gamedata/kv3"
-	"deadlock_ideas/internal/gamedata/resource"
-	"deadlock_ideas/internal/gamedata/vpk"
+	"github.com/obsessed-gopher/deadlock/internal/gamedata/kv3"
+	"github.com/obsessed-gopher/deadlock/internal/gamedata/resource"
+	"github.com/obsessed-gopher/deadlock/internal/gamedata/vpk"
 )
 
 func main() {

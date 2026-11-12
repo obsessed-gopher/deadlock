@@ -10,6 +10,7 @@ const abilities = new Map<number, Ability>([
   [3, { id: 3, key: "upgrade_magic_storm", name: "Magic Storm", nameRu: "", type: "item", slot: "spirit", tier: 4 }],
 ]);
 const ability = (id: number) => abilities.get(id);
+const ruName = (a: Ability) => a.nameRu || a.name;
 
 function ev(t: number, itemId: number, upgradeId = 0, soldT = 0): ItemEvent {
   return { t, itemId, upgradeId, soldT, flags: 0 };
@@ -17,7 +18,7 @@ function ev(t: number, itemId: number, upgradeId = 0, soldT = 0): ItemEvent {
 
 test("ability upgrades are numbered by order, not by upgrade_id", () => {
   // Shapes from match 134969900: unlock with upgrade_id 0, then hashes.
-  const got = buildEntries([ev(11, 1), ev(1070, 1, 582914516), ev(1252, 1, 2018283944)], ability);
+  const got = buildEntries([ev(11, 1), ev(1070, 1, 582914516), ev(1252, 1, 2018283944)], ability, ruName);
   assert.deepEqual(
     got.map((e) => [e.kind, e.level, e.name]),
     [
@@ -29,7 +30,7 @@ test("ability upgrades are numbered by order, not by upgrade_id", () => {
 });
 
 test("shop items keep tier, slot and sale time; unknown ids get a fallback name", () => {
-  const [item, unknown] = buildEntries([ev(203, 2, 1, 708), ev(300, 999)], ability);
+  const [item, unknown] = buildEntries([ev(203, 2, 1, 708), ev(300, 999)], ability, ruName);
   assert.deepEqual(item, {
     t: 203,
     itemId: 2,
@@ -45,7 +46,7 @@ test("shop items keep tier, slot and sale time; unknown ids get a fallback name"
 });
 
 test("events are ordered by time", () => {
-  const got = buildEntries([ev(500, 2), ev(100, 3)], ability);
+  const got = buildEntries([ev(500, 2), ev(100, 3)], ability, ruName);
   assert.deepEqual(
     got.map((e) => e.t),
     [100, 500],
@@ -53,7 +54,7 @@ test("events are ordered by time", () => {
 });
 
 test("finalItems drops sold items and abilities, sorts by tier", () => {
-  const entries = buildEntries([ev(11, 1), ev(203, 2, 1, 708), ev(250, 2), ev(1371, 3)], ability);
+  const entries = buildEntries([ev(11, 1), ev(203, 2, 1, 708), ev(250, 2), ev(1371, 3)], ability, ruName);
   assert.deepEqual(
     finalItems(entries).map((e) => [e.itemId, e.t]),
     [

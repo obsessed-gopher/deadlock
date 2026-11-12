@@ -1,10 +1,10 @@
-import { notFound, redirect } from "next/navigation";
+import { redirect } from "next/navigation";
 
 import { isId } from "@/api/client.ts";
 
-// Target of the search form on the home page: /players?id=... -> /players/<id>.
+// Target of the search form: /players?id=... -> /players/<id>. A bad id goes
+// back to the form with a localized hint instead of an error page.
 export default async function PlayerSearch({ searchParams }: { searchParams: Promise<{ id?: string }> }) {
   const id = (await searchParams).id?.trim() ?? "";
-  if (!isId(id)) notFound();
-  redirect(`/players/${id}`);
+  redirect(isId(id) ? `/players/${id}` : "/?error=badId");
 }

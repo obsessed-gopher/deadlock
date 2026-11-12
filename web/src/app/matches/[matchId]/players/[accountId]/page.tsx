@@ -2,201 +2,137 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { api, isId, isNotFound } from "@/api/client.ts";
-import type { PlayerMatch, StatSnapshot } from "@/api/schema.gen.ts";
+import { api, isId } from "@/api/client.ts";
+import { DataTable } from "@/components/DataTable.tsx";
+import { ErrorState } from "@/components/ErrorState.tsx";
 import { NetWorthChart } from "@/components/NetWorthChart.tsx";
-import { Scoreboard } from "@/components/Scoreboard.tsx";
-import { type BuildEntry, buildEntries, finalItems } from "@/lib/build.ts";
-import { dateTime, duration, gameModeName, kda, kdaRatio, matchModeName, num, pct } from "@/lib/format.ts";
+import { SoulBars } from "@/components/SoulBars.tsx";
+import { Stat } from "@/components/Stat.tsx";
+import { getI18n } from "@/i18n/server.ts";
+import { buildEntries, finalItems } from "@/lib/build.ts";
+import { attempt } from "@/lib/errors.ts";
+import { kda, kdaRatio } from "@/lib/format.ts";
 import { makeLookup } from "@/lib/gamedata.ts";
+import { buildTable, deathsTable, scoreboardTables } from "@/lib/views.ts";
 
 type Params = { matchId: string; accountId: string };
 
 export async function generateMetadata({ params }: { params: Promise<Params> }): Promise<Metadata> {
+  const { t } = await getI18n();
   const { matchId, accountId } = await params;
-  return { title: `Матч ${matchId} · ${accountId}` };
+  return { title: `${t("match.title", { id: matchId })} · ${accountId}` };
 }
 
 export default async function PlayerMatchPage({ params }: { params: Promise<Params> }) {
-  const { matchId, accountId } = await params;
+  const [{ matchId, accountId }, i18n] = await Promise.all([params, getI18n()]);
+  const { t } = i18n;
   if (!isId(matchId) || !isId(accountId)) notFound();
-  let pm: PlayerMatch;
-  try {
-    pm = await api.playerMatch(matchId, accountId);
-  } catch (err) {
-    if (isNotFound(err)) notFound();
-    throw err;
-  }
+  const self = `/matches/${matchId}/players/${accountId}`;
+  const [res, gd] = await Promise.all([attempt(() => api.playerMatch(matchId, accountId)), attempt(() => api.gameData())]);
+  if (!res.ok && res.kind === "notFound") notFound();
+  if (!res.ok) return <ErrorState i18n={i18n} kind={res.kind} retryHref={self} />;
+  if (!gd.ok) return <ErrorState i18n={i18n} kind={gd.kind} retryHref={self} />;
+  const pm = res.data;
   const match = pm.match;
   const me = match?.players.find((p) => p.slot === pm.slot);
   if (!match || !me) notFound();
 
-  const look = makeLookup(await api.gameData());
+  const look = makeLookup(gd.data, i18n);
+  const ctx = { i18n, look };
   const won = me.team === match.winningTeam;
-  const last: StatSnapshot | undefined = pm.timeline.at(-1);
-  const entries = buildEntries(pm.items, look.ability);
+  const last = pm.timeline.at(-1);
+  const entries = buildEntries(pm.items, look.ability, look.abilityName);
   const teamOf = (slot: number) => match.players.find((p) => p.slot === slot)?.team ?? 0;
-  const heroBySlot = (slot: number) => {
-    const p = match.players.find((x) => x.slot === slot);
-    return p ? look.heroName(p.heroId) : "—";
-  };
+  const perMin = Math.round(me.netWorth / Math.max(1, match.durationS / 60));
 
   return (
     <>
-      <div className="muted small">
-        <Link href={`/players/${me.accountId}`}>Игрок {me.accountId}</Link> ·{" "}
-        <Link href={`/matches/${match.matchId}`}>матч {match.matchId}</Link>
-      </div>
-      <h1>
-        {look.heroName(me.heroId)} <span className={won ? "win" : "loss"}>{won ? "Победа" : "Поражение"}</span>
-      </h1>
-      <p className="muted">
-        {dateTime(match.startTime)} · {duration(match.durationS)} · {gameModeName(match.gameMode)} ·{" "}
-        {matchModeName(match.matchMode)}
-      </p>
+      <section>
+        <nav className="crumbs" aria-label={t("app.title")}>
+          <Link href={`/players/${me.accountId}`}>{t("player.title", { id: me.accountId })}</Link>
+          <span aria-hidden="true">/</span>
+          <Link href={`/matches/${match.matchId}`}>{t("match.title", { id: match.matchId })}</Link>
+        </nav>
+        <div className="row" style={{ gap: 16 }}>
+          <h1>{look.heroName(me.heroId)}</h1>
+          <span className={`badge ${won ? "tone-win" : "tone-loss"}`}>
+            <span className="dot" aria-hidden="true" />
+            {won ? t("result.win") : t("result.loss")}
+          </span>
+        </div>
+        <span className="muted">
+          {i18n.date(match.startTime)} · {i18n.duration(match.durationS)} · {i18n.gameMode(match.gameMode)} ·{" "}
+          {i18n.matchMode(match.matchMode)} · <span className={`tone-team-${me.team}`}>{i18n.team(me.team)}</span>
+        </span>
+        <div className="stats">
+          <Stat
+            label={t("stat.kda")}
+            value={kda(me.kills, me.deaths, me.assists)}
+            hint={t("stat.kdaRatio", { n: i18n.dec(kdaRatio(me.kills, me.deaths, me.assists), 2) })}
+          />
+          <Stat label={t("stat.souls")} value={i18n.num(me.netWorth)} hint={t("stat.perMin", { n: i18n.num(perMin) })} />
+          <Stat label={t("stat.damage")} value={i18n.num(me.playerDamage)} />
+          <Stat label={t("stat.healing")} value={i18n.num(me.playerHealing)} />
+          <Stat label={t("stat.lastHitsDenies")} value={`${me.lastHits} / ${me.denies}`} />
+          {last && <Stat label={t("stat.accuracy")} value={i18n.pct(last.shotsHit, last.shotsHit + last.shotsMissed)} />}
+        </div>
+      </section>
 
-      <div className="stats">
-        <Stat label="K / D / A" value={kda(me.kills, me.deaths, me.assists)} hint={`KDA ${kdaRatio(me.kills, me.deaths, me.assists)}`} />
-        <Stat label="Души" value={num(me.netWorth)} hint={`${num(Math.round(me.netWorth / Math.max(1, match.durationS / 60)))} в минуту`} />
-        <Stat label="Урон по героям" value={num(me.playerDamage)} />
-        <Stat label="Лечение" value={num(me.playerHealing)} />
-        <Stat label="Добито / отказано" value={`${me.lastHits} / ${me.denies}`} />
-        {last && <Stat label="Точность" value={pct(last.shotsHit, last.shotsHit + last.shotsMissed)} />}
-      </div>
+      <section aria-labelledby="chart-title">
+        <h2 id="chart-title">{t("match.chart")}</h2>
+        <div className="card stack">
+          <NetWorthChart i18n={i18n} series={pm.netWorthBySlot} teamOf={teamOf} highlightSlot={pm.slot} />
+        </div>
+      </section>
 
-      <h2>Души по времени</h2>
-      <div className="card">
-        <NetWorthChart series={pm.netWorthBySlot} teamOf={teamOf} highlightSlot={pm.slot} />
-      </div>
-
-      <h2>Таблица матча</h2>
-      <Scoreboard match={match} look={look} highlightSlot={pm.slot} />
+      <section aria-labelledby="scoreboard-title">
+        <h2 id="scoreboard-title">{t("match.scoreboard")}</h2>
+        <div className="grid-2">
+          {scoreboardTables(ctx, match, pm.slot).map((spec) => (
+            <DataTable key={spec.label} spec={spec} />
+          ))}
+        </div>
+      </section>
 
       <div className="grid-2">
-        <div>
-          <h2>Итоговые предметы</h2>
+        <section aria-labelledby="items-title">
+          <h2 id="items-title">{t("match.finalItems")}</h2>
           <div className="items">
             {finalItems(entries).map((e) => (
-              <span key={`${e.itemId}-${e.t}`} className={`item slot-${e.slot}`} title={`T${e.tier}, куплен на ${duration(e.t)}`}>
+              <span key={`${e.itemId}-${e.t}`} className="item" title={i18n.duration(e.t)}>
+                <span className={`slot-mark slot-${e.slot || "ability"}`} aria-hidden="true" />
                 {e.name}
+                {e.tier > 0 && <span className="tier">T{e.tier}</span>}
               </span>
             ))}
           </div>
           {last && (
             <>
-              <h2>Источники душ</h2>
-              <SoulSources s={last} />
+              <h2>{t("match.souls")}</h2>
+              <SoulBars i18n={i18n} s={last} />
             </>
           )}
-        </div>
-        <div>
-          <h2>Смерти ({pm.deaths.length})</h2>
+        </section>
+        <section aria-labelledby="deaths-title">
+          <h2 id="deaths-title">
+            {t("match.deaths")}
+            <span className="count">{pm.deaths.length}</span>
+          </h2>
           {pm.deaths.length === 0 ? (
-            <p className="muted">Ни одной.</p>
+            <p className="muted">{t("match.noDeaths")}</p>
           ) : (
-            <div className="table-wrap">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Время</th>
-                    <th>Убийца</th>
-                    <th className="num">Время до смерти</th>
-                    <th className="num">Возрождение</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {pm.deaths.map((d) => (
-                    <tr key={d.t}>
-                      <td>{duration(d.t)}</td>
-                      <td>{heroBySlot(d.killerSlot)}</td>
-                      <td className="num">{d.timeToKillS >= 0 ? `${d.timeToKillS.toFixed(1)} с` : "—"}</td>
-                      <td className="num">{d.respawnS} с</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <DataTable spec={deathsTable(ctx, pm.deaths, match.players)} />
           )}
-        </div>
+        </section>
       </div>
 
-      <h2>Порядок покупок и улучшений</h2>
-      <BuildTable entries={entries} />
+      <section aria-labelledby="build-title">
+        <h2 id="build-title">
+          {t("match.build")}
+          <span className="count">{entries.length}</span>
+        </h2>
+        <DataTable spec={buildTable(ctx, entries)} />
+      </section>
     </>
-  );
-}
-
-function Stat({ label, value, hint }: { label: string; value: string; hint?: string }) {
-  return (
-    <div className="card stat">
-      <div className="label">{label}</div>
-      <div className="value">{value}</div>
-      {hint && <div className="muted small">{hint}</div>}
-    </div>
-  );
-}
-
-function SoulSources({ s }: { s: StatSnapshot }) {
-  const rows: [string, number][] = [
-    ["Крипы на линии", s.goldLaneCreep],
-    ["Нейтралы", s.goldNeutralCreep],
-    ["Герои", s.goldPlayer],
-    ["Боссы", s.goldBoss],
-    ["Сокровища", s.goldTreasure],
-  ];
-  const total = rows.reduce((sum, [, v]) => sum + v, 0);
-  return (
-    <div className="table-wrap">
-      <table>
-        <tbody>
-          {rows.map(([name, v]) => (
-            <tr key={name}>
-              <td>{name}</td>
-              <td className="num">{num(v)}</td>
-              <td className="num muted">{pct(v, total)}</td>
-            </tr>
-          ))}
-          <tr>
-            <td className="loss">Потеряно при смертях</td>
-            <td className="num loss">−{num(s.goldDeathLoss)}</td>
-            <td />
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  );
-}
-
-const kindText = { item: "", unlock: "открыта", upgrade: "улучшение" } as const;
-
-function BuildTable({ entries }: { entries: BuildEntry[] }) {
-  return (
-    <div className="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>Время</th>
-            <th>Что</th>
-            <th>Тип</th>
-            <th className="num">Продан</th>
-          </tr>
-        </thead>
-        <tbody>
-          {entries.map((e, i) => (
-            <tr key={i}>
-              <td>{duration(e.t)}</td>
-              <td className={e.kind === "item" ? `slot-${e.slot}` : undefined}>
-                <span className={e.soldT ? "sold" : undefined}>{e.name}</span>
-              </td>
-              <td className="muted small">
-                {e.kind === "item" ? (e.tier ? `предмет T${e.tier}` : "предмет") : kindText[e.kind]}
-                {e.kind === "upgrade" && ` ${e.level}`}
-              </td>
-              <td className="num muted">{e.soldT ? duration(e.soldT) : ""}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
   );
 }

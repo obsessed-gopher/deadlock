@@ -88,6 +88,8 @@ export interface ListPlayerHeroStatsResponse {
 export interface ListPlayerMatchesResponse {
   matches: PlayerMatchRow[];
   nextPageToken: string;
+  /** rows matching the filters, all pages */
+  total: number;
 }
 
 export interface Match {
@@ -118,6 +120,16 @@ export interface MatchPlayer {
   slot: number;
   team: number;
 }
+
+/** - MATCH_RESULT_UNSPECIFIED: any */
+export type MatchResult = "MATCH_RESULT_UNSPECIFIED" | "MATCH_RESULT_WIN" | "MATCH_RESULT_LOSS";
+
+/**
+ * Sort key of ListPlayerMatches. Ties are broken by match_id.
+ * 
+ * - MATCH_SORT_UNSPECIFIED: same as START_TIME
+ */
+export type MatchSort = "MATCH_SORT_UNSPECIFIED" | "MATCH_SORT_START_TIME" | "MATCH_SORT_DURATION" | "MATCH_SORT_KILLS" | "MATCH_SORT_DEATHS" | "MATCH_SORT_ASSISTS" | "MATCH_SORT_NET_WORTH" | "MATCH_SORT_LAST_HITS" | "MATCH_SORT_HERO_LEVEL";
 
 /**
  * - META_STATUS_PENDING: queued for download

@@ -64,6 +64,59 @@ test("pagination is keyset by match id and ends with an empty token", () => {
   assert.deepEqual(seen, sorted);
 });
 
+test("every sort pages through all rows in order, ties broken by match id", () => {
+  const sorts = ["MATCH_SORT_START_TIME", "MATCH_SORT_KILLS", "MATCH_SORT_NET_WORTH", "MATCH_SORT_DURATION"];
+  for (const sort of sorts) {
+    for (const ascending of [false, true]) {
+      const seen: ListPlayerMatchesResponse["matches"] = [];
+      let token = "";
+      for (let i = 0; i < 20; i++) {
+        const q = new URLSearchParams({ pageSize: "17", sort, ascending: String(ascending) });
+        if (token) q.set("pageToken", token);
+        const { status, body } = call<ListPlayerMatchesResponse>("GET", `/v1/players/${ACCOUNT}/matches?${q}`);
+        assert.equal(status, 200);
+        assert.equal(body.total, fx.rows.length);
+        seen.push(...body.matches);
+        token = body.nextPageToken;
+        if (!token) break;
+      }
+      assert.equal(seen.length, fx.rows.length, `${sort} asc=${ascending}`);
+      assert.equal(new Set(seen.map((m) => m.matchId)).size, seen.length);
+    }
+  }
+  const { body } = call<ListPlayerMatchesResponse>("GET", `/v1/players/${ACCOUNT}/matches?pageSize=200&sort=MATCH_SORT_KILLS`);
+  const kills = body.matches.map((m) => m.kills);
+  assert.deepEqual(kills, [...kills].sort((a, b) => b - a));
+});
+
+test("filters: result, game mode, metadata; total counts all pages", () => {
+  const list = (q: string) =>
+    call<ListPlayerMatchesResponse>("GET", `/v1/players/${ACCOUNT}/matches?pageSize=5&${q}`).body;
+  const wins = list("result=MATCH_RESULT_WIN");
+  assert.equal(wins.total, fx.rows.filter((r) => r.won).length);
+  assert.ok(wins.matches.every((m) => m.won));
+  const losses = list("result=MATCH_RESULT_LOSS");
+  assert.equal(wins.total + losses.total, fx.rows.length);
+  const brawl = list("gameMode=4&pageSize=200");
+  assert.ok(brawl.matches.every((m) => m.gameMode === 4));
+  const ok = list("metaStatus=META_STATUS_OK&pageSize=200");
+  assert.ok(ok.total > 0 && ok.matches.every((m) => m.metaStatus === "META_STATUS_OK"));
+  for (const bad of ["sort=MATCH_SORT_X", "result=DRAW", "metaStatus=X", "pageToken=101"]) {
+    assert.equal(call("GET", `/v1/players/${ACCOUNT}/matches?${bad}`).status, 400, bad);
+  }
+});
+
+test("error triggers behave like the real gateway", () => {
+  const internal = call<RpcStatus>("GET", "/v1/matches/500");
+  assert.deepEqual([internal.status, internal.body.code], [500, 13]);
+  assert.equal(call("GET", `/v1/matches/500/players/${ACCOUNT}`).status, 500);
+  const down = call<RpcStatus>("GET", "/v1/players/503");
+  assert.deepEqual([down.status, down.body.code], [503, 14]);
+  assert.equal(call("POST", "/v1/players/503:sync").status, 503);
+  assert.equal(call("GET", "/v1/players/504").status, 404);
+  assert.equal(call("POST", "/v1/players/504:sync").status, 503);
+});
+
 test("hero filter and hero stats agree", () => {
   const { body } = call<ListPlayerHeroStatsResponse>("GET", `/v1/players/${ACCOUNT}/heroes`);
   const top = body.heroes[0];

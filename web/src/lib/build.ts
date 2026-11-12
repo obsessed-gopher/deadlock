@@ -1,5 +1,4 @@
 import type { Ability, ItemEvent } from "../api/schema.gen.ts";
-import { displayName } from "./gamedata.ts";
 
 export type BuildKind = "item" | "unlock" | "upgrade";
 
@@ -26,12 +25,16 @@ export interface BuildEntry {
  * so the upgrade level comes from the order of events, not from the value.
  * See docs/problems.md.
  */
-export function buildEntries(items: ItemEvent[], ability: (id: number) => Ability | undefined): BuildEntry[] {
+export function buildEntries(
+  items: ItemEvent[],
+  ability: (id: number) => Ability | undefined,
+  nameOf: (a: Ability) => string,
+): BuildEntry[] {
   const upgrades = new Map<number, number>();
   const out: BuildEntry[] = [];
   for (const ev of [...items].sort((a, b) => a.t - b.t)) {
     const a = ability(ev.itemId);
-    const name = a ? displayName(a) : `#${ev.itemId}`;
+    const name = a ? nameOf(a) : `#${ev.itemId}`;
     if (a && a.type !== "item") {
       if (ev.upgradeId === 0) {
         out.push({ t: ev.t, itemId: ev.itemId, name, kind: "unlock", level: 0, tier: 0, slot: "", soldT: 0 });

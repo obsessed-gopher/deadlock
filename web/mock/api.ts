@@ -41,6 +41,12 @@ export interface Response {
   body: unknown;
 }
 
+/** Ids that make the mock fail on purpose (see handle). */
+export const ERROR_MATCH = 500;
+export const UNAVAILABLE_PLAYER = 503;
+/** Unknown player (404) whose sync fails with Unavailable. */
+export const SYNC_FAILS_PLAYER = 504;
+
 const STEAM_ID64_BASE = 76561197960265728n;
 const MAX_U32 = 0xffffffffn;
 
@@ -62,6 +68,34 @@ function error(status: number, code: number, message: string): Response {
 const notFound = () => error(404, 5, "not found");
 const badRequest = (msg: string) => error(400, 3, msg);
 const ok = (body: unknown): Response => ({ status: 200, body });
+
+// ListPlayerMatches sort keys -> the row value they sort by (as in Go,
+// db.MatchSortValue).
+const SORT_VALUES: Record<string, (r: PlayerMatchRow) => string | number> = {
+  MATCH_SORT_UNSPECIFIED: (r) => r.startTime,
+  MATCH_SORT_START_TIME: (r) => r.startTime,
+  MATCH_SORT_DURATION: (r) => r.durationS,
+  MATCH_SORT_KILLS: (r) => r.kills,
+  MATCH_SORT_DEATHS: (r) => r.deaths,
+  MATCH_SORT_ASSISTS: (r) => r.assists,
+  MATCH_SORT_NET_WORTH: (r) => r.netWorth,
+  MATCH_SORT_LAST_HITS: (r) => r.lastHits,
+  MATCH_SORT_HERO_LEVEL: (r) => r.heroLevel,
+};
+
+const RESULTS: Record<string, boolean | undefined> = {
+  MATCH_RESULT_UNSPECIFIED: undefined,
+  MATCH_RESULT_WIN: true,
+  MATCH_RESULT_LOSS: false,
+};
+
+const META_STATUSES = [
+  "META_STATUS_UNSPECIFIED",
+  "META_STATUS_PENDING",
+  "META_STATUS_OK",
+  "META_STATUS_EXPIRED",
+  "META_STATUS_FAILED",
+];
 
 const byMatchDesc = (a: PlayerMatchRow, b: PlayerMatchRow) => {
   const x = BigInt(a.matchId);
@@ -129,18 +163,50 @@ export function createMockApi(fx: Fixtures, now: () => number = () => Date.now()
   }
 
   function listMatches(q: URLSearchParams): Response {
-    const sizeRaw = Number(q.get("pageSize") ?? q.get("page_size") ?? 0);
+    const get = (camel: string, snake: string) => q.get(camel) ?? q.get(snake) ?? "";
+    const sizeRaw = Number(get("pageSize", "page_size") || 0);
     const size = sizeRaw <= 0 ? 50 : Math.min(sizeRaw, 200);
-    const token = q.get("pageToken") ?? q.get("page_token") ?? "";
-    if (token && !/^\d+$/.test(token)) return badRequest("bad page_token");
-    const heroId = Number(q.get("heroId") ?? q.get("hero_id") ?? 0);
-    const page = rows
-      .filter((r) => !heroId || r.heroId === heroId)
-      .filter((r) => !token || BigInt(r.matchId) < BigInt(token))
+
+    const sortName = get("sort", "sort") || "MATCH_SORT_UNSPECIFIED";
+    const value = SORT_VALUES[sortName];
+    if (!value) return badRequest("unknown sort");
+    const result = get("result", "result") || "MATCH_RESULT_UNSPECIFIED";
+    if (!(result in RESULTS)) return badRequest("unknown result");
+    const meta = get("metaStatus", "meta_status") || "META_STATUS_UNSPECIFIED";
+    if (!META_STATUSES.includes(meta)) return badRequest("unknown meta_status");
+    const asc = get("ascending", "ascending") === "true";
+    const heroId = Number(get("heroId", "hero_id") || 0);
+    const gameMode = Number(get("gameMode", "game_mode") || 0);
+
+    // Same token format as the Go server: "<sort value>_<match id>".
+    const token = get("pageToken", "page_token");
+    let after: { v: bigint; id: bigint } | null = null;
+    if (token) {
+      const m = /^(-?\d+)_(\d+)$/.exec(token);
+      if (!m) return badRequest("bad page_token");
+      after = { v: BigInt(m[1]!), id: BigInt(m[2]!) };
+    }
+
+    const filtered = rows.filter(
+      (r) =>
+        (!heroId || r.heroId === heroId) &&
+        (RESULTS[result] === undefined || r.won === RESULTS[result]) &&
+        (!gameMode || r.gameMode === gameMode) &&
+        (meta === "META_STATUS_UNSPECIFIED" || r.metaStatus === meta),
+    );
+    const key = (r: PlayerMatchRow) => ({ v: BigInt(value(r)), id: BigInt(r.matchId) });
+    const cmp = (a: { v: bigint; id: bigint }, b: { v: bigint; id: bigint }) =>
+      a.v === b.v ? (a.id === b.id ? 0 : a.id < b.id ? -1 : 1) : a.v < b.v ? -1 : 1;
+    const sign = asc ? 1 : -1;
+    const page = filtered
+      .sort((a, b) => sign * cmp(key(a), key(b)))
+      .filter((r) => !after || sign * cmp(key(r), after) > 0)
       .slice(0, size);
+    const last = page.at(-1);
     const body: ListPlayerMatchesResponse = {
       matches: page,
-      nextPageToken: page.length === size ? (page.at(-1)?.matchId ?? "") : "",
+      nextPageToken: page.length === size && last ? `${value(last)}_${last.matchId}` : "",
+      total: filtered.length,
     };
     return ok(body);
   }
@@ -171,6 +237,17 @@ export function createMockApi(fx: Fixtures, now: () => number = () => Date.now()
     const parts = u.pathname.split("/").filter(Boolean);
     if (u.pathname === "/healthz") return ok("ok");
     if (parts[0] !== "v1") return notFound();
+
+    // Error triggers for e2e tests of the error pages: match 500 fails with
+    // Internal, player 503 with Unavailable, the sync of player 504 with
+    // Unavailable, like the real gateway.
+    if (parts[1] === "matches" && parts[2] === String(ERROR_MATCH)) return error(500, 13, "internal error");
+    if (parts[1] === "players" && parts[2]?.split(":")[0] === String(UNAVAILABLE_PLAYER)) {
+      return error(503, 14, "provider unavailable");
+    }
+    if (method === "POST" && parts[1] === "players" && parts[2] === `${SYNC_FAILS_PLAYER}:sync`) {
+      return error(503, 14, "sync: provider unavailable");
+    }
 
     if (method === "GET" && parts.length === 2 && parts[1] === "gamedata") return ok(fx.gameData);
 

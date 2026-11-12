@@ -227,6 +227,68 @@
             "required": false,
             "type": "integer",
             "format": "int64"
+          },
+          {
+            "name": "sort",
+            "description": " - MATCH_SORT_UNSPECIFIED: same as START_TIME",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "MATCH_SORT_UNSPECIFIED",
+              "MATCH_SORT_START_TIME",
+              "MATCH_SORT_DURATION",
+              "MATCH_SORT_KILLS",
+              "MATCH_SORT_DEATHS",
+              "MATCH_SORT_ASSISTS",
+              "MATCH_SORT_NET_WORTH",
+              "MATCH_SORT_LAST_HITS",
+              "MATCH_SORT_HERO_LEVEL"
+            ],
+            "default": "MATCH_SORT_UNSPECIFIED"
+          },
+          {
+            "name": "ascending",
+            "description": "default: largest / newest first",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "result",
+            "description": "optional filter\n\n - MATCH_RESULT_UNSPECIFIED: any",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "MATCH_RESULT_UNSPECIFIED",
+              "MATCH_RESULT_WIN",
+              "MATCH_RESULT_LOSS"
+            ],
+            "default": "MATCH_RESULT_UNSPECIFIED"
+          },
+          {
+            "name": "gameMode",
+            "description": "optional filter, 0 = any",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "metaStatus",
+            "description": "optional filter, UNSPECIFIED = any\n\n - META_STATUS_PENDING: queued for download\n - META_STATUS_OK: parsed and stored\n - META_STATUS_EXPIRED: Valve no longer hosts the replay\n - META_STATUS_FAILED: gave up after retries",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "META_STATUS_UNSPECIFIED",
+              "META_STATUS_PENDING",
+              "META_STATUS_OK",
+              "META_STATUS_EXPIRED",
+              "META_STATUS_FAILED"
+            ],
+            "default": "META_STATUS_UNSPECIFIED"
           }
         ],
         "tags": [
@@ -515,6 +577,11 @@
         },
         "nextPageToken": {
           "type": "string"
+        },
+        "total": {
+          "type": "integer",
+          "format": "int64",
+          "title": "rows matching the filters, all pages"
         }
       }
     },
@@ -621,6 +688,32 @@
           "format": "int64"
         }
       }
+    },
+    "v1MatchResult": {
+      "type": "string",
+      "enum": [
+        "MATCH_RESULT_UNSPECIFIED",
+        "MATCH_RESULT_WIN",
+        "MATCH_RESULT_LOSS"
+      ],
+      "default": "MATCH_RESULT_UNSPECIFIED",
+      "description": "- MATCH_RESULT_UNSPECIFIED: any"
+    },
+    "v1MatchSort": {
+      "type": "string",
+      "enum": [
+        "MATCH_SORT_UNSPECIFIED",
+        "MATCH_SORT_START_TIME",
+        "MATCH_SORT_DURATION",
+        "MATCH_SORT_KILLS",
+        "MATCH_SORT_DEATHS",
+        "MATCH_SORT_ASSISTS",
+        "MATCH_SORT_NET_WORTH",
+        "MATCH_SORT_LAST_HITS",
+        "MATCH_SORT_HERO_LEVEL"
+      ],
+      "default": "MATCH_SORT_UNSPECIFIED",
+      "description": "Sort key of ListPlayerMatches. Ties are broken by match_id.\n\n - MATCH_SORT_UNSPECIFIED: same as START_TIME"
     },
     "v1MetaStatus": {
       "type": "string",

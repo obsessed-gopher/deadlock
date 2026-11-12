@@ -114,17 +114,42 @@ message Player {
   uint32 wins = 8;
 }
 
+// Sort key of ListPlayerMatches. Ties are broken by match_id.
+enum MatchSort {
+  MATCH_SORT_UNSPECIFIED = 0; // same as START_TIME
+  MATCH_SORT_START_TIME = 1;
+  MATCH_SORT_DURATION = 2;
+  MATCH_SORT_KILLS = 3;
+  MATCH_SORT_DEATHS = 4;
+  MATCH_SORT_ASSISTS = 5;
+  MATCH_SORT_NET_WORTH = 6;
+  MATCH_SORT_LAST_HITS = 7;
+  MATCH_SORT_HERO_LEVEL = 8;
+}
+
+enum MatchResult {
+  MATCH_RESULT_UNSPECIFIED = 0; // any
+  MATCH_RESULT_WIN = 1;
+  MATCH_RESULT_LOSS = 2;
+}
+
 message ListPlayerMatchesRequest {
   // Account id or SteamID64. Widened from uint32, which is wire-compatible.
   uint64 account_id = 1;
   uint32 page_size = 2;       // default 50, max 200
   string page_token = 3;      // opaque, from previous response
   uint32 hero_id = 4;         // optional filter
+  MatchSort sort = 5;
+  bool ascending = 6;         // default: largest / newest first
+  MatchResult result = 7;     // optional filter
+  int32 game_mode = 8;        // optional filter, 0 = any
+  MetaStatus meta_status = 9; // optional filter, UNSPECIFIED = any
 }
 
 message ListPlayerMatchesResponse {
   repeated PlayerMatchRow matches = 1;
   string next_page_token = 2;
+  uint32 total = 3;           // rows matching the filters, all pages
 }
 
 message PlayerMatchRow {

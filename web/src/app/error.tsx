@@ -1,17 +1,26 @@
 "use client";
 
-// Shown when the Go API is down or returns an unexpected error.
-export default function ErrorPage({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
+// Last resort for errors pages did not handle themselves (they render
+// ErrorState for API failures). Localized through the layout's provider.
+import Link from "next/link";
+
+import { useI18n } from "@/i18n/client.tsx";
+
+export default function ErrorPage({ reset }: { error: Error & { digest?: string }; reset: () => void }) {
+  const { t } = useI18n();
   return (
-    <div className="card error" style={{ maxWidth: 560 }}>
-      <h1>Ошибка</h1>
-      <p className="muted">
-        Не удалось получить данные от API. Проверь, что сервер запущен (<code>docker compose ps</code>).
-      </p>
-      {error.digest && <p className="muted small">digest: {error.digest}</p>}
-      <button type="button" onClick={reset}>
-        Повторить
-      </button>
+    <div className="state" role="alert">
+      <span className="eyebrow">500</span>
+      <h1>{t("error.internal.title")}</h1>
+      <p>{t("error.internal.text")}</p>
+      <div className="row">
+        <button type="button" className="btn primary" onClick={reset}>
+          {t("error.retry")}
+        </button>
+        <Link href="/" className="btn">
+          {t("error.home")}
+        </Link>
+      </div>
     </div>
   );
 }

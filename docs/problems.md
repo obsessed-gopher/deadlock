@@ -28,6 +28,10 @@
 
 - **openapi-typescript не читает OpenAPI v2**, а grpc-gateway генерирует только v2 (7.x понимает только OpenAPI 3, 6.x тоже отказывается от 2.0 и тянет уязвимый `undici`). Поэтому TS-типы делает свой `tools/protogen/tsgen.go`.
 - **`next build` переписывает `web/tsconfig.json`** (добавляет `allowJs`, пути `.next/types`). Это штатно, изменения коммитить.
+- **`node --test` (strip-types) не понимает parameter properties** (`constructor(readonly x: T)`) и `enum`: падает с `ERR_UNSUPPORTED_TYPESCRIPT_SYNTAX`. Поля класса объявлять явно.
+- **У Next.js свой скрытый `role="alert"`** (объявление маршрута). В e2e `getByRole("alert")` находит два элемента — фильтровать по тексту.
+- **Даты в клиентских компонентах → ошибка гидрации**, если часовой пояс сервера и браузера разный. Даты и числа форматируются на сервере (`lib/views.ts`), в `DataTable` приходит текст.
+- **`click().catch()` на несуществующей кнопке ждёт весь таймаут теста** (30 с), а не падает сразу. Условие проверять заранее.
 - **`next start` не работает с `output: "standalone"`** (предупреждение и неполная раздача статики). Production-сборку запускать как в Docker: `node .next/standalone/server.js` после копирования `.next/static` (`web/scripts/standalone.ts`, это делает `npm run e2e`).
 - **MCP-серверы через `npx` на нативном Windows** запускаются только через `cmd /c npx …` (`.mcp.json`), иначе процесс не стартует.
 - **Порты стеков**: прод 3000/8080, dev-compose 3001/8090, `dev:mock` 3002/8092, e2e 3200/8091. Новый стек — новые порты, иначе `reuseExistingServer` Playwright молча подключится к чужому серверу.

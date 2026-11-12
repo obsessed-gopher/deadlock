@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"runtime/debug"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/obsessed-gopher/deadlock/internal/db"
@@ -23,7 +24,7 @@ import (
 // Store is the read side of the database the API needs. *db.DB implements it.
 type Store interface {
 	GetPlayer(ctx context.Context, accountID uint32) (*v1.Player, error)
-	ListPlayerMatches(ctx context.Context, accountID, heroID uint32, beforeMatchID uint64, limit int) ([]*v1.PlayerMatchRow, error)
+	ListPlayerMatches(ctx context.Context, q db.MatchQuery) ([]*v1.PlayerMatchRow, int, error)
 	ListPlayerHeroStats(ctx context.Context, accountID uint32) ([]*v1.HeroStats, error)
 	GetMatch(ctx context.Context, matchID uint64) (*v1.Match, error)
 	GetPlayerMatch(ctx context.Context, matchID uint64, accountID uint32) (*v1.PlayerMatch, error)
@@ -71,23 +72,59 @@ func (s *Server) ListPlayerMatches(ctx context.Context, req *v1.ListPlayerMatche
 	case size > 200:
 		size = 200
 	}
-	var before uint64
+	if _, ok := v1.MatchSort_name[int32(req.GetSort())]; !ok {
+		return nil, status.Error(codes.InvalidArgument, "unknown sort")
+	}
+	if _, ok := v1.MatchResult_name[int32(req.GetResult())]; !ok {
+		return nil, status.Error(codes.InvalidArgument, "unknown result")
+	}
+	if _, ok := v1.MetaStatus_name[int32(req.GetMetaStatus())]; !ok {
+		return nil, status.Error(codes.InvalidArgument, "unknown meta_status")
+	}
+	q := db.MatchQuery{
+		AccountID: id, HeroID: req.GetHeroId(), Result: req.GetResult(),
+		GameMode: req.GetGameMode(), MetaStatus: req.GetMetaStatus(),
+		Sort: req.GetSort(), Ascending: req.GetAscending(), Limit: size,
+	}
 	if t := req.GetPageToken(); t != "" {
-		v, err := strconv.ParseUint(t, 10, 64)
+		c, err := parsePageToken(t)
 		if err != nil {
 			return nil, status.Error(codes.InvalidArgument, "bad page_token")
 		}
-		before = v
+		q.After = c
 	}
-	rows, err := s.store.ListPlayerMatches(ctx, id, req.GetHeroId(), before, size)
+	rows, total, err := s.store.ListPlayerMatches(ctx, q)
 	if err != nil {
 		return nil, toStatus(err)
 	}
-	resp := &v1.ListPlayerMatchesResponse{Matches: rows}
+	resp := &v1.ListPlayerMatchesResponse{Matches: rows, Total: uint32(total)}
 	if len(rows) == size {
-		resp.NextPageToken = strconv.FormatUint(rows[len(rows)-1].MatchId, 10)
+		last := rows[len(rows)-1]
+		resp.NextPageToken = formatPageToken(db.MatchSortValue(last, q.Sort), last.GetMatchId())
 	}
 	return resp, nil
+}
+
+// Page tokens are "<sort value>_<match id>" of the last row. Clients treat
+// them as opaque; a token is only valid with the sort it was issued for.
+func formatPageToken(value int64, matchID uint64) string {
+	return strconv.FormatInt(value, 10) + "_" + strconv.FormatUint(matchID, 10)
+}
+
+func parsePageToken(t string) (*db.MatchCursor, error) {
+	v, m, ok := strings.Cut(t, "_")
+	if !ok {
+		return nil, errors.New("no separator")
+	}
+	value, err := strconv.ParseInt(v, 10, 64)
+	if err != nil {
+		return nil, err
+	}
+	matchID, err := strconv.ParseUint(m, 10, 64)
+	if err != nil {
+		return nil, err
+	}
+	return &db.MatchCursor{Value: value, MatchID: matchID}, nil
 }
 
 // ListPlayerHeroStats implements v1.StatsServiceServer.
@@ -179,6 +216,8 @@ func toStatus(err error) error {
 		return nil
 	case errors.Is(err, db.ErrNotFound):
 		return status.Error(codes.NotFound, "not found")
+	case errors.Is(err, db.ErrBadQuery):
+		return status.Error(codes.InvalidArgument, err.Error())
 	case errors.Is(err, context.Canceled):
 		return status.Error(codes.Canceled, err.Error())
 	case errors.Is(err, context.DeadlineExceeded):

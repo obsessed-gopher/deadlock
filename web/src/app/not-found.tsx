@@ -1,13 +1,6 @@
-import Link from "next/link";
+import { ErrorState } from "@/components/ErrorState.tsx";
+import { getI18n } from "@/i18n/server.ts";
 
-export default function NotFound() {
-  return (
-    <div className="card" style={{ maxWidth: 560 }}>
-      <h1>Не найдено</h1>
-      <p className="muted">Такого игрока или матча нет в базе.</p>
-      <Link href="/" className="button">
-        На главную
-      </Link>
-    </div>
-  );
+export default async function NotFound() {
+  return <ErrorState i18n={await getI18n()} kind="notFound" />;
 }

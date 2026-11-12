@@ -3,19 +3,24 @@
 import { revalidatePath } from "next/cache";
 
 import { api, isId } from "@/api/client.ts";
+import { getI18n } from "@/i18n/server.ts";
+import { errorKind } from "@/lib/errors.ts";
 
 export interface SyncState {
   message: string;
   ok: boolean;
 }
 
+/** Sync button: localized result text; failures never throw to the page. */
 export async function syncPlayer(accountId: string, _prev: SyncState | null): Promise<SyncState> {
-  if (!isId(accountId)) return { ok: false, message: "Некорректный id" };
+  const { t } = await getI18n();
+  if (!isId(accountId)) return { ok: false, message: t("error.badId") };
   try {
     const r = await api.sync(accountId);
     revalidatePath(`/players/${accountId}`);
-    return { ok: true, message: `Новых матчей: ${r.newMatches}, в очереди метаданных: ${r.queuedMeta}` };
+    return { ok: true, message: t("player.syncDone", { new: r.newMatches, queued: r.queuedMeta }) };
   } catch (err) {
-    return { ok: false, message: `Не удалось синхронизировать: ${err instanceof Error ? err.message : String(err)}` };
+    const kind = errorKind(err);
+    return { ok: false, message: t("error.syncFailed", { reason: t(`error.${kind}.text`) }) };
   }
 }

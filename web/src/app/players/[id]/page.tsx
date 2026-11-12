@@ -1,254 +1,119 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
-import { api, isId, isNotFound } from "@/api/client.ts";
-import type { MetaStatus, Player, SyncState } from "@/api/schema.gen.ts";
+import { api, isId } from "@/api/client.ts";
+import { DataTable } from "@/components/DataTable.tsx";
+import { ErrorState } from "@/components/ErrorState.tsx";
+import { MatchesTable } from "@/components/MatchesTable.tsx";
+import { Stat } from "@/components/Stat.tsx";
 import { SyncButton } from "@/components/SyncButton.tsx";
-import { dateTime, duration, gameModeName, kda, matchModeName, num, pct } from "@/lib/format.ts";
-import { type Lookup, makeLookup } from "@/lib/gamedata.ts";
-import { type HeroRow, heroRows } from "@/lib/heroes.ts";
+import { getI18n } from "@/i18n/server.ts";
+import { attempt } from "@/lib/errors.ts";
+import { makeLookup } from "@/lib/gamedata.ts";
+import { matchStateQuery, parseMatchState } from "@/lib/matchQuery.ts";
+import { heroTable } from "@/lib/views.ts";
 
 import { syncPlayer } from "./actions.ts";
 
-const PAGE_SIZE = 50;
-
 type Params = { id: string };
-type Search = { hero?: string; before?: string };
+type Search = Record<string, string | string[] | undefined>;
 
 export async function generateMetadata({ params }: { params: Promise<Params> }): Promise<Metadata> {
-  return { title: `Игрок ${(await params).id}` };
+  const { t } = await getI18n();
+  return { title: t("player.title", { id: (await params).id }) };
 }
 
-const syncStateText: Record<SyncState, string> = {
-  SYNC_STATE_UNSPECIFIED: "—",
-  SYNC_STATE_NEVER: "ещё не было",
-  SYNC_STATE_RUNNING: "идёт",
-  SYNC_STATE_IDLE: "готово",
-  SYNC_STATE_ERROR: "ошибка",
-};
-
-const metaText: Record<MetaStatus, string> = {
-  META_STATUS_UNSPECIFIED: "—",
-  META_STATUS_PENDING: "в очереди",
-  META_STATUS_OK: "",
-  META_STATUS_EXPIRED: "реплей удалён",
-  META_STATUS_FAILED: "не загрузилось",
-};
-
-export default async function PlayerPage({
-  params,
-  searchParams,
-}: {
-  params: Promise<Params>;
-  searchParams: Promise<Search>;
-}) {
-  const { id } = await params;
-  const { hero, before } = await searchParams;
+export default async function PlayerPage({ params, searchParams }: { params: Promise<Params>; searchParams: Promise<Search> }) {
+  const [{ id }, sp, i18n] = await Promise.all([params, searchParams, getI18n()]);
+  const { t } = i18n;
   if (!isId(id)) notFound();
+  const state = parseMatchState(sp);
+  const self = `/players/${id}${matchStateQuery(state)}`;
 
-  let player: Player | null = null;
-  try {
-    player = await api.player(id);
-  } catch (err) {
-    if (!isNotFound(err)) throw err;
-  }
+  const player = await attempt(() => api.player(id));
   const action = syncPlayer.bind(null, id);
-
-  if (!player) {
+  if (!player.ok && player.kind === "notFound") {
     return (
-      <div className="card" style={{ maxWidth: 560 }}>
-        <h1>Игрок {id}</h1>
-        <p className="muted">Данных об этом игроке ещё нет. Синхронизация загрузит историю матчей.</p>
+      <section className="state">
+        <span className="eyebrow">{t("player.account", { id })}</span>
+        <h1>{t("player.title", { id })}</h1>
+        <p>{t("player.noData")}</p>
         <SyncButton action={action} />
-      </div>
+      </section>
     );
   }
+  if (!player.ok) return <ErrorState i18n={i18n} kind={player.kind} retryHref={self} />;
+  const p = player.data;
+
   // A SteamID64 in the URL resolves to the account id: keep one canonical URL.
-  const canonical = String(player.accountId);
-  if (canonical !== id) redirect(`/players/${canonical}`);
+  const canonical = String(p.accountId);
+  if (canonical !== id) redirect(`/players/${canonical}${matchStateQuery(state)}`);
 
-  const heroId = hero && /^\d+$/.test(hero) ? Number(hero) : 0;
-  const [gd, page, heroStats] = await Promise.all([
-    api.gameData(),
-    api.matches(id, { pageSize: PAGE_SIZE, pageToken: before, heroId }),
-    api.heroStats(id),
+  const [gd, page, heroes] = await Promise.all([
+    attempt(() => api.gameData()),
+    attempt(() => api.matches(id, state)),
+    attempt(() => api.heroStats(id)),
   ]);
-  const look = makeLookup(gd);
-  const losses = player.matchesTotal - player.wins;
+  if (!gd.ok) return <ErrorState i18n={i18n} kind={gd.kind} retryHref={self} />;
+  if (!page.ok) return <ErrorState i18n={i18n} kind={page.kind} retryHref={self} />;
+  if (!heroes.ok) return <ErrorState i18n={i18n} kind={heroes.kind} retryHref={self} />;
 
-  const nextHref = (() => {
-    if (!page.nextPageToken) return "";
-    const q = new URLSearchParams({ before: page.nextPageToken });
-    if (heroId) q.set("hero", String(heroId));
-    return `/players/${id}?${q}`;
-  })();
+  const look = makeLookup(gd.data, i18n);
+  const syncLine =
+    p.syncState === "SYNC_STATE_RUNNING"
+      ? t("player.syncRunning")
+      : p.syncState === "SYNC_STATE_ERROR"
+        ? t("player.syncError", { reason: p.syncError })
+        : Number(p.lastSyncedAt) > 0
+          ? t("player.synced", { date: i18n.date(p.lastSyncedAt) })
+          : t("player.neverSynced");
 
   return (
     <>
-      <div className="row spread">
-        <div>
-          <h1>Игрок {player.accountId}</h1>
-          <div className="muted small">
-            Синхронизация: {syncStateText[player.syncState]}, {dateTime(player.lastSyncedAt)}
-            {player.syncError && <span className="loss"> · {player.syncError}</span>}
+      <section>
+        <div className="head-row">
+          <div className="stack">
+            <span className="eyebrow">{t("player.account", { id: canonical })}</span>
+            <h1>{t("player.title", { id: canonical })}</h1>
+            <span className={p.syncState === "SYNC_STATE_ERROR" ? "tone-loss" : "muted"}>
+              {syncLine}
+              {p.matchesPending > 0 && ` · ${t("player.pending", { n: i18n.num(p.matchesPending) })}`}
+            </span>
           </div>
+          <SyncButton action={action} />
         </div>
-        <SyncButton action={action} />
-      </div>
+        <div className="stats">
+          <Stat label={t("stat.matches")} value={i18n.num(p.matchesTotal)} />
+          <Stat label={t("stat.winsLosses")} value={`${i18n.num(p.wins)} / ${i18n.num(p.matchesTotal - p.wins)}`} />
+          <Stat
+            label={t("stat.winRate")}
+            value={i18n.pct(p.wins, p.matchesTotal)}
+            meter={p.matchesTotal ? p.wins / p.matchesTotal : 0}
+          />
+          <Stat label={t("stat.withMeta")} value={i18n.num(p.matchesWithMeta)} />
+        </div>
+      </section>
 
-      <div className="stats">
-        <Stat label="Матчей" value={num(player.matchesTotal)} />
-        <Stat label="Победы / поражения" value={`${num(player.wins)} / ${num(losses)}`} />
-        <Stat label="Винрейт" value={pct(player.wins, player.matchesTotal)} />
-        <Stat
-          label="С метаданными"
-          value={num(player.matchesWithMeta)}
-          hint={player.matchesPending > 0 ? `ещё ${num(player.matchesPending)} в очереди` : undefined}
-        />
-      </div>
-
-      <h2>Герои</h2>
-      <HeroTable rows={heroRows(heroStats.heroes)} look={look} accountId={id} selected={heroId} />
-
-      <div className="row spread" style={{ marginTop: 28 }}>
-        <h2 style={{ margin: 0 }}>Матчи</h2>
-        <form method="get" className="row">
-          <select name="hero" defaultValue={heroId ? String(heroId) : ""} aria-label="Герой">
-            <option value="">Все герои</option>
-            {look.playableHeroes.map((h) => (
-              <option key={h.id} value={h.id}>
-                {look.heroName(h.id)}
-              </option>
-            ))}
-          </select>
-          <button type="submit">Показать</button>
-        </form>
-      </div>
-
-      <div className="table-wrap" style={{ marginTop: 10 }}>
-        <table aria-label="Матчи">
-          <thead>
-            <tr>
-              <th>Дата</th>
-              <th>Герой</th>
-              <th>Итог</th>
-              <th className="num">K / D / A</th>
-              <th className="num">Души</th>
-              <th className="num">Добито</th>
-              <th className="num">Ур.</th>
-              <th className="num">Длит.</th>
-              <th>Режим</th>
-              <th />
-            </tr>
-          </thead>
-          <tbody>
-            {page.matches.map((m) => {
-              const ok = m.metaStatus === "META_STATUS_OK";
-              return (
-                <tr key={m.matchId}>
-                  <td>{dateTime(m.startTime)}</td>
-                  <td>{look.heroName(m.heroId)}</td>
-                  <td className={m.won ? "win" : "loss"}>{m.won ? "Победа" : "Поражение"}</td>
-                  <td className="num">{kda(m.kills, m.deaths, m.assists)}</td>
-                  <td className="num">{num(m.netWorth)}</td>
-                  <td className="num">{m.lastHits}</td>
-                  <td className="num">{m.heroLevel}</td>
-                  <td className="num">{duration(m.durationS)}</td>
-                  <td className="muted small">
-                    {gameModeName(m.gameMode)} · {matchModeName(m.matchMode)}
-                  </td>
-                  <td>
-                    {ok ? (
-                      <Link href={`/matches/${m.matchId}/players/${player.accountId}`}>разбор →</Link>
-                    ) : (
-                      <span className="muted small">{metaText[m.metaStatus]}</span>
-                    )}
-                  </td>
-                </tr>
-              );
-            })}
-            {page.matches.length === 0 && (
-              <tr>
-                <td colSpan={10} className="muted">
-                  Матчей нет.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      <div className="row pager">
-        {before && (
-          <Link className="button" href={heroId ? `/players/${id}?hero=${heroId}` : `/players/${id}`}>
-            ← К последним
-          </Link>
+      <section aria-labelledby="heroes-title">
+        <h2 id="heroes-title">
+          {t("heroes.title")}
+          <span className="count">{heroes.data.heroes.length}</span>
+        </h2>
+        {heroes.data.heroes.length === 0 ? (
+          <p className="muted">{t("heroes.empty")}</p>
+        ) : (
+          <DataTable spec={heroTable({ i18n, look }, heroes.data.heroes, canonical, state.hero)} />
         )}
-        {nextHref && (
-          <Link className="button" href={nextHref}>
-            Старше →
-          </Link>
-        )}
-      </div>
+      </section>
+
+      <MatchesTable
+        i18n={i18n}
+        look={look}
+        base={`/players/${canonical}`}
+        accountId={p.accountId}
+        state={state}
+        page={page.data}
+      />
     </>
-  );
-}
-
-function HeroTable({
-  rows,
-  look,
-  accountId,
-  selected,
-}: {
-  rows: HeroRow[];
-  look: Lookup;
-  accountId: string;
-  selected: number;
-}) {
-  if (rows.length === 0) return <p className="muted">Нет сыгранных матчей.</p>;
-  return (
-    <div className="table-wrap">
-      <table aria-label="Герои">
-        <thead>
-          <tr>
-            <th>Герой</th>
-            <th className="num">Матчей</th>
-            <th className="num">Винрейт</th>
-            <th className="num">K / D / A в среднем</th>
-            <th className="num">KDA</th>
-            <th className="num">Души в минуту</th>
-            <th>Последний матч</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((r) => (
-            <tr key={r.heroId} className={r.heroId === selected ? "me" : undefined}>
-              <td>
-                <Link href={`/players/${accountId}?hero=${r.heroId}`}>{look.heroName(r.heroId)}</Link>
-              </td>
-              <td className="num">{r.matches}</td>
-              <td className={`num ${r.winRate >= 0.5 ? "win" : "loss"}`}>{pct(r.wins, r.matches)}</td>
-              <td className="num">
-                {r.avgKills.toFixed(1)} / {r.avgDeaths.toFixed(1)} / {r.avgAssists.toFixed(1)}
-              </td>
-              <td className="num">{r.kda.toFixed(2)}</td>
-              <td className="num">{num(Math.round(r.soulsPerMin))}</td>
-              <td className="muted">{dateTime(r.lastPlayed)}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-}
-
-function Stat({ label, value, hint }: { label: string; value: string; hint?: string | undefined }) {
-  return (
-    <div className="card stat">
-      <div className="label">{label}</div>
-      <div className="value">{value}</div>
-      {hint && <div className="muted small">{hint}</div>}
-    </div>
   );
 }

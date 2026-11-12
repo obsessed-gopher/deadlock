@@ -158,9 +158,11 @@ func Decode(data []byte) (any, error) {
 
 	r := bytes.NewReader(data[4:])
 	var h header
-	fixed := []any{&h.Format, &h.Compression, &h.DictID, &h.FrameSize, &h.CountBytes1, &h.CountBytes4,
+	fixed := []any{
+		&h.Format, &h.Compression, &h.DictID, &h.FrameSize, &h.CountBytes1, &h.CountBytes4,
 		&h.CountBytes8, &h.CountTypes, &h.CountObjects, &h.CountArrays, &h.SizeTotal, &h.SizeCompTotal,
-		&h.CountBlocks, &h.SizeBlobs, &h.CountBytes2, &h.SizeBlockComp}
+		&h.CountBlocks, &h.SizeBlobs, &h.CountBytes2, &h.SizeBlockComp,
+	}
 	if version >= 5 {
 		fixed = append(fixed, &h.SizeBuf1, &h.SizeCompBuf1, &h.SizeBuf2, &h.SizeCompBuf2,
 			&h.B1Buf2, &h.B2Buf2, &h.B4Buf2, &h.B8Buf2, &h.CountNodes, &h.CountObjectsBuf2,

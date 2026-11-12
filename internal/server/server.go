@@ -9,36 +9,53 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/obsessed-gopher/deadlock/internal/db"
+	"github.com/obsessed-gopher/deadlock/internal/gamedata"
+
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
 	v1 "github.com/obsessed-gopher/deadlock/gen/go/deadlock/v1"
-	"github.com/obsessed-gopher/deadlock/internal/db"
-	"github.com/obsessed-gopher/deadlock/internal/gamedata"
-	"github.com/obsessed-gopher/deadlock/internal/syncer"
 )
 
+// Store is the read side of the database the API needs. *db.DB implements it.
+type Store interface {
+	GetPlayer(ctx context.Context, accountID uint32) (*v1.Player, error)
+	ListPlayerMatches(ctx context.Context, accountID, heroID uint32, beforeMatchID uint64, limit int) ([]*v1.PlayerMatchRow, error)
+	GetMatch(ctx context.Context, matchID uint64) (*v1.Match, error)
+	GetPlayerMatch(ctx context.Context, matchID uint64, accountID uint32) (*v1.PlayerMatch, error)
+}
+
+// PlayerSyncer triggers a history sync. *syncer.Syncer implements it.
+type PlayerSyncer interface {
+	SyncPlayer(ctx context.Context, accountID uint32) (newMatches, pending int, err error)
+}
+
+// Server implements v1.StatsServiceServer.
 type Server struct {
 	v1.UnimplementedStatsServiceServer
-	DB     *db.DB
-	Syncer *syncer.Syncer
+	store  Store
+	syncer PlayerSyncer
 
 	gameData *v1.GameData
 }
 
-func New(d *db.DB, s *syncer.Syncer, gd *gamedata.Data) *Server {
-	return &Server{DB: d, Syncer: s, gameData: gameDataToAPI(gd)}
+// New builds the service; the game data snapshot is converted once here.
+func New(store Store, sy PlayerSyncer, gd *gamedata.Data) *Server {
+	return &Server{store: store, syncer: sy, gameData: gameDataToAPI(gd)}
 }
 
+// GetPlayer implements v1.StatsServiceServer.
 func (s *Server) GetPlayer(ctx context.Context, req *v1.GetPlayerRequest) (*v1.Player, error) {
 	if req.GetAccountId() == 0 {
 		return nil, status.Error(codes.InvalidArgument, "account_id is required")
 	}
-	p, err := s.DB.GetPlayer(ctx, req.GetAccountId())
+	p, err := s.store.GetPlayer(ctx, req.GetAccountId())
 	return p, toStatus(err)
 }
 
+// ListPlayerMatches implements v1.StatsServiceServer.
 func (s *Server) ListPlayerMatches(ctx context.Context, req *v1.ListPlayerMatchesRequest) (*v1.ListPlayerMatchesResponse, error) {
 	if req.GetAccountId() == 0 {
 		return nil, status.Error(codes.InvalidArgument, "account_id is required")
@@ -58,7 +75,7 @@ func (s *Server) ListPlayerMatches(ctx context.Context, req *v1.ListPlayerMatche
 		}
 		before = v
 	}
-	rows, err := s.DB.ListPlayerMatches(ctx, req.GetAccountId(), req.GetHeroId(), before, size)
+	rows, err := s.store.ListPlayerMatches(ctx, req.GetAccountId(), req.GetHeroId(), before, size)
 	if err != nil {
 		return nil, toStatus(err)
 	}
@@ -69,34 +86,38 @@ func (s *Server) ListPlayerMatches(ctx context.Context, req *v1.ListPlayerMatche
 	return resp, nil
 }
 
+// SyncPlayer implements v1.StatsServiceServer.
 func (s *Server) SyncPlayer(ctx context.Context, req *v1.SyncPlayerRequest) (*v1.SyncPlayerResponse, error) {
 	if req.GetAccountId() == 0 {
 		return nil, status.Error(codes.InvalidArgument, "account_id is required")
 	}
-	n, pending, err := s.Syncer.SyncPlayer(ctx, req.GetAccountId())
+	n, pending, err := s.syncer.SyncPlayer(ctx, req.GetAccountId())
 	if err != nil {
 		return nil, status.Errorf(codes.Unavailable, "sync: %v", err)
 	}
 	return &v1.SyncPlayerResponse{NewMatches: uint32(n), QueuedMeta: uint32(pending)}, nil
 }
 
+// GetMatch implements v1.StatsServiceServer.
 func (s *Server) GetMatch(ctx context.Context, req *v1.GetMatchRequest) (*v1.Match, error) {
 	if req.GetMatchId() == 0 {
 		return nil, status.Error(codes.InvalidArgument, "match_id is required")
 	}
-	m, err := s.DB.GetMatch(ctx, req.GetMatchId())
+	m, err := s.store.GetMatch(ctx, req.GetMatchId())
 	return m, toStatus(err)
 }
 
+// GetPlayerMatch implements v1.StatsServiceServer.
 func (s *Server) GetPlayerMatch(ctx context.Context, req *v1.GetPlayerMatchRequest) (*v1.PlayerMatch, error) {
 	if req.GetMatchId() == 0 || req.GetAccountId() == 0 {
 		return nil, status.Error(codes.InvalidArgument, "match_id and account_id are required")
 	}
-	pm, err := s.DB.GetPlayerMatch(ctx, req.GetMatchId(), req.GetAccountId())
+	pm, err := s.store.GetPlayerMatch(ctx, req.GetMatchId(), req.GetAccountId())
 	return pm, toStatus(err)
 }
 
-func (s *Server) GetGameData(ctx context.Context, _ *v1.GetGameDataRequest) (*v1.GameData, error) {
+// GetGameData implements v1.StatsServiceServer.
+func (s *Server) GetGameData(_ context.Context, _ *v1.GetGameDataRequest) (*v1.GameData, error) {
 	return s.gameData, nil
 }
 
@@ -133,7 +154,8 @@ func toStatus(err error) error {
 	}
 }
 
-// UnaryInterceptor logs every call and converts panics into Internal errors.
+// UnaryInterceptor logs every call, converts panics into Internal errors and
+// hides the text of internal errors from clients.
 func UnaryInterceptor(log *slog.Logger) grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp any, err error) {
 		start := time.Now()
@@ -149,6 +171,10 @@ func UnaryInterceptor(log *slog.Logger) grpc.UnaryServerInterceptor {
 			}
 			log.Log(ctx, level, "rpc", "method", info.FullMethod, "code", code.String(),
 				"dur_ms", time.Since(start).Milliseconds(), "err", err)
+			if level == slog.LevelError {
+				// The details are in the log; clients must not see SQL or internals.
+				err = status.Error(codes.Internal, "internal error")
+			}
 		}()
 		return handler(ctx, req)
 	}

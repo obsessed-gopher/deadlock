@@ -17,6 +17,7 @@ type DeadlockAPI struct {
 	HTTP    *http.Client
 }
 
+// NewDeadlockAPI returns a client for the public instance.
 func NewDeadlockAPI() *DeadlockAPI {
 	return &DeadlockAPI{
 		BaseURL: "https://api.deadlock-api.com",
@@ -24,6 +25,8 @@ func NewDeadlockAPI() *DeadlockAPI {
 	}
 }
 
+// Salts implements SaltProvider. A match the API knows nothing about yields
+// ErrNotFound.
 func (c *DeadlockAPI) Salts(ctx context.Context, matchID uint64) (Salts, error) {
 	var s Salts
 	err := c.getJSON(ctx, fmt.Sprintf("/v1/matches/%d/salts", matchID), &s)
@@ -33,6 +36,7 @@ func (c *DeadlockAPI) Salts(ctx context.Context, matchID uint64) (Salts, error) 
 	return s, err
 }
 
+// MatchHistory implements HistoryProvider.
 func (c *DeadlockAPI) MatchHistory(ctx context.Context, accountID uint32) ([]MatchSummary, error) {
 	var out []MatchSummary
 	err := c.getJSON(ctx, fmt.Sprintf("/v1/players/%d/match-history", accountID), &out)
@@ -49,7 +53,7 @@ func (c *DeadlockAPI) getJSON(ctx context.Context, path string, v any) error {
 	if err != nil {
 		return fmt.Errorf("deadlock-api %s: %w", path, err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 	if resp.StatusCode == http.StatusNotFound {
 		return fmt.Errorf("deadlock-api %s: %w", path, ErrNotFound)
 	}

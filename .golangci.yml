@@ -1,0 +1,140 @@
+# golangci-lint v2. Version is pinned in tools/dev/main.go.
+# Run: go run ./tools/dev lint      Format: go run ./tools/dev fmt
+version: "2"
+
+run:
+  timeout: 5m
+
+linters:
+  default: standard # errcheck, govet, ineffassign, staticcheck, unused
+  enable:
+    - bodyclose # http response bodies are closed
+    - copyloopvar
+    - depguard # architecture rules, see docs/architecture.md
+    - errname
+    - errorlint # errors.Is/As and %w instead of == and %v
+    - gocritic
+    - gosec
+    - misspell
+    - nilerr
+    - noctx # no http requests / db calls without context
+    - nolintlint # every //nolint names a linter and gives a reason
+    - revive
+    - rowserrcheck
+    - sloglint
+    - sqlclosecheck
+    - unconvert
+    - unparam
+    - usestdlibvars
+    - wastedassign
+
+  settings:
+    depguard:
+      rules:
+        pgx-only-in-db:
+          list-mode: lax
+          files:
+            - "!**/internal/db/**"
+          deny:
+            - pkg: github.com/jackc/pgx
+              desc: SQL and pgx live only in internal/db; depend on a consumer-side interface instead
+        no-transport-in-core:
+          list-mode: lax
+          files:
+            - "**/internal/meta/**"
+            - "**/internal/compress/**"
+            - "**/internal/gamedata/**"
+            - "**/internal/source/**"
+            - "**/internal/syncer/**"
+          deny:
+            - pkg: github.com/obsessed-gopher/deadlock/gen/go
+              desc: API types are for internal/server and the internal/db read model only
+            - pkg: google.golang.org/grpc
+              desc: gRPC belongs to internal/server and cmd/server
+            - pkg: github.com/obsessed-gopher/deadlock/internal/server
+              desc: nothing imports the transport layer except cmd/server
+        no-deprecated:
+          list-mode: lax
+          deny:
+            - pkg: io/ioutil
+              desc: use io and os
+            - pkg: github.com/pkg/errors
+              desc: use errors and fmt.Errorf with %w
+    errcheck:
+      exclude-functions:
+        - fmt.Fprint
+        - fmt.Fprintf
+        - fmt.Fprintln
+        - (*text/tabwriter.Writer).Flush
+    gocritic:
+      disabled-checks:
+        - ifElseChain
+    gosec:
+      excludes:
+        - G115 # integer conversions: protobuf uint32 <-> postgres int4 everywhere, values are bounded by the game
+    nolintlint:
+      require-explanation: true
+      require-specific: true
+    revive:
+      rules:
+        - name: blank-imports
+        - name: context-as-argument
+        - name: context-keys-type
+        - name: dot-imports
+        - name: early-return
+        - name: empty-block
+        - name: error-naming
+        - name: error-return
+        - name: error-strings
+        - name: errorf
+        - name: exported
+          arguments: [disableStutteringCheck]
+        - name: increment-decrement
+        - name: indent-error-flow
+        - name: package-comments
+        - name: range
+        - name: receiver-naming
+        - name: redefines-builtin-id
+        - name: superfluous-else
+        - name: time-naming
+        - name: unexported-return
+        - name: unreachable-code
+        - name: unused-parameter
+        - name: var-declaration
+        - name: var-naming
+    sloglint:
+      no-mixed-args: true
+      static-msg: true
+      key-naming-case: snake
+
+  exclusions:
+    generated: lax
+    presets:
+      - std-error-handling
+    paths:
+      - internal/pb # generated from Valve protos
+      - gen # generated from proto/api
+      - internal/zstd # copied verbatim from the Go standard library
+    rules:
+      - path: _test\.go
+        linters: [gosec, noctx, unparam, errcheck]
+      # Opening files by a path the caller supplies is the job of these packages:
+      # developer CLIs, the game-file parsers and the on-disk replay cache.
+      - path: ^(cmd/dlstat|tools|internal/gamedata|internal/source|internal/meta)/
+        linters: [gosec]
+        text: "G301|G302|G304|G306|G703"
+
+formatters:
+  enable:
+    - gofumpt
+    - goimports
+  settings:
+    goimports:
+      local-prefixes:
+        - github.com/obsessed-gopher/deadlock
+  exclusions:
+    generated: lax
+    paths:
+      - internal/pb
+      - gen
+      - internal/zstd

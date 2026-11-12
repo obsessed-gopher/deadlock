@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/jackc/pgx/v5"
-
 	"github.com/obsessed-gopher/deadlock/internal/pb"
 	"github.com/obsessed-gopher/deadlock/internal/source"
+
+	"github.com/jackc/pgx/v5"
 )
 
 // Meta statuses stored in matches.meta_status.
@@ -83,11 +83,26 @@ func (d *DB) NextPendingMeta(ctx context.Context, limit int) ([]uint64, error) {
 	return pgx.CollectRows(rows, pgx.RowTo[uint64])
 }
 
-// CountPendingMeta returns the number of matches still waiting for metadata.
-func (d *DB) CountPendingMeta(ctx context.Context) (int, error) {
+// CountPendingMeta returns how many of the player's matches are still waiting
+// for metadata.
+func (d *DB) CountPendingMeta(ctx context.Context, accountID uint32) (int, error) {
 	var n int
-	err := d.Pool.QueryRow(ctx, `SELECT count(*) FROM matches WHERE meta_status = 'pending'`).Scan(&n)
+	err := d.Pool.QueryRow(ctx, `
+		SELECT count(*) FROM player_matches pm
+		JOIN matches m ON m.match_id = pm.match_id
+		WHERE pm.account_id = $1 AND m.meta_status = 'pending'`, accountID).Scan(&n)
 	return n, err
+}
+
+// ResetInterruptedSyncs marks syncs left in the "running" state as failed and
+// returns how many there were. A sync only stays "running" if the process
+// died in the middle of it, so this is called once at startup, before any
+// sync can begin.
+func (d *DB) ResetInterruptedSyncs(ctx context.Context) (int, error) {
+	tag, err := d.Pool.Exec(ctx, `
+		UPDATE players SET sync_state = 'error', sync_error = 'interrupted by restart'
+		WHERE sync_state = 'running'`)
+	return int(tag.RowsAffected()), err
 }
 
 // MarkMetaFailure records a failed attempt. Permanent failures (expired
@@ -182,15 +197,21 @@ func (d *DB) StoreMeta(ctx context.Context, matchID uint64, raw []byte, version 
 			cols  []string
 			rows  [][]any
 		}{
-			{"match_players", []string{"match_id", "slot", "account_id", "team", "hero_id", "lane", "kills", "deaths",
-				"assists", "net_worth", "last_hits", "denies", "level", "player_damage", "player_healing", "abandon_time_s"}, players},
-			{"player_stats", []string{"match_id", "slot", "t", "net_worth", "level", "kills", "deaths", "assists",
+			{"match_players", []string{
+				"match_id", "slot", "account_id", "team", "hero_id", "lane", "kills", "deaths",
+				"assists", "net_worth", "last_hits", "denies", "level", "player_damage", "player_healing", "abandon_time_s",
+			}, players},
+			{"player_stats", []string{
+				"match_id", "slot", "t", "net_worth", "level", "kills", "deaths", "assists",
 				"creep_kills", "neutral_kills", "denies", "player_damage", "player_damage_taken", "player_healing",
 				"self_healing", "gold_player", "gold_lane_creep", "gold_neutral_creep", "gold_boss", "gold_treasure",
-				"gold_death_loss", "shots_hit", "shots_missed"}, stats},
+				"gold_death_loss", "shots_hit", "shots_missed",
+			}, stats},
 			{"item_events", []string{"match_id", "slot", "seq", "t", "item_id", "sold_t", "upgrade_id", "flags"}, items},
-			{"deaths", []string{"match_id", "slot", "seq", "t", "killer_slot", "x", "y", "z",
-				"killer_x", "killer_y", "killer_z", "respawn_s", "ttk_s"}, deaths},
+			{"deaths", []string{
+				"match_id", "slot", "seq", "t", "killer_slot", "x", "y", "z",
+				"killer_x", "killer_y", "killer_z", "respawn_s", "ttk_s",
+			}, deaths},
 		}
 		for _, c := range copies {
 			if len(c.rows) == 0 {

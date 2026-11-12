@@ -20,10 +20,14 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"strconv"
-	"strings"
 	"syscall"
 	"time"
+
+	"github.com/obsessed-gopher/deadlock/internal/db"
+	"github.com/obsessed-gopher/deadlock/internal/gamedata"
+	"github.com/obsessed-gopher/deadlock/internal/server"
+	"github.com/obsessed-gopher/deadlock/internal/source"
+	"github.com/obsessed-gopher/deadlock/internal/syncer"
 
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc"
@@ -32,11 +36,6 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 
 	v1 "github.com/obsessed-gopher/deadlock/gen/go/deadlock/v1"
-	"github.com/obsessed-gopher/deadlock/internal/db"
-	"github.com/obsessed-gopher/deadlock/internal/gamedata"
-	"github.com/obsessed-gopher/deadlock/internal/server"
-	"github.com/obsessed-gopher/deadlock/internal/source"
-	"github.com/obsessed-gopher/deadlock/internal/syncer"
 )
 
 func main() {
@@ -51,32 +50,25 @@ func run(log *slog.Logger) error {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
-	dbURL := os.Getenv("DATABASE_URL")
-	if dbURL == "" {
-		return errors.New("DATABASE_URL is required")
-	}
-	grpcAddr := env("GRPC_ADDR", ":9090")
-	httpAddr := env("HTTP_ADDR", ":8080")
-	syncEvery, err := time.ParseDuration(env("SYNC_EVERY", "30m"))
-	if err != nil {
-		return fmt.Errorf("SYNC_EVERY: %w", err)
-	}
-	metaInterval, err := time.ParseDuration(env("META_INTERVAL", "1.5s"))
-	if err != nil {
-		return fmt.Errorf("META_INTERVAL: %w", err)
-	}
-	accounts, err := parseAccounts(os.Getenv("SYNC_ACCOUNTS"))
+	cfg, err := loadConfig(os.Getenv)
 	if err != nil {
 		return err
 	}
 
-	database, err := connectWithRetry(ctx, dbURL, log)
+	database, err := connectWithRetry(ctx, cfg.DatabaseURL, log)
 	if err != nil {
 		return err
 	}
 	defer database.Close()
 	if err := database.Migrate(ctx); err != nil {
 		return err
+	}
+	// Nothing is syncing yet, so every "running" state is left over from a
+	// process that died mid-sync.
+	if n, err := database.ResetInterruptedSyncs(ctx); err != nil {
+		return err
+	} else if n > 0 {
+		log.Warn("reset interrupted syncs", "players", n)
 	}
 	log.Info("database ready")
 
@@ -88,15 +80,15 @@ func run(log *slog.Logger) error {
 
 	api := source.NewDeadlockAPI()
 	sy := syncer.New(database, api, api, log)
-	sy.Interval = metaInterval
+	sy.Interval = cfg.MetaInterval
 
 	// gRPC
 	gs := grpc.NewServer(grpc.UnaryInterceptor(server.UnaryInterceptor(log)))
 	v1.RegisterStatsServiceServer(gs, server.New(database, sy, gd))
 	reflection.Register(gs)
-	lis, err := net.Listen("tcp", grpcAddr)
+	lis, err := (&net.ListenConfig{}).Listen(ctx, "tcp", cfg.GRPCAddr)
 	if err != nil {
-		return err
+		return fmt.Errorf("grpc listen: %w", err)
 	}
 
 	// REST gateway -> gRPC over loopback
@@ -104,49 +96,59 @@ func run(log *slog.Logger) error {
 		MarshalOptions:   protojson.MarshalOptions{EmitUnpopulated: true},
 		UnmarshalOptions: protojson.UnmarshalOptions{DiscardUnknown: true},
 	}))
-	conn, err := grpc.NewClient(loopback(grpcAddr), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.NewClient(loopback(cfg.GRPCAddr), grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return err
 	}
-	defer conn.Close()
+	defer func() { _ = conn.Close() }()
 	if err := v1.RegisterStatsServiceHandler(ctx, gwMux, conn); err != nil {
 		return err
 	}
 	mux := http.NewServeMux()
 	mux.Handle("/v1/", gwMux)
 	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, r *http.Request) {
-		if err := database.Pool.Ping(r.Context()); err != nil {
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		if err := database.Ping(r.Context()); err != nil {
+			log.Warn("healthz", "err", err)
+			http.Error(w, "database unavailable", http.StatusServiceUnavailable)
 			return
 		}
-		w.Write([]byte("ok"))
+		_, _ = w.Write([]byte("ok"))
 	})
-	hs := &http.Server{Addr: httpAddr, Handler: mux, ReadHeaderTimeout: 10 * time.Second}
+	hs := &http.Server{Addr: cfg.HTTPAddr, Handler: mux, ReadHeaderTimeout: 10 * time.Second}
 
 	errc := make(chan error, 2)
-	go func() { log.Info("grpc listening", "addr", grpcAddr); errc <- gs.Serve(lis) }()
 	go func() {
-		log.Info("http listening", "addr", httpAddr)
+		log.Info("grpc listening", "addr", cfg.GRPCAddr)
+		if err := gs.Serve(lis); err != nil {
+			errc <- fmt.Errorf("grpc: %w", err)
+		}
+	}()
+	go func() {
+		log.Info("http listening", "addr", cfg.HTTPAddr)
 		if err := hs.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
-			errc <- err
+			errc <- fmt.Errorf("http: %w", err)
 		}
 	}()
 	go sy.Run(ctx)
-	if len(accounts) > 0 {
-		go periodicSync(ctx, sy, accounts, syncEvery, log)
+	if len(cfg.SyncAccounts) > 0 {
+		go periodicSync(ctx, sy, cfg.SyncAccounts, cfg.SyncEvery, log)
 	}
 
+	// A listener dying is fatal: report it so the process exits non-zero and
+	// the supervisor restarts it. A signal is a clean shutdown.
+	var runErr error
 	select {
 	case <-ctx.Done():
-	case err := <-errc:
-		log.Error("server stopped", "err", err)
+	case runErr = <-errc:
 	}
 	log.Info("shutting down")
-	shCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	shCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 10*time.Second)
 	defer cancel()
-	hs.Shutdown(shCtx)
+	if err := hs.Shutdown(shCtx); err != nil {
+		log.Warn("http shutdown", "err", err)
+	}
 	gs.GracefulStop()
-	return nil
+	return runErr
 }
 
 func periodicSync(ctx context.Context, sy *syncer.Syncer, accounts []uint32, every time.Duration, log *slog.Logger) {
@@ -169,7 +171,7 @@ func periodicSync(ctx context.Context, sy *syncer.Syncer, accounts []uint32, eve
 // connectWithRetry waits for Postgres to come up (useful under compose).
 func connectWithRetry(ctx context.Context, url string, log *slog.Logger) (*db.DB, error) {
 	var lastErr error
-	for i := 0; i < 30; i++ {
+	for range 30 {
 		d, err := db.Open(ctx, url)
 		if err == nil {
 			return d, nil
@@ -183,38 +185,4 @@ func connectWithRetry(ctx context.Context, url string, log *slog.Logger) (*db.DB
 		}
 	}
 	return nil, lastErr
-}
-
-func parseAccounts(s string) ([]uint32, error) {
-	var out []uint32
-	for _, part := range strings.Split(s, ",") {
-		part = strings.TrimSpace(part)
-		if part == "" {
-			continue
-		}
-		v, err := strconv.ParseUint(part, 10, 64)
-		if err != nil {
-			return nil, fmt.Errorf("SYNC_ACCOUNTS: bad id %q", part)
-		}
-		if v > 1<<32 {
-			out = append(out, source.SteamID64ToAccountID(v))
-		} else {
-			out = append(out, uint32(v))
-		}
-	}
-	return out, nil
-}
-
-func loopback(addr string) string {
-	if strings.HasPrefix(addr, ":") {
-		return "localhost" + addr
-	}
-	return addr
-}
-
-func env(key, def string) string {
-	if v := os.Getenv(key); v != "" {
-		return v
-	}
-	return def
 }

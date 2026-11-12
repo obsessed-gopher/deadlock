@@ -36,7 +36,11 @@ func Open(ctx context.Context, url string) (*DB, error) {
 	return &DB{Pool: pool}, nil
 }
 
+// Close releases all connections.
 func (d *DB) Close() { d.Pool.Close() }
+
+// Ping checks that the database is reachable.
+func (d *DB) Ping(ctx context.Context) error { return d.Pool.Ping(ctx) }
 
 // Migrate applies pending migrations from migrations/NNNN_name.sql in order,
 // each in its own transaction. An advisory lock makes concurrent starts safe.
@@ -51,7 +55,8 @@ func (d *DB) Migrate(ctx context.Context) error {
 	if _, err := conn.Exec(ctx, `SELECT pg_advisory_lock($1)`, lockID); err != nil {
 		return fmt.Errorf("migrate: lock: %w", err)
 	}
-	defer conn.Exec(context.WithoutCancel(ctx), `SELECT pg_advisory_unlock($1)`, lockID)
+	// Best effort: the lock is also released when the connection closes.
+	defer func() { _, _ = conn.Exec(context.WithoutCancel(ctx), `SELECT pg_advisory_unlock($1)`, lockID) }()
 
 	if _, err := conn.Exec(ctx, `CREATE TABLE IF NOT EXISTS schema_migrations (
 		version    integer PRIMARY KEY,

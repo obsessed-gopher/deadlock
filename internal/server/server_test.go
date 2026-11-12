@@ -1,0 +1,221 @@
+package server
+
+import (
+	"context"
+	"errors"
+	"log/slog"
+	"testing"
+
+	"github.com/obsessed-gopher/deadlock/internal/db"
+	"github.com/obsessed-gopher/deadlock/internal/gamedata"
+
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+
+	v1 "github.com/obsessed-gopher/deadlock/gen/go/deadlock/v1"
+)
+
+// fakeStore records the arguments of the last call and returns canned data.
+type fakeStore struct {
+	Store // panics on anything a test did not expect
+
+	player *v1.Player
+	rows   []*v1.PlayerMatchRow
+	err    error
+
+	gotHero   uint32
+	gotBefore uint64
+	gotLimit  int
+}
+
+func (f *fakeStore) GetPlayer(context.Context, uint32) (*v1.Player, error) {
+	return f.player, f.err
+}
+
+func (f *fakeStore) ListPlayerMatches(_ context.Context, _, heroID uint32, before uint64, limit int) ([]*v1.PlayerMatchRow, error) {
+	f.gotHero, f.gotBefore, f.gotLimit = heroID, before, limit
+	return f.rows, f.err
+}
+
+type fakeSyncer struct {
+	newMatches, pending int
+	err                 error
+}
+
+func (f fakeSyncer) SyncPlayer(context.Context, uint32) (int, int, error) {
+	return f.newMatches, f.pending, f.err
+}
+
+func newServer(st Store, sy PlayerSyncer) *Server {
+	return New(st, sy, &gamedata.Data{})
+}
+
+func TestRequiredIDs(t *testing.T) {
+	s := newServer(&fakeStore{}, fakeSyncer{})
+	ctx := context.Background()
+	calls := map[string]func() error{
+		"GetPlayer":         func() error { _, err := s.GetPlayer(ctx, &v1.GetPlayerRequest{}); return err },
+		"ListPlayerMatches": func() error { _, err := s.ListPlayerMatches(ctx, &v1.ListPlayerMatchesRequest{}); return err },
+		"SyncPlayer":        func() error { _, err := s.SyncPlayer(ctx, &v1.SyncPlayerRequest{}); return err },
+		"GetMatch":          func() error { _, err := s.GetMatch(ctx, &v1.GetMatchRequest{}); return err },
+		"GetPlayerMatch": func() error {
+			_, err := s.GetPlayerMatch(ctx, &v1.GetPlayerMatchRequest{MatchId: 1})
+			return err
+		},
+	}
+	for name, call := range calls {
+		if got := status.Code(call()); got != codes.InvalidArgument {
+			t.Errorf("%s with missing id: code = %s, want InvalidArgument", name, got)
+		}
+	}
+}
+
+func TestGetPlayerErrorMapping(t *testing.T) {
+	cases := []struct {
+		err  error
+		want codes.Code
+	}{
+		{nil, codes.OK},
+		{db.ErrNotFound, codes.NotFound},
+		{context.Canceled, codes.Canceled},
+		{context.DeadlineExceeded, codes.DeadlineExceeded},
+		{errors.New("connection refused"), codes.Internal},
+	}
+	for _, c := range cases {
+		s := newServer(&fakeStore{player: &v1.Player{AccountId: 1}, err: c.err}, fakeSyncer{})
+		_, err := s.GetPlayer(context.Background(), &v1.GetPlayerRequest{AccountId: 1})
+		if got := status.Code(err); got != c.want {
+			t.Errorf("store error %v: code = %s, want %s", c.err, got, c.want)
+		}
+	}
+}
+
+func TestListPlayerMatchesPaging(t *testing.T) {
+	cases := []struct {
+		name      string
+		req       *v1.ListPlayerMatchesRequest
+		rows      int
+		wantLimit int
+		wantToken string
+	}{
+		{"default size", &v1.ListPlayerMatchesRequest{AccountId: 1}, 3, 50, ""},
+		{"size is capped", &v1.ListPlayerMatchesRequest{AccountId: 1, PageSize: 10_000}, 3, 200, ""},
+		{"full page has a next token", &v1.ListPlayerMatchesRequest{AccountId: 1, PageSize: 3}, 3, 3, "101"},
+		{"short page ends the list", &v1.ListPlayerMatchesRequest{AccountId: 1, PageSize: 4}, 3, 4, ""},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			st := &fakeStore{}
+			for i := range c.rows {
+				st.rows = append(st.rows, &v1.PlayerMatchRow{MatchId: uint64(103 - i)})
+			}
+			resp, err := newServer(st, fakeSyncer{}).ListPlayerMatches(context.Background(), c.req)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if st.gotLimit != c.wantLimit {
+				t.Errorf("limit = %d, want %d", st.gotLimit, c.wantLimit)
+			}
+			if resp.GetNextPageToken() != c.wantToken {
+				t.Errorf("next token = %q, want %q", resp.GetNextPageToken(), c.wantToken)
+			}
+		})
+	}
+}
+
+func TestListPlayerMatchesTokenAndFilter(t *testing.T) {
+	st := &fakeStore{}
+	s := newServer(st, fakeSyncer{})
+	_, err := s.ListPlayerMatches(context.Background(),
+		&v1.ListPlayerMatchesRequest{AccountId: 1, HeroId: 13, PageToken: "101"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if st.gotBefore != 101 || st.gotHero != 13 {
+		t.Errorf("store got before=%d hero=%d, want 101 and 13", st.gotBefore, st.gotHero)
+	}
+
+	_, err = s.ListPlayerMatches(context.Background(),
+		&v1.ListPlayerMatchesRequest{AccountId: 1, PageToken: "garbage"})
+	if got := status.Code(err); got != codes.InvalidArgument {
+		t.Errorf("bad token: code = %s, want InvalidArgument", got)
+	}
+}
+
+func TestSyncPlayer(t *testing.T) {
+	s := newServer(&fakeStore{}, fakeSyncer{newMatches: 4, pending: 9})
+	resp, err := s.SyncPlayer(context.Background(), &v1.SyncPlayerRequest{AccountId: 1})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if resp.GetNewMatches() != 4 || resp.GetQueuedMeta() != 9 {
+		t.Errorf("resp = %v", resp)
+	}
+
+	s = newServer(&fakeStore{}, fakeSyncer{err: errors.New("provider down")})
+	_, err = s.SyncPlayer(context.Background(), &v1.SyncPlayerRequest{AccountId: 1})
+	if got := status.Code(err); got != codes.Unavailable {
+		t.Errorf("provider failure: code = %s, want Unavailable", got)
+	}
+}
+
+func TestGameDataToAPI(t *testing.T) {
+	gd := &gamedata.Data{
+		GameVersion: "6000",
+		Heroes: []*gamedata.Hero{
+			{ID: 13, Key: "hero_haze", Name: "Haze", NameRU: "Пелена", State: "release"},
+			{ID: 99, Key: "hero_wip", State: "release", InDev: true},
+			{ID: 98, Key: "hero_off", State: "release", Disabled: true},
+			{ID: 97, Key: "hero_test", State: "playtest"},
+		},
+		Abilities: []*gamedata.Ability{{ID: 7, Key: "upgrade_x", Type: "item", Slot: "weapon", Tier: 2}},
+	}
+	out, err := New(nil, nil, gd).GetGameData(context.Background(), &v1.GetGameDataRequest{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if out.GetGameVersion() != "6000" || len(out.GetHeroes()) != 4 || len(out.GetAbilities()) != 1 {
+		t.Fatalf("out = %v", out)
+	}
+	for i, want := range []bool{true, false, false, false} {
+		if got := out.GetHeroes()[i].GetPlayable(); got != want {
+			t.Errorf("hero %s playable = %v, want %v", out.GetHeroes()[i].GetKey(), got, want)
+		}
+	}
+	if a := out.GetAbilities()[0]; a.GetSlot() != "weapon" || a.GetTier() != 2 {
+		t.Errorf("ability = %v", a)
+	}
+}
+
+func TestInterceptor(t *testing.T) {
+	icpt := UnaryInterceptor(slog.New(slog.DiscardHandler))
+	info := &grpc.UnaryServerInfo{FullMethod: "/deadlock.v1.StatsService/GetPlayer"}
+	call := func(h grpc.UnaryHandler) error {
+		_, err := icpt(context.Background(), nil, info, h)
+		return err
+	}
+
+	err := call(func(context.Context, any) (any, error) { panic("boom") })
+	if status.Code(err) != codes.Internal {
+		t.Errorf("panic: err = %v, want Internal", err)
+	}
+
+	err = call(func(context.Context, any) (any, error) {
+		return nil, status.Error(codes.Internal, `ERROR: relation "matches" does not exist`)
+	})
+	if st := status.Convert(err); st.Code() != codes.Internal || st.Message() != "internal error" {
+		t.Errorf("internal error leaked to the client: %v", err)
+	}
+
+	err = call(func(context.Context, any) (any, error) {
+		return nil, status.Error(codes.NotFound, "not found")
+	})
+	if st := status.Convert(err); st.Code() != codes.NotFound || st.Message() != "not found" {
+		t.Errorf("client error must pass through unchanged, got %v", err)
+	}
+
+	if err := call(func(context.Context, any) (any, error) { return "ok", nil }); err != nil {
+		t.Errorf("success: err = %v", err)
+	}
+}

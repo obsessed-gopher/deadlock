@@ -9,11 +9,11 @@
 //
 // Usage (from repo root):
 //
-//	go run ./tools/protogen
+//	go run ./tools/dev gen
 //
-// Requires protoc (PATH, $PROTOC or winget location) and plugins in
-// $GOPATH/bin: protoc-gen-go, protoc-gen-go-grpc, protoc-gen-grpc-gateway,
-// protoc-gen-openapiv2.
+// Prefer "go run ./tools/dev gen", which first installs the pinned protoc
+// plugins into .tools/bin. Requires protoc itself (PATH, $PROTOC or the winget
+// location).
 package main
 
 import (
@@ -60,10 +60,11 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	// Make sure protoc finds the Go plugins even if GOPATH/bin isn't on PATH.
-	if gopath, err := exec.Command("go", "env", "GOPATH").Output(); err == nil {
-		bin := filepath.Join(strings.TrimSpace(string(gopath)), "bin")
-		os.Setenv("PATH", bin+string(os.PathListSeparator)+os.Getenv("PATH"))
+	// Use the plugins pinned by tools/dev (.tools/bin) ahead of anything else
+	// on PATH, so generated code does not depend on what happens to be
+	// installed globally.
+	if bin, err := filepath.Abs(".tools/bin"); err == nil {
+		_ = os.Setenv("PATH", bin+string(os.PathListSeparator)+os.Getenv("PATH"))
 	}
 
 	genGame(protoc, include)

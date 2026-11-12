@@ -2,10 +2,12 @@ package db
 
 import (
 	"context"
+	"errors"
 	"os"
 	"testing"
 	"time"
 
+	v1 "github.com/obsessed-gopher/deadlock/gen/go/deadlock/v1"
 	"github.com/obsessed-gopher/deadlock/internal/compress"
 	"github.com/obsessed-gopher/deadlock/internal/meta"
 	"github.com/obsessed-gopher/deadlock/internal/source"
@@ -71,6 +73,26 @@ func TestIngestRoundTrip(t *testing.T) {
 	if err != nil || len(ids) != 1 || ids[0] != match {
 		t.Fatalf("NextPendingMeta = %v, %v", ids, err)
 	}
+	if n, err := d.CountPendingMeta(ctx, acc); err != nil || n != 1 {
+		t.Errorf("CountPendingMeta = %d, %v; want 1", n, err)
+	}
+	if n, err := d.CountPendingMeta(ctx, 42); err != nil || n != 0 {
+		t.Errorf("CountPendingMeta for another player = %d, %v; want 0", n, err)
+	}
+
+	// A sync that was running when the process died must not stay "running".
+	if err := d.SetSyncState(ctx, acc, "running", "", false); err != nil {
+		t.Fatal(err)
+	}
+	if n, err := d.ResetInterruptedSyncs(ctx); err != nil || n != 1 {
+		t.Errorf("ResetInterruptedSyncs = %d, %v; want 1", n, err)
+	}
+	if n, err := d.ResetInterruptedSyncs(ctx); err != nil || n != 0 {
+		t.Errorf("second ResetInterruptedSyncs = %d, %v; want 0", n, err)
+	}
+	if p, err := d.GetPlayer(ctx, acc); err != nil || p.SyncState != v1.SyncState_SYNC_STATE_ERROR || p.SyncError == "" {
+		t.Errorf("after reset: player = %+v, %v; want error state with a message", p, err)
+	}
 
 	f, err := os.Open("../meta/testdata/134969900.meta.zst")
 	if err != nil {
@@ -128,7 +150,7 @@ func TestIngestRoundTrip(t *testing.T) {
 		t.Errorf("items = %d", len(pm.Items))
 	}
 
-	if _, err := d.GetPlayerMatch(ctx, match, 42); err != ErrNotFound {
+	if _, err := d.GetPlayerMatch(ctx, match, 42); !errors.Is(err, ErrNotFound) {
 		t.Errorf("unknown player err = %v", err)
 	}
 }

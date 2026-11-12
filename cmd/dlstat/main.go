@@ -9,6 +9,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"flag"
 	"fmt"
 	"os"
@@ -36,11 +37,14 @@ func main() {
 	args := parseInterspersed(fs, os.Args[2:])
 
 	ctx := context.Background()
+	var err error
+	if gd, err = gamedata.Embedded(); err != nil {
+		fail(err)
+	}
 	api := source.NewDeadlockAPI()
 	cache := source.NewCache(*cacheDir, api)
 	acc := parseAccount(*account)
 
-	var err error
 	switch cmd {
 	case "history":
 		err = history(ctx, api, acc, *n)
@@ -83,19 +87,16 @@ func parseAccount(s string) uint32 {
 	if s == "" {
 		return 0
 	}
-	v, err := strconv.ParseUint(s, 10, 64)
+	id, err := source.ParseAccountID(s)
 	if err != nil {
-		fail(fmt.Errorf("bad account %q", s))
+		fail(err)
 	}
-	if v > 1<<32 {
-		return source.SteamID64ToAccountID(v)
-	}
-	return uint32(v)
+	return id
 }
 
 func history(ctx context.Context, api *source.DeadlockAPI, acc uint32, n int) error {
 	if acc == 0 {
-		return fmt.Errorf("set -account or DL_ACCOUNT")
+		return errors.New("set -account or DL_ACCOUNT")
 	}
 	ms, err := api.MatchHistory(ctx, acc)
 	if err != nil {
@@ -150,7 +151,7 @@ func showMeta(path string, acc uint32) error {
 			p.GetKills(), p.GetDeaths(), p.GetAssists(), p.GetNetWorth(), p.GetLastHits(),
 			soulsAt(p, 600), soulsAt(p, 1200), len(p.GetStats()), len(p.GetItems()), len(p.GetDeathDetails()))
 	}
-	w.Flush()
+	_ = w.Flush()
 
 	if me != nil {
 		showPlayer(me)
@@ -204,7 +205,7 @@ func mmss(s uint32) string {
 func parseInterspersed(fs *flag.FlagSet, in []string) []string {
 	var pos []string
 	for {
-		fs.Parse(in)
+		_ = fs.Parse(in) // ExitOnError: Parse exits on bad flags
 		in = fs.Args()
 		if len(in) == 0 {
 			return pos
@@ -214,7 +215,8 @@ func parseInterspersed(fs *flag.FlagSet, in []string) []string {
 	}
 }
 
-var gd, _ = gamedata.Embedded()
+// gd is the embedded snapshot; set once in main before any lookups.
+var gd *gamedata.Data
 
 func heroName(id uint32) string {
 	if h := gd.Hero(id); h != nil && h.Name != "" {

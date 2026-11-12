@@ -80,17 +80,11 @@ func Parse(b []byte) (*Data, error) {
 //go:embed snapshot/gamedata.json
 var snapshot []byte
 
-var (
-	once     sync.Once
-	embedded *Data
-	embedErr error
-)
+var parseEmbedded = sync.OnceValues(func() (*Data, error) { return Parse(snapshot) })
 
-// Embedded returns the snapshot compiled into the binary.
-func Embedded() (*Data, error) {
-	once.Do(func() { embedded, embedErr = Parse(snapshot) })
-	return embedded, embedErr
-}
+// Embedded returns the snapshot compiled into the binary. It is parsed once;
+// callers share the result and must not modify it.
+func Embedded() (*Data, error) { return parseEmbedded() }
 
 // HashKey computes the id the game uses for an ability/item name.
 func HashKey(key string) uint32 {

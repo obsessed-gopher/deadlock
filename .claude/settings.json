@@ -1,0 +1,33 @@
+{
+  "attribution": {
+    "commit": "",
+    "pr": "",
+    "sessionUrl": false
+  },
+  "permissions": {
+    "allow": [
+      "PowerShell(go build *)",
+      "PowerShell(go vet *)",
+      "PowerShell(go test *)",
+      "PowerShell(go list *)",
+      "PowerShell(go doc *)",
+      "PowerShell(go env *)",
+      "PowerShell(go version)",
+      "PowerShell(go mod tidy *)",
+      "PowerShell(go run ./tools/dev *)",
+      "PowerShell(docker compose ps *)",
+      "PowerShell(docker compose logs *)",
+      "Bash(go build *)",
+      "Bash(go vet *)",
+      "Bash(go test *)",
+      "Bash(go list *)",
+      "Bash(go doc *)",
+      "Bash(go env *)",
+      "Bash(go version)",
+      "Bash(go mod tidy *)",
+      "Bash(go run ./tools/dev *)",
+      "Bash(docker compose ps *)",
+      "Bash(docker compose logs *)"
+    ]
+  }
+}

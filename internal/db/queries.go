@@ -27,6 +27,8 @@ var syncStateToAPI = map[string]v1.SyncState{
 	"error":   v1.SyncState_SYNC_STATE_ERROR,
 }
 
+// GetPlayer returns the profile and match counters of a tracked player, or
+// ErrNotFound.
 func (d *DB) GetPlayer(ctx context.Context, accountID uint32) (*v1.Player, error) {
 	var (
 		p      v1.Player
@@ -97,6 +99,8 @@ func (d *DB) ListPlayerMatches(ctx context.Context, accountID uint32, heroID uin
 	return out, rows.Err()
 }
 
+// GetMatch returns the match header and, once metadata is ingested, the
+// scoreboard of all players. Unknown matches yield ErrNotFound.
 func (d *DB) GetMatch(ctx context.Context, matchID uint64) (*v1.Match, error) {
 	var (
 		m      v1.Match
@@ -136,6 +140,8 @@ func (d *DB) GetMatch(ctx context.Context, matchID uint64) (*v1.Match, error) {
 	return &m, rows.Err()
 }
 
+// GetPlayerMatch returns one player's detailed breakdown of a match. It yields
+// ErrNotFound when the match is unknown or the player did not take part.
 func (d *DB) GetPlayerMatch(ctx context.Context, matchID uint64, accountID uint32) (*v1.PlayerMatch, error) {
 	m, err := d.GetMatch(ctx, matchID)
 	if err != nil {

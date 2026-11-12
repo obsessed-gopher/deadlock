@@ -13,15 +13,25 @@ import (
 	"time"
 
 	"github.com/obsessed-gopher/deadlock/internal/compress"
-	"github.com/obsessed-gopher/deadlock/internal/db"
 	"github.com/obsessed-gopher/deadlock/internal/meta"
 	"github.com/obsessed-gopher/deadlock/internal/pb"
 	"github.com/obsessed-gopher/deadlock/internal/source"
 )
 
+// Store is the write side of the database the syncer needs. *db.DB implements it.
+type Store interface {
+	EnsurePlayer(ctx context.Context, accountID uint32) error
+	SetSyncState(ctx context.Context, accountID uint32, state, errMsg string, synced bool) error
+	UpsertHistory(ctx context.Context, accountID uint32, ms []source.MatchSummary) (newMatches int, err error)
+	CountPendingMeta(ctx context.Context, accountID uint32) (int, error)
+	NextPendingMeta(ctx context.Context, limit int) ([]uint64, error)
+	StoreMeta(ctx context.Context, matchID uint64, raw []byte, version uint32, mi *pb.CMsgMatchMetaDataContents_MatchInfo) error
+	MarkMetaFailure(ctx context.Context, matchID uint64, expired bool, cause error, maxAttempts int) error
+}
+
 // Syncer coordinates providers and the database.
 type Syncer struct {
-	DB      *db.DB
+	DB      Store
 	History source.HistoryProvider
 	Salts   source.SaltProvider
 	HTTP    *http.Client
@@ -35,7 +45,9 @@ type Syncer struct {
 	wake chan struct{}
 }
 
-func New(d *db.DB, hist source.HistoryProvider, salts source.SaltProvider, log *slog.Logger) *Syncer {
+// New returns a Syncer with production defaults; tune the exported fields
+// before calling Run.
+func New(d Store, hist source.HistoryProvider, salts source.SaltProvider, log *slog.Logger) *Syncer {
 	return &Syncer{
 		DB: d, History: hist, Salts: salts, Log: log,
 		HTTP:        &http.Client{Timeout: 2 * time.Minute},
@@ -71,7 +83,7 @@ func (s *Syncer) SyncPlayer(ctx context.Context, accountID uint32) (newMatches, 
 	if err != nil {
 		return 0, 0, err
 	}
-	pending, err = s.DB.CountPendingMeta(ctx)
+	pending, err = s.DB.CountPendingMeta(ctx, accountID)
 	if err != nil {
 		return newMatches, 0, err
 	}
@@ -146,7 +158,7 @@ func (s *Syncer) fetchMeta(ctx context.Context, matchID uint64) ([]byte, uint32,
 	salts, err := s.Salts.Salts(ctx, matchID)
 	if err != nil {
 		if errors.Is(err, source.ErrNotFound) {
-			return nil, 0, nil, fmt.Errorf("%w: %v", errExpired, err)
+			return nil, 0, nil, fmt.Errorf("%w: %w", errExpired, err)
 		}
 		return nil, 0, nil, err
 	}
@@ -158,7 +170,7 @@ func (s *Syncer) fetchMeta(ctx context.Context, matchID uint64) ([]byte, uint32,
 	if err != nil {
 		return nil, 0, nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 	switch {
 	case resp.StatusCode == http.StatusNotFound:
 		return nil, 0, nil, fmt.Errorf("%w: %s", errExpired, salts.MetadataURL())

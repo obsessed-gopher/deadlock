@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"os"
 
-	"google.golang.org/protobuf/proto"
-
 	"github.com/obsessed-gopher/deadlock/internal/compress"
 	"github.com/obsessed-gopher/deadlock/internal/pb"
+
+	"google.golang.org/protobuf/proto"
 )
 
 // Decode parses decompressed .meta bytes.

@@ -1,4 +1,4 @@
-# deadlock_ideas
+# deadlock
 
 Личная аналитика матчей Deadlock (в духе Leetify/STRATZ) на основе метаданных матчей с CDN Valve.
 
@@ -18,6 +18,7 @@ replay*.valve.net ──(.meta, zstd)──► syncer ──► Postgres ◄─�
 - `internal/syncer` — синхронизация истории и загрузка метаданных
 - `internal/source` — провайдеры данных за интерфейсами (сейчас deadlock-api)
 - `internal/zstd` — декодер zstd, скопирован из Go stdlib (BSD)
+- `tools/dev` — раннер задач разработки (проверки, тесты, кодогенерация)
 - `internal/gamedata` — герои, предметы и способности (названия EN/RU, слот, тир). Снимок `snapshot/gamedata.json` встроен в бинарник; собственные парсеры VPK (`vpk`), ресурсов Source 2 (`resource`) и бинарного KV3 (`kv3`). `item_id` в данных матча = MurmurHash2(lower(имя), 0x31415926)
 
 В базе хранится сырой `.meta` (`matches.meta_raw`), поэтому таблицы можно пересчитать без повторной загрузки: Valve со временем удаляет старые реплеи.
@@ -40,12 +41,12 @@ gRPC: `grpcurl -plaintext localhost:9090 list` (reflection включён).
 ## Разработка
 
 ```sh
-go test ./...
-# интеграционный тест БД:
-TEST_DATABASE_URL='postgres://deadlock:deadlock@localhost:5432/deadlock?sslmode=disable' go test ./internal/db
+go run ./tools/dev setup      # один раз: линтер и плагины protoc в .tools/bin, git-хук
+go run ./tools/dev check      # перед коммитом: tidy, формат, сборка, линт, тесты
+go run ./tools/dev test-db    # интеграционные тесты БД (поднимает postgres из compose)
 
 # после изменения .proto или патча игры (обновить proto/deadlock):
-go run ./tools/protogen
+go run ./tools/dev gen
 
 # после патча игры: пересобрать снимок героев/предметов из локальной установки
 go run ./tools/gamedata -check internal/meta/testdata/134969900.meta.zst
@@ -55,4 +56,12 @@ go run ./tools/vpkdump -grep scripts/ "<...>/Deadlock/game/citadel/pak01_dir.vpk
 go run ./tools/vpkdump -kv scripts/heroes.vdata_c -key hero_haze "<...>/pak01_dir.vpk"
 ```
 
-Нужны `protoc` и плагины в `$GOPATH/bin`: `protoc-gen-go`, `protoc-gen-go-grpc`, `protoc-gen-grpc-gateway`, `protoc-gen-openapiv2`.
+Для кодогенерации нужен `protoc`; плагины нужных версий ставит `tools/dev`.
+
+Документация для разработки:
+
+- [docs/architecture.md](docs/architecture.md) — пакеты, границы, принятые решения, схема БД
+- [docs/development.md](docs/development.md) — проверки, тесты, линтеры, кодогенерация, миграции, changelog, git
+- [docs/code-style.md](docs/code-style.md) — правила написания кода и тестов
+- [docs/problems.md](docs/problems.md) — грабли и известные проблемы
+- [CHANGELOG.md](CHANGELOG.md)

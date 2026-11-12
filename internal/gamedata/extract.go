@@ -84,7 +84,8 @@ func Extract(gameDir string) (*Data, error) {
 		}
 		if ab.IsItem() {
 			ab.Slot = itemSlot(a.Str("m_eItemSlotType"))
-			fmt.Sscanf(a.Str("m_iItemTier"), "EModTier_%d", &ab.Tier)
+			// Tier stays 0 when the field is missing or has an unknown format.
+			_, _ = fmt.Sscanf(a.Str("m_iItemTier"), "EModTier_%d", &ab.Tier)
 		}
 		d.Abilities = append(d.Abilities, ab)
 	}

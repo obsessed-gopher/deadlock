@@ -100,10 +100,11 @@
           },
           {
             "name": "accountId",
+            "description": "Account id or SteamID64. Widened from uint32, which is wire-compatible.",
             "in": "path",
             "required": true,
-            "type": "integer",
-            "format": "int64"
+            "type": "string",
+            "format": "uint64"
           }
         ],
         "tags": [
@@ -132,10 +133,44 @@
         "parameters": [
           {
             "name": "accountId",
+            "description": "Account id or SteamID64. Widened from uint32, which is wire-compatible.",
             "in": "path",
             "required": true,
-            "type": "integer",
-            "format": "int64"
+            "type": "string",
+            "format": "uint64"
+          }
+        ],
+        "tags": [
+          "StatsService"
+        ]
+      }
+    },
+    "/v1/players/{accountId}/heroes": {
+      "get": {
+        "summary": "Per-hero totals of a player over all synced matches, most played first.",
+        "operationId": "StatsService_ListPlayerHeroStats",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ListPlayerHeroStatsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "accountId",
+            "description": "Account id or SteamID64.",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "uint64"
           }
         ],
         "tags": [
@@ -164,10 +199,11 @@
         "parameters": [
           {
             "name": "accountId",
+            "description": "Account id or SteamID64. Widened from uint32, which is wire-compatible.",
             "in": "path",
             "required": true,
-            "type": "integer",
-            "format": "int64"
+            "type": "string",
+            "format": "uint64"
           },
           {
             "name": "pageSize",
@@ -191,6 +227,68 @@
             "required": false,
             "type": "integer",
             "format": "int64"
+          },
+          {
+            "name": "sort",
+            "description": " - MATCH_SORT_UNSPECIFIED: same as START_TIME",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "MATCH_SORT_UNSPECIFIED",
+              "MATCH_SORT_START_TIME",
+              "MATCH_SORT_DURATION",
+              "MATCH_SORT_KILLS",
+              "MATCH_SORT_DEATHS",
+              "MATCH_SORT_ASSISTS",
+              "MATCH_SORT_NET_WORTH",
+              "MATCH_SORT_LAST_HITS",
+              "MATCH_SORT_HERO_LEVEL"
+            ],
+            "default": "MATCH_SORT_UNSPECIFIED"
+          },
+          {
+            "name": "ascending",
+            "description": "default: largest / newest first",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "result",
+            "description": "optional filter\n\n - MATCH_RESULT_UNSPECIFIED: any",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "MATCH_RESULT_UNSPECIFIED",
+              "MATCH_RESULT_WIN",
+              "MATCH_RESULT_LOSS"
+            ],
+            "default": "MATCH_RESULT_UNSPECIFIED"
+          },
+          {
+            "name": "gameMode",
+            "description": "optional filter, 0 = any",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "metaStatus",
+            "description": "optional filter, UNSPECIFIED = any\n\n - META_STATUS_PENDING: queued for download\n - META_STATUS_OK: parsed and stored\n - META_STATUS_EXPIRED: Valve no longer hosts the replay\n - META_STATUS_FAILED: gave up after retries",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "META_STATUS_UNSPECIFIED",
+              "META_STATUS_PENDING",
+              "META_STATUS_OK",
+              "META_STATUS_EXPIRED",
+              "META_STATUS_FAILED"
+            ],
+            "default": "META_STATUS_UNSPECIFIED"
           }
         ],
         "tags": [
@@ -219,10 +317,11 @@
         "parameters": [
           {
             "name": "accountId",
+            "description": "Account id or SteamID64. Widened from uint32, which is wire-compatible.",
             "in": "path",
             "required": true,
-            "type": "integer",
-            "format": "int64"
+            "type": "string",
+            "format": "uint64"
           },
           {
             "name": "body",
@@ -380,6 +479,54 @@
         }
       }
     },
+    "v1HeroStats": {
+      "type": "object",
+      "properties": {
+        "heroId": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "matches": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "wins": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "kills": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "deaths": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "assists": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "netWorth": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "lastHits": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "durationS": {
+          "type": "integer",
+          "format": "int64",
+          "title": "total time played"
+        },
+        "lastPlayed": {
+          "type": "string",
+          "format": "int64",
+          "title": "unix seconds, start of the latest match"
+        }
+      },
+      "description": "Totals over the player's matches on one hero; averages are total / matches."
+    },
     "v1ItemEvent": {
       "type": "object",
       "properties": {
@@ -406,6 +553,18 @@
         }
       }
     },
+    "v1ListPlayerHeroStatsResponse": {
+      "type": "object",
+      "properties": {
+        "heroes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1HeroStats"
+          }
+        }
+      }
+    },
     "v1ListPlayerMatchesResponse": {
       "type": "object",
       "properties": {
@@ -418,6 +577,11 @@
         },
         "nextPageToken": {
           "type": "string"
+        },
+        "total": {
+          "type": "integer",
+          "format": "int64",
+          "title": "rows matching the filters, all pages"
         }
       }
     },
@@ -524,6 +688,32 @@
           "format": "int64"
         }
       }
+    },
+    "v1MatchResult": {
+      "type": "string",
+      "enum": [
+        "MATCH_RESULT_UNSPECIFIED",
+        "MATCH_RESULT_WIN",
+        "MATCH_RESULT_LOSS"
+      ],
+      "default": "MATCH_RESULT_UNSPECIFIED",
+      "description": "- MATCH_RESULT_UNSPECIFIED: any"
+    },
+    "v1MatchSort": {
+      "type": "string",
+      "enum": [
+        "MATCH_SORT_UNSPECIFIED",
+        "MATCH_SORT_START_TIME",
+        "MATCH_SORT_DURATION",
+        "MATCH_SORT_KILLS",
+        "MATCH_SORT_DEATHS",
+        "MATCH_SORT_ASSISTS",
+        "MATCH_SORT_NET_WORTH",
+        "MATCH_SORT_LAST_HITS",
+        "MATCH_SORT_HERO_LEVEL"
+      ],
+      "default": "MATCH_SORT_UNSPECIFIED",
+      "description": "Sort key of ListPlayerMatches. Ties are broken by match_id.\n\n - MATCH_SORT_UNSPECIFIED: same as START_TIME"
     },
     "v1MetaStatus": {
       "type": "string",

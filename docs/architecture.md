@@ -11,6 +11,7 @@ replay<N>.valve.net ──(.meta, zstd)──► syncer ──► Postgres ◄�
 1. `SyncPlayer` (RPC или периодический тикер по `SYNC_ACCOUNTS`) тянет историю матчей игрока и кладёт заголовки в `matches` + `player_matches`. Новые матчи получают `meta_status = 'pending'`.
 2. Фоновый воркер `Syncer.Run` разбирает очередь `pending`: получает соль матча, качает `.meta` с CDN Valve, распаковывает, декодирует protobuf и в одной транзакции сохраняет сырой файл и производные таблицы.
 3. API только читает из Postgres. Статические данные игры (герои, предметы) встроены в бинарник.
+4. Веб-интерфейс (`web/`, Next.js) рендерит страницы на сервере, запрашивая REST-gateway; браузер с Go API напрямую не общается. Локализация ru/en — свой словарь без библиотек (`web/src/i18n`): язык интерфейса и язык имён из игры — независимые настройки в cookies.
 
 Один процесс `cmd/server` держит gRPC-сервер, REST-gateway (ходит в gRPC по loopback) и воркеры синхронизации.
 
@@ -20,13 +21,13 @@ replay<N>.valve.net ──(.meta, zstd)──► syncer ──► Postgres ◄�
 |---|---|---|
 | `cmd/server` | сборка зависимостей, конфигурация из env, жизненный цикл | всё |
 | `cmd/dlstat` | отладочный CLI (`history`, `match`, `meta`) | `source`, `meta`, `gamedata`, `pb` |
-| `internal/server` | реализация `deadlock.v1.StatsService`: валидация, пагинация, коды ошибок | `gen/go`, `gamedata`, `db` (только `ErrNotFound`) |
+| `internal/server` | реализация `deadlock.v1.StatsService`: валидация, пагинация, коды ошибок | `gen/go`, `gamedata`, `db` (только `ErrNotFound`), `source` (только `NormalizeAccountID`) |
 | `internal/syncer` | синхронизация истории, очередь загрузки метаданных, ретраи | `source`, `meta`, `compress`, `pb` |
 | `internal/db` | пул pgx, миграции, **весь** SQL | `pb`, `source`, `gen/go` |
 | `internal/source` | провайдеры данных за интерфейсами (`SaltProvider`, `HistoryProvider`), клиент deadlock-api, дисковый кэш реплеев | — |
 | `internal/meta` | декодирование `.meta` в protobuf-типы | `compress`, `pb` |
 | `internal/compress` | определение сжатия по magic-байтам (zstd / bzip2 / без сжатия) | `zstd` |
-| `internal/gamedata` | снимок героев/предметов + парсеры файлов игры (`vpk`, `resource`, `kv3`) | свои подпакеты |
+| `internal/gamedata` | снимок героев/предметов + парсеры файлов игры (`vpk`, `resource`, `kv3`, `vtex` — текстуры) и выгрузка иконок | свои подпакеты |
 | `internal/pb` | **сгенерировано** из `proto/deadlock` (протобафы Valve) | — |
 | `gen/go`, `gen/openapi` | **сгенерировано** из `proto/api` (наш API) | — |
 | `internal/zstd` | декодер zstd, **копия из stdlib Go** (BSD), не редактируется | — |
@@ -34,6 +35,8 @@ replay<N>.valve.net ──(.meta, zstd)──► syncer ──► Postgres ◄�
 | `tools/protogen` | кодогенерация из `.proto` | — |
 | `tools/gamedata` | пересборка снимка `gamedata.json` из установленной игры | `gamedata`, `meta` |
 | `tools/vpkdump` | просмотр файлов игры | `gamedata/*` |
+| `web` | веб-интерфейс (Next.js + TypeScript), отдельный npm-проект | REST API; типы — `web/src/api/schema.gen.ts` (**сгенерировано**) |
+| `web/mock` | мок REST API на снятых фикстурах: dev-стек и e2e | типы API |
 
 ## Правила зависимостей
 
@@ -65,6 +68,10 @@ replay<N>.valve.net ──(.meta, zstd)──► syncer ──► Postgres ◄�
 
 **Снимок данных игры встроен в бинарник** (`go:embed`), серверу не нужна установленная игра. `item_id` в метаданных матча — это `MurmurHash2(lower(ключ), 0x31415926)`.
 
+**Иконки не в git и не в Go-сервере.** Это арт Valve: он извлекается из локальной установки игры в `data/icons` (игнорируется git) и раздаётся фронтом из `ICONS_DIR`; отсутствующая иконка — заглушка. Так в репозитории нет чужих картинок, а всё, кроме внешнего вида, работает без них.
+
+**Фронт — серверный рендеринг Next.js поверх REST, без отдельного BFF.** Страницы — серверные компоненты, которые ходят в gateway; изменение данных (синхронизация) — server action. Так API не выставляется в браузер, а фронту не нужны библиотеки запросов и состояния. Графики — SVG без библиотек, по тому же принципу минимума зависимостей.
+
 **Раннер задач на Go (`tools/dev`) вместо make/Taskfile**: на Windows нет make, а так одна и та же команда работает локально, в хуке и в CI. Версии инструментов закреплены в `tools/dev/main.go` и ставятся в `.tools/bin` (в git не попадает).
 
 ## Схема БД
@@ -80,9 +87,12 @@ replay<N>.valve.net ──(.meta, zstd)──► syncer ──► Postgres ◄�
 
 ## API
 
-Контракт — `proto/api/deadlock/v1/stats.proto`; REST-маршруты заданы аннотациями `google.api.http`, OpenAPI генерируется в `gen/openapi/api.swagger.json` (из него позже будут типы для фронтенда).
+Контракт — `proto/api/deadlock/v1/stats.proto`; REST-маршруты заданы аннотациями `google.api.http`, OpenAPI генерируется в `gen/openapi/api.swagger.json`, из него — TS-типы фронта `web/src/api/schema.gen.ts`.
 
-- Пагинация `ListPlayerMatches` — keyset по `match_id` по убыванию; `page_token` — это `match_id` последней строки. Размер страницы по умолчанию 50, максимум 200.
+- `account_id` в запросах — `uint64` и принимает как account id, так и SteamID64 (нормализуется в `server`); в ответах — всегда 32-битный account id.
+- `ListPlayerHeroStats` — суммы по героям из истории матчей (метаданные не нужны); средние считает клиент.
+- `ListPlayerMatches`: фильтры (`hero_id`, `result`, `game_mode`, `meta_status`), сортировка (`sort` — дата, длительность, K/D/A, души, добивания, уровень; `ascending`) и `total` — число строк под фильтрами. Пагинация — keyset по паре (значение сортировки, `match_id`); `page_token` — непрозрачная строка `<значение>_<match_id>`, действует только с той сортировкой, с которой выдан. SQL собирается из констант (`matchSortExprs`), значения — только параметрами. Размер страницы по умолчанию 50, максимум 200.
+- Ошибочные значения запроса (неизвестный enum, битый токен) — `InvalidArgument`, а не `Internal` (`db.ErrBadQuery`).
 - Ошибки: `InvalidArgument` (нет обязательного id, битый токен), `NotFound`, `Unavailable` (не ответил провайдер при синхронизации), `Internal`. Текст внутренних ошибок клиенту не отдаётся (подменяется в интерцепторе), подробности — в логе.
 - Аутентификации нет: порты в `docker-compose.yml` привязаны к `127.0.0.1`.
 

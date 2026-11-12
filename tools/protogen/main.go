@@ -5,7 +5,8 @@
 //     options (boxed_type, additional_includes, ...) that stock protoc
 //     rejects, so the import closure is copied to a temp dir and sanitized.
 //  2. Our API (proto/api) -> gen/go (messages, gRPC, grpc-gateway) and
-//     gen/openapi (OpenAPI v2 spec, used to generate frontend types).
+//     gen/openapi (OpenAPI v2 spec), and from the spec the frontend types in
+//     web/src/api/schema.gen.ts (see tsgen.go).
 //
 // Usage (from repo root):
 //
@@ -37,6 +38,7 @@ const (
 	thirdPartyDir = "proto/third_party"
 	apiOutDir     = "gen/go"
 	openapiOutDir = "gen/openapi"
+	tsOutFile     = "web/src/api/schema.gen.ts"
 )
 
 // Game root files; everything they import (transitively) is generated too.
@@ -130,7 +132,22 @@ func genAPI(protoc, include string) {
 		args = append(args, "-I", include)
 	}
 	run(protoc, append(args, files...)...)
-	fmt.Printf("api: %d files -> %s, %s\n", len(files), apiOutDir, openapiOutDir)
+
+	spec, err := os.ReadFile(filepath.Join(openapiOutDir, "api.swagger.json"))
+	if err != nil {
+		log.Fatal(err)
+	}
+	ts, err := swaggerToTS(spec)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if err := os.MkdirAll(filepath.Dir(tsOutFile), 0o755); err != nil {
+		log.Fatal(err)
+	}
+	if err := os.WriteFile(tsOutFile, ts, 0o644); err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("api: %d files -> %s, %s, %s\n", len(files), apiOutDir, openapiOutDir, tsOutFile)
 }
 
 func run(bin string, args ...string) {

@@ -7,9 +7,12 @@
 # IDE
 /.idea/
 
-# frontend (later)
+# frontend (see also web/.gitignore)
 node_modules/
 .next/
 
 # local env
 .env
+
+# Playwright MCP screenshots and traces
+/.playwright-mcp/

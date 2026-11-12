@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log/slog"
 	"testing"
 
@@ -22,20 +23,32 @@ type fakeStore struct {
 
 	player *v1.Player
 	rows   []*v1.PlayerMatchRow
+	heroes []*v1.HeroStats
 	err    error
 
-	gotHero   uint32
-	gotBefore uint64
-	gotLimit  int
+	gotAccount uint32
+	gotQuery   db.MatchQuery
+	total      int
 }
 
-func (f *fakeStore) GetPlayer(context.Context, uint32) (*v1.Player, error) {
+func (f *fakeStore) GetPlayer(_ context.Context, accountID uint32) (*v1.Player, error) {
+	f.gotAccount = accountID
 	return f.player, f.err
 }
 
-func (f *fakeStore) ListPlayerMatches(_ context.Context, _, heroID uint32, before uint64, limit int) ([]*v1.PlayerMatchRow, error) {
-	f.gotHero, f.gotBefore, f.gotLimit = heroID, before, limit
-	return f.rows, f.err
+func (f *fakeStore) ListPlayerMatches(_ context.Context, q db.MatchQuery) ([]*v1.PlayerMatchRow, int, error) {
+	f.gotAccount, f.gotQuery = q.AccountID, q
+	return f.rows, f.total, f.err
+}
+
+func (f *fakeStore) ListPlayerHeroStats(_ context.Context, accountID uint32) ([]*v1.HeroStats, error) {
+	f.gotAccount = accountID
+	return f.heroes, f.err
+}
+
+func (f *fakeStore) GetPlayerMatch(_ context.Context, _ uint64, accountID uint32) (*v1.PlayerMatch, error) {
+	f.gotAccount = accountID
+	return &v1.PlayerMatch{}, f.err
 }
 
 type fakeSyncer struct {
@@ -45,6 +58,14 @@ type fakeSyncer struct {
 
 func (f fakeSyncer) SyncPlayer(context.Context, uint32) (int, int, error) {
 	return f.newMatches, f.pending, f.err
+}
+
+// recordingSyncer remembers the account it was asked to sync.
+type recordingSyncer struct{ got uint32 }
+
+func (r *recordingSyncer) SyncPlayer(_ context.Context, accountID uint32) (int, int, error) {
+	r.got = accountID
+	return 0, 0, nil
 }
 
 func newServer(st Store, sy PlayerSyncer) *Server {
@@ -58,7 +79,11 @@ func TestRequiredIDs(t *testing.T) {
 		"GetPlayer":         func() error { _, err := s.GetPlayer(ctx, &v1.GetPlayerRequest{}); return err },
 		"ListPlayerMatches": func() error { _, err := s.ListPlayerMatches(ctx, &v1.ListPlayerMatchesRequest{}); return err },
 		"SyncPlayer":        func() error { _, err := s.SyncPlayer(ctx, &v1.SyncPlayerRequest{}); return err },
-		"GetMatch":          func() error { _, err := s.GetMatch(ctx, &v1.GetMatchRequest{}); return err },
+		"ListPlayerHeroStats": func() error {
+			_, err := s.ListPlayerHeroStats(ctx, &v1.ListPlayerHeroStatsRequest{})
+			return err
+		},
+		"GetMatch": func() error { _, err := s.GetMatch(ctx, &v1.GetMatchRequest{}); return err },
 		"GetPlayerMatch": func() error {
 			_, err := s.GetPlayerMatch(ctx, &v1.GetPlayerMatchRequest{MatchId: 1})
 			return err
@@ -67,6 +92,51 @@ func TestRequiredIDs(t *testing.T) {
 	for name, call := range calls {
 		if got := status.Code(call()); got != codes.InvalidArgument {
 			t.Errorf("%s with missing id: code = %s, want InvalidArgument", name, got)
+		}
+	}
+}
+
+func TestAccountIDAcceptsSteamID64(t *testing.T) {
+	const (
+		steamID64 = 76561199477771562
+		account   = 1517505834
+	)
+	st, sy := &fakeStore{}, &recordingSyncer{}
+	s := newServer(st, sy)
+	ctx := context.Background()
+	calls := map[string]func(id uint64) (uint32, error){
+		"GetPlayer": func(id uint64) (uint32, error) {
+			_, err := s.GetPlayer(ctx, &v1.GetPlayerRequest{AccountId: id})
+			return st.gotAccount, err
+		},
+		"ListPlayerMatches": func(id uint64) (uint32, error) {
+			_, err := s.ListPlayerMatches(ctx, &v1.ListPlayerMatchesRequest{AccountId: id})
+			return st.gotAccount, err
+		},
+		"GetPlayerMatch": func(id uint64) (uint32, error) {
+			_, err := s.GetPlayerMatch(ctx, &v1.GetPlayerMatchRequest{MatchId: 1, AccountId: id})
+			return st.gotAccount, err
+		},
+		"ListPlayerHeroStats": func(id uint64) (uint32, error) {
+			_, err := s.ListPlayerHeroStats(ctx, &v1.ListPlayerHeroStatsRequest{AccountId: id})
+			return st.gotAccount, err
+		},
+		"SyncPlayer": func(id uint64) (uint32, error) {
+			_, err := s.SyncPlayer(ctx, &v1.SyncPlayerRequest{AccountId: id})
+			return sy.got, err
+		},
+	}
+	for name, call := range calls {
+		for _, id := range []uint64{account, steamID64} {
+			st.gotAccount, sy.got = 0, 0
+			got, err := call(id)
+			if err != nil || got != account {
+				t.Errorf("%s(%d): store got %d, err %v; want %d", name, id, got, err, account)
+			}
+		}
+		st.gotAccount, sy.got = 0, 0
+		if _, err := call(4_294_967_296); status.Code(err) != codes.InvalidArgument {
+			t.Errorf("%s(2^32): code = %s, want InvalidArgument", name, status.Code(err))
 		}
 	}
 }
@@ -101,45 +171,102 @@ func TestListPlayerMatchesPaging(t *testing.T) {
 	}{
 		{"default size", &v1.ListPlayerMatchesRequest{AccountId: 1}, 3, 50, ""},
 		{"size is capped", &v1.ListPlayerMatchesRequest{AccountId: 1, PageSize: 10_000}, 3, 200, ""},
-		{"full page has a next token", &v1.ListPlayerMatchesRequest{AccountId: 1, PageSize: 3}, 3, 3, "101"},
+		// Token = sort value of the last row + its match id; default sort is start time.
+		{"full page has a next token", &v1.ListPlayerMatchesRequest{AccountId: 1, PageSize: 3}, 3, 3, "1001_101"},
+		{
+			"token carries the value of the requested sort",
+			&v1.ListPlayerMatchesRequest{AccountId: 1, PageSize: 3, Sort: v1.MatchSort_MATCH_SORT_KILLS}, 3, 3, "7_101",
+		},
 		{"short page ends the list", &v1.ListPlayerMatchesRequest{AccountId: 1, PageSize: 4}, 3, 4, ""},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			st := &fakeStore{}
+			st := &fakeStore{total: 42}
 			for i := range c.rows {
-				st.rows = append(st.rows, &v1.PlayerMatchRow{MatchId: uint64(103 - i)})
+				id := uint64(103 - i)
+				st.rows = append(st.rows, &v1.PlayerMatchRow{MatchId: id, StartTime: int64(id) + 900, Kills: uint32(id) - 94})
 			}
 			resp, err := newServer(st, fakeSyncer{}).ListPlayerMatches(context.Background(), c.req)
 			if err != nil {
 				t.Fatal(err)
 			}
-			if st.gotLimit != c.wantLimit {
-				t.Errorf("limit = %d, want %d", st.gotLimit, c.wantLimit)
+			if st.gotQuery.Limit != c.wantLimit {
+				t.Errorf("limit = %d, want %d", st.gotQuery.Limit, c.wantLimit)
 			}
 			if resp.GetNextPageToken() != c.wantToken {
 				t.Errorf("next token = %q, want %q", resp.GetNextPageToken(), c.wantToken)
+			}
+			if resp.GetTotal() != 42 {
+				t.Errorf("total = %d, want 42", resp.GetTotal())
 			}
 		})
 	}
 }
 
-func TestListPlayerMatchesTokenAndFilter(t *testing.T) {
+func TestListPlayerMatchesQuery(t *testing.T) {
 	st := &fakeStore{}
 	s := newServer(st, fakeSyncer{})
-	_, err := s.ListPlayerMatches(context.Background(),
-		&v1.ListPlayerMatchesRequest{AccountId: 1, HeroId: 13, PageToken: "101"})
+	_, err := s.ListPlayerMatches(context.Background(), &v1.ListPlayerMatchesRequest{
+		AccountId: 1, HeroId: 13, PageToken: "-5_101", Sort: v1.MatchSort_MATCH_SORT_NET_WORTH, Ascending: true,
+		Result: v1.MatchResult_MATCH_RESULT_WIN, GameMode: 4, MetaStatus: v1.MetaStatus_META_STATUS_OK,
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if st.gotBefore != 101 || st.gotHero != 13 {
-		t.Errorf("store got before=%d hero=%d, want 101 and 13", st.gotBefore, st.gotHero)
+	want := db.MatchQuery{
+		AccountID: 1, HeroID: 13, Result: v1.MatchResult_MATCH_RESULT_WIN, GameMode: 4,
+		MetaStatus: v1.MetaStatus_META_STATUS_OK, Sort: v1.MatchSort_MATCH_SORT_NET_WORTH, Ascending: true,
+		After: &db.MatchCursor{Value: -5, MatchID: 101}, Limit: 50,
+	}
+	got := st.gotQuery
+	if got.After == nil || *got.After != *want.After {
+		t.Fatalf("cursor = %+v, want %+v", got.After, want.After)
+	}
+	got.After, want.After = nil, nil
+	if got != want {
+		t.Errorf("query = %+v, want %+v", got, want)
+	}
+}
+
+func TestListPlayerMatchesRejectsBadInput(t *testing.T) {
+	cases := map[string]*v1.ListPlayerMatchesRequest{
+		"garbage token":       {AccountId: 1, PageToken: "garbage"},
+		"token without id":    {AccountId: 1, PageToken: "5_"},
+		"old token format":    {AccountId: 1, PageToken: "101"},
+		"unknown sort":        {AccountId: 1, Sort: 99},
+		"unknown result":      {AccountId: 1, Result: 7},
+		"unknown meta status": {AccountId: 1, MetaStatus: 9},
+	}
+	for name, req := range cases {
+		st := &fakeStore{}
+		_, err := newServer(st, fakeSyncer{}).ListPlayerMatches(context.Background(), req)
+		if got := status.Code(err); got != codes.InvalidArgument {
+			t.Errorf("%s: code = %s, want InvalidArgument", name, got)
+		}
+	}
+	// A query the store rejects is the client's fault, not an internal error.
+	st := &fakeStore{err: fmt.Errorf("%w: sort", db.ErrBadQuery)}
+	_, err := newServer(st, fakeSyncer{}).ListPlayerMatches(context.Background(), &v1.ListPlayerMatchesRequest{AccountId: 1})
+	if got := status.Code(err); got != codes.InvalidArgument {
+		t.Errorf("store ErrBadQuery: code = %s, want InvalidArgument", got)
+	}
+}
+
+func TestListPlayerHeroStats(t *testing.T) {
+	heroes := []*v1.HeroStats{{HeroId: 13, Matches: 2}, {HeroId: 7, Matches: 1}}
+	s := newServer(&fakeStore{heroes: heroes}, fakeSyncer{})
+	resp, err := s.ListPlayerHeroStats(context.Background(), &v1.ListPlayerHeroStatsRequest{AccountId: 1})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(resp.GetHeroes()) != 2 || resp.GetHeroes()[0].GetHeroId() != 13 {
+		t.Errorf("heroes = %v, want the store rows in order", resp.GetHeroes())
 	}
 
-	_, err = s.ListPlayerMatches(context.Background(),
-		&v1.ListPlayerMatchesRequest{AccountId: 1, PageToken: "garbage"})
-	if got := status.Code(err); got != codes.InvalidArgument {
-		t.Errorf("bad token: code = %s, want InvalidArgument", got)
+	s = newServer(&fakeStore{err: errors.New("connection refused")}, fakeSyncer{})
+	_, err = s.ListPlayerHeroStats(context.Background(), &v1.ListPlayerHeroStatsRequest{AccountId: 1})
+	if got := status.Code(err); got != codes.Internal {
+		t.Errorf("store failure: code = %s, want Internal", got)
 	}
 }
 

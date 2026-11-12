@@ -2,7 +2,11 @@
 // install into internal/gamedata/snapshot/gamedata.json (embedded into the
 // server). Re-run after game patches.
 //
-//	go run ./tools/gamedata [-game ".../Deadlock/game/citadel"] [-check file.meta]
+//	go run ./tools/gamedata [-game ".../Deadlock/game/citadel"] [-check file.meta] [-icons data/icons]
+//
+// -icons also writes hero/item/ability icons as PNG into that directory
+// (served by the web UI from ICONS_DIR). Icons are game art: they stay out
+// of git (data/ is ignored) and are re-extracted from the local install.
 package main
 
 import (
@@ -24,6 +28,8 @@ func main() {
 	game := flag.String("game", defaultGameDir, "path to Deadlock/game/citadel")
 	out := flag.String("o", "internal/gamedata/snapshot/gamedata.json", "output file")
 	check := flag.String("check", "", "optional .meta file: report hero/item ids missing from the snapshot")
+	icons := flag.String("icons", "", "optional directory: also extract icons as PNG there")
+	iconSize := flag.Int("icon-size", 96, "max icon side in px (2x the largest size the UI shows)")
 	flag.Parse()
 
 	d, err := gamedata.Extract(*game)
@@ -49,6 +55,15 @@ func main() {
 		log.Fatal(err)
 	}
 	fmt.Println("wrote", *out)
+
+	if *icons != "" {
+		st, err := gamedata.ExtractIcons(*game, d, *icons, *iconSize)
+		fmt.Printf("icons: %d written, %d without an image, %d failed -> %s\n", st.Written, st.NoImage, st.Failed, *icons)
+		if err != nil {
+			// Not fatal: a patch may break a few textures; the UI shows a placeholder.
+			log.Printf("icons: %v", err)
+		}
+	}
 
 	if *check != "" {
 		mi, err := meta.ReadFile(*check)

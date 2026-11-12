@@ -3,6 +3,8 @@ package db
 import (
 	"context"
 	"errors"
+	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/jackc/pgx/v5"
@@ -18,6 +20,13 @@ var metaStatusToAPI = map[string]v1.MetaStatus{
 	MetaOK:      v1.MetaStatus_META_STATUS_OK,
 	MetaExpired: v1.MetaStatus_META_STATUS_EXPIRED,
 	MetaFailed:  v1.MetaStatus_META_STATUS_FAILED,
+}
+
+var metaStatusFromAPI = map[v1.MetaStatus]string{
+	v1.MetaStatus_META_STATUS_PENDING: MetaPending,
+	v1.MetaStatus_META_STATUS_OK:      MetaOK,
+	v1.MetaStatus_META_STATUS_EXPIRED: MetaExpired,
+	v1.MetaStatus_META_STATUS_FAILED:  MetaFailed,
 }
 
 var syncStateToAPI = map[string]v1.SyncState{
@@ -61,22 +70,125 @@ func (d *DB) GetPlayer(ctx context.Context, accountID uint32) (*v1.Player, error
 	return &p, nil
 }
 
-// ListPlayerMatches pages by match_id descending; beforeMatchID = 0 means
-// start from the newest.
-func (d *DB) ListPlayerMatches(ctx context.Context, accountID uint32, heroID uint32, beforeMatchID uint64, limit int) ([]*v1.PlayerMatchRow, error) {
-	rows, err := d.Pool.Query(ctx, `
+// MatchQuery selects a page of a player's match history.
+type MatchQuery struct {
+	AccountID uint32
+
+	// Filters; zero values mean "any".
+	HeroID     uint32
+	Result     v1.MatchResult
+	GameMode   int32
+	MetaStatus v1.MetaStatus
+
+	Sort      v1.MatchSort // UNSPECIFIED = START_TIME
+	Ascending bool
+	// After continues a previous page: rows strictly after this
+	// (sort value, match id) in the requested order. Nil = first page.
+	After *MatchCursor
+	Limit int
+}
+
+// MatchCursor is the position of the last row of a page.
+type MatchCursor struct {
+	Value   int64
+	MatchID uint64
+}
+
+// matchSortExprs maps a sort key to its SQL expression. Only these constants
+// are ever concatenated into the query; values always go as parameters.
+var matchSortExprs = map[v1.MatchSort]string{
+	v1.MatchSort_MATCH_SORT_UNSPECIFIED: "extract(epoch FROM m.start_time)::bigint",
+	v1.MatchSort_MATCH_SORT_START_TIME:  "extract(epoch FROM m.start_time)::bigint",
+	v1.MatchSort_MATCH_SORT_DURATION:    "m.duration_s",
+	v1.MatchSort_MATCH_SORT_KILLS:       "pm.kills",
+	v1.MatchSort_MATCH_SORT_DEATHS:      "pm.deaths",
+	v1.MatchSort_MATCH_SORT_ASSISTS:     "pm.assists",
+	v1.MatchSort_MATCH_SORT_NET_WORTH:   "pm.net_worth",
+	v1.MatchSort_MATCH_SORT_LAST_HITS:   "pm.last_hits",
+	v1.MatchSort_MATCH_SORT_HERO_LEVEL:  "pm.hero_level",
+}
+
+// MatchSortValue is the value of a row that a cursor stores for this sort.
+func MatchSortValue(r *v1.PlayerMatchRow, s v1.MatchSort) int64 {
+	switch s {
+	case v1.MatchSort_MATCH_SORT_DURATION:
+		return int64(r.GetDurationS())
+	case v1.MatchSort_MATCH_SORT_KILLS:
+		return int64(r.GetKills())
+	case v1.MatchSort_MATCH_SORT_DEATHS:
+		return int64(r.GetDeaths())
+	case v1.MatchSort_MATCH_SORT_ASSISTS:
+		return int64(r.GetAssists())
+	case v1.MatchSort_MATCH_SORT_NET_WORTH:
+		return int64(r.GetNetWorth())
+	case v1.MatchSort_MATCH_SORT_LAST_HITS:
+		return int64(r.GetLastHits())
+	case v1.MatchSort_MATCH_SORT_HERO_LEVEL:
+		return int64(r.GetHeroLevel())
+	default:
+		return r.GetStartTime()
+	}
+}
+
+// ErrBadQuery is returned for a sort or filter value the query does not know.
+var ErrBadQuery = errors.New("bad query")
+
+// matchFilter is the shared WHERE clause of ListPlayerMatches and its count.
+const matchFilter = `
+		WHERE pm.account_id = $1
+		  AND ($2 = 0 OR pm.hero_id = $2)
+		  AND ($3 = 0 OR pm.won = ($3 = 1))
+		  AND ($4 = 0 OR m.game_mode = $4)
+		  AND ($5 = '' OR m.meta_status = $5)`
+
+// ListPlayerMatches returns one page of a player's matches and the number of
+// rows matching the filters across all pages. Pages are keyset by
+// (sort value, match_id), so they stay stable while new matches arrive.
+func (d *DB) ListPlayerMatches(ctx context.Context, q MatchQuery) ([]*v1.PlayerMatchRow, int, error) {
+	expr, ok := matchSortExprs[q.Sort]
+	if !ok {
+		return nil, 0, fmt.Errorf("%w: sort %v", ErrBadQuery, q.Sort)
+	}
+	meta := ""
+	if q.MetaStatus != v1.MetaStatus_META_STATUS_UNSPECIFIED {
+		if meta, ok = metaStatusFromAPI[q.MetaStatus]; !ok {
+			return nil, 0, fmt.Errorf("%w: meta status %v", ErrBadQuery, q.MetaStatus)
+		}
+	}
+	if q.Result < v1.MatchResult_MATCH_RESULT_UNSPECIFIED || q.Result > v1.MatchResult_MATCH_RESULT_LOSS {
+		return nil, 0, fmt.Errorf("%w: result %v", ErrBadQuery, q.Result)
+	}
+	args := []any{q.AccountID, q.HeroID, int32(q.Result), q.GameMode, meta}
+
+	var total int
+	if err := d.Pool.QueryRow(ctx, `
+		SELECT count(*)
+		FROM player_matches pm
+		JOIN matches m ON m.match_id = pm.match_id`+matchFilter, args...).Scan(&total); err != nil {
+		return nil, 0, err
+	}
+
+	dir, cmp := "DESC", "<"
+	if q.Ascending {
+		dir, cmp = "ASC", ">"
+	}
+	cursor := ""
+	if q.After != nil {
+		cursor = " AND (" + expr + ", m.match_id) " + cmp + " ($6, $7)"
+		args = append(args, q.After.Value, q.After.MatchID)
+	}
+	args = append(args, q.Limit)
+	sql := `
 		SELECT m.match_id, m.start_time, m.duration_s, m.game_mode, m.match_mode,
 		       pm.hero_id, pm.team, pm.won, pm.kills, pm.deaths, pm.assists,
 		       pm.net_worth, pm.last_hits, pm.denies, pm.hero_level, m.meta_status
 		FROM player_matches pm
-		JOIN matches m ON m.match_id = pm.match_id
-		WHERE pm.account_id = $1
-		  AND ($2 = 0 OR pm.hero_id = $2)
-		  AND ($3 = 0 OR m.match_id < $3)
-		ORDER BY m.match_id DESC
-		LIMIT $4`, accountID, heroID, beforeMatchID, limit)
+		JOIN matches m ON m.match_id = pm.match_id` + matchFilter + cursor + `
+		ORDER BY ` + expr + ` ` + dir + `, m.match_id ` + dir + `
+		LIMIT $` + strconv.Itoa(len(args))
+	rows, err := d.Pool.Query(ctx, sql, args...)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 	defer rows.Close()
 
@@ -90,11 +202,45 @@ func (d *DB) ListPlayerMatches(ctx context.Context, accountID uint32, heroID uin
 		if err := rows.Scan(&r.MatchId, &start, &r.DurationS, &r.GameMode, &r.MatchMode,
 			&r.HeroId, &r.Team, &r.Won, &r.Kills, &r.Deaths, &r.Assists,
 			&r.NetWorth, &r.LastHits, &r.Denies, &r.HeroLevel, &status); err != nil {
-			return nil, err
+			return nil, 0, err
 		}
 		r.StartTime = start.Unix()
 		r.MetaStatus = metaStatusToAPI[status]
 		out = append(out, &r)
+	}
+	return out, total, rows.Err()
+}
+
+// ListPlayerHeroStats sums a player's match history per hero, most played
+// first. It needs only match history, not metadata. An unknown player has no
+// rows.
+func (d *DB) ListPlayerHeroStats(ctx context.Context, accountID uint32) ([]*v1.HeroStats, error) {
+	rows, err := d.Pool.Query(ctx, `
+		SELECT pm.hero_id, count(*), count(*) FILTER (WHERE pm.won),
+		       sum(pm.kills), sum(pm.deaths), sum(pm.assists),
+		       sum(pm.net_worth), sum(pm.last_hits), sum(m.duration_s), max(m.start_time)
+		FROM player_matches pm
+		JOIN matches m ON m.match_id = pm.match_id
+		WHERE pm.account_id = $1
+		GROUP BY pm.hero_id
+		ORDER BY count(*) DESC, pm.hero_id`, accountID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var out []*v1.HeroStats
+	for rows.Next() {
+		var (
+			h    v1.HeroStats
+			last time.Time
+		)
+		if err := rows.Scan(&h.HeroId, &h.Matches, &h.Wins, &h.Kills, &h.Deaths, &h.Assists,
+			&h.NetWorth, &h.LastHits, &h.DurationS, &last); err != nil {
+			return nil, err
+		}
+		h.LastPlayed = last.Unix()
+		out = append(out, &h)
 	}
 	return out, rows.Err()
 }

@@ -19,6 +19,11 @@ service StatsService {
     option (google.api.http) = {get: "/v1/players/{account_id}/matches"};
   }
 
+  // Per-hero totals of a player over all synced matches, most played first.
+  rpc ListPlayerHeroStats(ListPlayerHeroStatsRequest) returns (ListPlayerHeroStatsResponse) {
+    option (google.api.http) = {get: "/v1/players/{account_id}/heroes"};
+  }
+
   // Pull fresh match history and queue metadata downloads for new matches.
   rpc SyncPlayer(SyncPlayerRequest) returns (SyncPlayerResponse) {
     option (google.api.http) = {
@@ -94,7 +99,8 @@ enum SyncState {
 // ---------- player ----------
 
 message GetPlayerRequest {
-  uint32 account_id = 1;
+  // Account id or SteamID64. Widened from uint32, which is wire-compatible.
+  uint64 account_id = 1;
 }
 
 message Player {
@@ -108,16 +114,42 @@ message Player {
   uint32 wins = 8;
 }
 
+// Sort key of ListPlayerMatches. Ties are broken by match_id.
+enum MatchSort {
+  MATCH_SORT_UNSPECIFIED = 0; // same as START_TIME
+  MATCH_SORT_START_TIME = 1;
+  MATCH_SORT_DURATION = 2;
+  MATCH_SORT_KILLS = 3;
+  MATCH_SORT_DEATHS = 4;
+  MATCH_SORT_ASSISTS = 5;
+  MATCH_SORT_NET_WORTH = 6;
+  MATCH_SORT_LAST_HITS = 7;
+  MATCH_SORT_HERO_LEVEL = 8;
+}
+
+enum MatchResult {
+  MATCH_RESULT_UNSPECIFIED = 0; // any
+  MATCH_RESULT_WIN = 1;
+  MATCH_RESULT_LOSS = 2;
+}
+
 message ListPlayerMatchesRequest {
-  uint32 account_id = 1;
+  // Account id or SteamID64. Widened from uint32, which is wire-compatible.
+  uint64 account_id = 1;
   uint32 page_size = 2;       // default 50, max 200
   string page_token = 3;      // opaque, from previous response
   uint32 hero_id = 4;         // optional filter
+  MatchSort sort = 5;
+  bool ascending = 6;         // default: largest / newest first
+  MatchResult result = 7;     // optional filter
+  int32 game_mode = 8;        // optional filter, 0 = any
+  MetaStatus meta_status = 9; // optional filter, UNSPECIFIED = any
 }
 
 message ListPlayerMatchesResponse {
   repeated PlayerMatchRow matches = 1;
   string next_page_token = 2;
+  uint32 total = 3;           // rows matching the filters, all pages
 }
 
 message PlayerMatchRow {
@@ -139,8 +171,32 @@ message PlayerMatchRow {
   MetaStatus meta_status = 16;
 }
 
+message ListPlayerHeroStatsRequest {
+  // Account id or SteamID64.
+  uint64 account_id = 1;
+}
+
+message ListPlayerHeroStatsResponse {
+  repeated HeroStats heroes = 1;
+}
+
+// Totals over the player's matches on one hero; averages are total / matches.
+message HeroStats {
+  uint32 hero_id = 1;
+  uint32 matches = 2;
+  uint32 wins = 3;
+  uint32 kills = 4;
+  uint32 deaths = 5;
+  uint32 assists = 6;
+  uint32 net_worth = 7;
+  uint32 last_hits = 8;
+  uint32 duration_s = 9;      // total time played
+  int64 last_played = 10;     // unix seconds, start of the latest match
+}
+
 message SyncPlayerRequest {
-  uint32 account_id = 1;
+  // Account id or SteamID64. Widened from uint32, which is wire-compatible.
+  uint64 account_id = 1;
 }
 
 message SyncPlayerResponse {
@@ -187,7 +243,8 @@ message MatchPlayer {
 
 message GetPlayerMatchRequest {
   uint64 match_id = 1;
-  uint32 account_id = 2;
+  // Account id or SteamID64. Widened from uint32, which is wire-compatible.
+  uint64 account_id = 2;
 }
 
 message PlayerMatch {

@@ -48,7 +48,7 @@ test("unknown player offers a sync; bad ids and unknown matches are 404", async 
 });
 
 test("garbage in the match list URL falls back to defaults", async ({ page }) => {
-  const res = await page.goto(`/players/${ACCOUNT}?sort=bogus&dir=up&result=draw&page=xyz&hero=abc`);
+  const res = await page.goto(`/players/${ACCOUNT}/matches?sort=bogus&dir=up&result=draw&page=xyz&hero=abc`);
   expect(res?.status()).toBe(200);
   await expect(page.getByRole("table", { name: t("matches.title"), exact: true })).toBeVisible();
 });

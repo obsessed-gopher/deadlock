@@ -17,7 +17,8 @@ export async function syncPlayer(accountId: string, _prev: SyncState | null): Pr
   if (!isId(accountId)) return { ok: false, message: t("error.badId") };
   try {
     const r = await api.sync(accountId);
-    revalidatePath(`/players/${accountId}`);
+    // All profile tabs (progress, heroes, matches) live under this path.
+    revalidatePath(`/players/${accountId}`, "layout");
     return { ok: true, message: t("player.syncDone", { new: r.newMatches, queued: r.queuedMeta }) };
   } catch (err) {
     const kind = errorKind(err);

@@ -26,6 +26,7 @@ type Store interface {
 	GetPlayer(ctx context.Context, accountID uint32) (*v1.Player, error)
 	ListPlayerMatches(ctx context.Context, q db.MatchQuery) ([]*v1.PlayerMatchRow, int, error)
 	ListPlayerHeroStats(ctx context.Context, accountID uint32) ([]*v1.HeroStats, error)
+	ListPlayerMatchFacts(ctx context.Context, accountID uint32) ([]*v1.MatchFacts, error)
 	GetMatch(ctx context.Context, matchID uint64) (*v1.Match, error)
 	GetPlayerMatch(ctx context.Context, matchID uint64, accountID uint32) (*v1.PlayerMatch, error)
 }
@@ -138,6 +139,23 @@ func (s *Server) ListPlayerHeroStats(ctx context.Context, req *v1.ListPlayerHero
 		return nil, toStatus(err)
 	}
 	return &v1.ListPlayerHeroStatsResponse{Heroes: heroes}, nil
+}
+
+// ListPlayerMatchFacts implements v1.StatsServiceServer.
+func (s *Server) ListPlayerMatchFacts(ctx context.Context, req *v1.ListPlayerMatchFactsRequest) (*v1.ListPlayerMatchFactsResponse, error) {
+	id, err := accountID(req.GetAccountId())
+	if err != nil {
+		return nil, err
+	}
+	facts, err := s.store.ListPlayerMatchFacts(ctx, id)
+	if err != nil {
+		return nil, toStatus(err)
+	}
+	return &v1.ListPlayerMatchFactsResponse{
+		Matches:     facts,
+		SoulMarksS:  db.SoulMarksS,
+		SoulTargets: db.SoulTargets,
+	}, nil
 }
 
 // SyncPlayer implements v1.StatsServiceServer.

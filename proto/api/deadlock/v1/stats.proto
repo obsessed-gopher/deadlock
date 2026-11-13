@@ -24,6 +24,12 @@ service StatsService {
     option (google.api.http) = {get: "/v1/players/{account_id}/heroes"};
   }
 
+  // Compact facts of every match of a player, oldest first: the input of
+  // client-side trends (progress, development speed, sessions, records).
+  rpc ListPlayerMatchFacts(ListPlayerMatchFactsRequest) returns (ListPlayerMatchFactsResponse) {
+    option (google.api.http) = {get: "/v1/players/{account_id}/facts"};
+  }
+
   // Pull fresh match history and queue metadata downloads for new matches.
   rpc SyncPlayer(SyncPlayerRequest) returns (SyncPlayerResponse) {
     option (google.api.http) = {
@@ -192,6 +198,54 @@ message HeroStats {
   uint32 last_hits = 8;
   uint32 duration_s = 9;      // total time played
   int64 last_played = 10;     // unix seconds, start of the latest match
+}
+
+message ListPlayerMatchFactsRequest {
+  // Account id or SteamID64.
+  uint64 account_id = 1;
+}
+
+message ListPlayerMatchFactsResponse {
+  repeated MatchFacts matches = 1;   // oldest first
+  repeated uint32 soul_marks_s = 2;  // game times of MatchFacts.souls_at
+  repeated uint32 soul_targets = 3;  // soul totals of MatchFacts.time_to_souls_s
+}
+
+message MatchFacts {
+  uint64 match_id = 1;
+  int64 start_time = 2;       // unix seconds
+  uint32 duration_s = 3;
+  int32 game_mode = 4;
+  int32 match_mode = 5;
+  uint32 hero_id = 6;
+  bool won = 7;
+  uint32 kills = 8;
+  uint32 deaths = 9;
+  uint32 assists = 10;
+  uint32 net_worth = 11;
+  uint32 last_hits = 12;
+
+  // The rest comes from metadata: zero when has_meta is false.
+  bool has_meta = 13;
+  uint32 player_damage = 14;
+  uint32 player_healing = 15;
+  // Net worth at each soul_marks_s; 0 when the match ended earlier.
+  repeated uint32 souls_at = 16;
+  // Seconds to reach each soul_targets; 0 when never reached.
+  repeated uint32 time_to_souls_s = 17;
+  SoulSources souls_from = 18;
+  // Average rank badge of both teams (tier * 10 + subtier); 0 = not reported.
+  // Valve writes no per-player rank into metadata.
+  uint32 lobby_badge = 19;
+}
+
+// Souls earned by source over the whole match.
+message SoulSources {
+  uint32 heroes = 1;
+  uint32 lane_creeps = 2;
+  uint32 neutrals = 3;
+  uint32 bosses = 4;
+  uint32 treasure = 5;        // urns, crates
 }
 
 message SyncPlayerRequest {

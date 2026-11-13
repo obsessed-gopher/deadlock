@@ -121,6 +121,11 @@ func (d *DB) MarkMetaFailure(ctx context.Context, matchID uint64, expired bool, 
 	return err
 }
 
+// DeriveVersion is the version of what StoreMeta derives from metadata. Bump
+// it when the derivation changes (a new column, a fix): on start the syncer
+// re-derives every stored match from meta_raw, without downloads.
+const DeriveVersion = 1
+
 // StoreMeta saves the raw metadata and (re)derives all per-player tables in
 // one transaction. Safe to call again for the same match.
 func (d *DB) StoreMeta(ctx context.Context, matchID uint64, raw []byte, version uint32, mi *pb.CMsgMatchMetaDataContents_MatchInfo) error {
@@ -130,97 +135,149 @@ func (d *DB) StoreMeta(ctx context.Context, matchID uint64, raw []byte, version 
 	return pgx.BeginFunc(ctx, d.Pool, func(tx pgx.Tx) error {
 		tag, err := tx.Exec(ctx, `
 			UPDATE matches SET
-			    duration_s = $2, winning_team = $3, game_mode = $4, match_mode = $5,
-			    start_time = CASE WHEN $6::bigint > 0 THEN to_timestamp($6::bigint) ELSE start_time END,
 			    meta_status = 'ok', meta_error = '', meta_fetched_at = now(),
-			    meta_raw = $7, meta_version = $8
-			WHERE match_id = $1`,
-			matchID, mi.GetDurationS(), int32(mi.GetWinningTeam()), int32(mi.GetGameMode()),
-			int32(mi.GetMatchMode()), int64(mi.GetStartTime()), raw, version)
+			    meta_raw = $2, meta_version = $3
+			WHERE match_id = $1`, matchID, raw, version)
 		if err != nil {
 			return err
 		}
 		if tag.RowsAffected() == 0 {
 			return errors.New("store meta: match row missing")
 		}
-
-		for _, t := range []string{"match_players", "player_stats", "item_events", "deaths"} {
-			if _, err := tx.Exec(ctx, `DELETE FROM `+t+` WHERE match_id = $1`, matchID); err != nil {
-				return err
-			}
-		}
-
-		var players, stats, items, deaths [][]any
-		for _, p := range mi.GetPlayers() {
-			slot := int16(p.GetPlayerSlot())
-			var dmg, heal uint32
-			if ss := p.GetStats(); len(ss) > 0 {
-				last := ss[len(ss)-1]
-				dmg, heal = last.GetPlayerDamage(), last.GetPlayerHealing()
-			}
-			players = append(players, []any{
-				matchID, slot, int64(p.GetAccountId()), int16(p.GetTeam()), int32(p.GetHeroId()),
-				int16(p.GetAssignedLane()), int32(p.GetKills()), int32(p.GetDeaths()), int32(p.GetAssists()),
-				int32(p.GetNetWorth()), int32(p.GetLastHits()), int32(p.GetDenies()), int32(p.GetLevel()),
-				int32(dmg), int32(heal), int32(p.GetAbandonMatchTimeS()),
-			})
-			for _, s := range p.GetStats() {
-				stats = append(stats, []any{
-					matchID, slot, int32(s.GetTimeStampS()), int32(s.GetNetWorth()), int32(s.GetLevel()),
-					int32(s.GetKills()), int32(s.GetDeaths()), int32(s.GetAssists()),
-					int32(s.GetCreepKills()), int32(s.GetNeutralKills()), int32(s.GetDenies()),
-					int32(s.GetPlayerDamage()), int32(s.GetPlayerDamageTaken()),
-					int32(s.GetPlayerHealing()), int32(s.GetSelfHealing()),
-					int32(s.GetGoldPlayer()), int32(s.GetGoldLaneCreep()), int32(s.GetGoldNeutralCreep()),
-					int32(s.GetGoldBoss()), int32(s.GetGoldTreasure()), int32(s.GetGoldDeathLoss()),
-					int32(s.GetShotsHit()), int32(s.GetShotsMissed()),
-				})
-			}
-			for i, it := range p.GetItems() {
-				items = append(items, []any{
-					matchID, slot, int16(i), int32(it.GetGameTimeS()), int64(it.GetItemId()),
-					int32(it.GetSoldTimeS()), int64(it.GetUpgradeId()), int32(it.GetFlags()),
-				})
-			}
-			for i, dd := range p.GetDeathDetails() {
-				pos, kp := dd.GetDeathPos(), dd.GetKillerPos()
-				deaths = append(deaths, []any{
-					matchID, slot, int16(i), int32(dd.GetGameTimeS()), int16(dd.GetKillerPlayerSlot()),
-					pos.GetX(), pos.GetY(), pos.GetZ(), kp.GetX(), kp.GetY(), kp.GetZ(),
-					int32(dd.GetDeathDurationS()), dd.GetTimeToKillS(),
-				})
-			}
-		}
-
-		copies := []struct {
-			table string
-			cols  []string
-			rows  [][]any
-		}{
-			{"match_players", []string{
-				"match_id", "slot", "account_id", "team", "hero_id", "lane", "kills", "deaths",
-				"assists", "net_worth", "last_hits", "denies", "level", "player_damage", "player_healing", "abandon_time_s",
-			}, players},
-			{"player_stats", []string{
-				"match_id", "slot", "t", "net_worth", "level", "kills", "deaths", "assists",
-				"creep_kills", "neutral_kills", "denies", "player_damage", "player_damage_taken", "player_healing",
-				"self_healing", "gold_player", "gold_lane_creep", "gold_neutral_creep", "gold_boss", "gold_treasure",
-				"gold_death_loss", "shots_hit", "shots_missed",
-			}, stats},
-			{"item_events", []string{"match_id", "slot", "seq", "t", "item_id", "sold_t", "upgrade_id", "flags"}, items},
-			{"deaths", []string{
-				"match_id", "slot", "seq", "t", "killer_slot", "x", "y", "z",
-				"killer_x", "killer_y", "killer_z", "respawn_s", "ttk_s",
-			}, deaths},
-		}
-		for _, c := range copies {
-			if len(c.rows) == 0 {
-				continue
-			}
-			if _, err := tx.CopyFrom(ctx, pgx.Identifier{c.table}, c.cols, pgx.CopyFromRows(c.rows)); err != nil {
-				return fmt.Errorf("copy %s: %w", c.table, err)
-			}
-		}
-		return nil
+		return derive(ctx, tx, matchID, mi)
 	})
+}
+
+// NextStaleMeta returns up to limit ingested matches with id > after whose
+// derived tables are older than DeriveVersion, by match id.
+func (d *DB) NextStaleMeta(ctx context.Context, after uint64, limit int) ([]uint64, error) {
+	rows, err := d.Pool.Query(ctx, `
+		SELECT match_id FROM matches
+		WHERE meta_status = 'ok' AND meta_raw IS NOT NULL AND derive_version < $1 AND match_id > $2
+		ORDER BY match_id LIMIT $3`, DeriveVersion, after, limit)
+	if err != nil {
+		return nil, err
+	}
+	return pgx.CollectRows(rows, pgx.RowTo[uint64])
+}
+
+// MetaRaw returns the stored .meta file of a match exactly as downloaded, or
+// ErrNotFound.
+func (d *DB) MetaRaw(ctx context.Context, matchID uint64) ([]byte, error) {
+	var raw []byte
+	err := d.Pool.QueryRow(ctx, `SELECT meta_raw FROM matches WHERE match_id = $1 AND meta_raw IS NOT NULL`, matchID).Scan(&raw)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, ErrNotFound
+	}
+	return raw, err
+}
+
+// RederiveMeta rebuilds the derived tables of an ingested match from its
+// decoded meta_raw. meta_raw itself is never touched.
+func (d *DB) RederiveMeta(ctx context.Context, matchID uint64, mi *pb.CMsgMatchMetaDataContents_MatchInfo) error {
+	if mi.GetMatchId() != 0 && mi.GetMatchId() != matchID {
+		return fmt.Errorf("rederive: meta is for match %d, expected %d", mi.GetMatchId(), matchID)
+	}
+	return pgx.BeginFunc(ctx, d.Pool, func(tx pgx.Tx) error {
+		return derive(ctx, tx, matchID, mi)
+	})
+}
+
+// derive writes everything computed from metadata: the match header fields
+// it refines and all per-player tables.
+func derive(ctx context.Context, tx pgx.Tx, matchID uint64, mi *pb.CMsgMatchMetaDataContents_MatchInfo) error {
+	tag, err := tx.Exec(ctx, `
+		UPDATE matches SET
+		    duration_s = $2, winning_team = $3, game_mode = $4, match_mode = $5,
+		    start_time = CASE WHEN $6::bigint > 0 THEN to_timestamp($6::bigint) ELSE start_time END,
+		    badge_team0 = $7, badge_team1 = $8, derive_version = $9
+		WHERE match_id = $1`,
+		matchID, mi.GetDurationS(), int32(mi.GetWinningTeam()), int32(mi.GetGameMode()),
+		int32(mi.GetMatchMode()), int64(mi.GetStartTime()),
+		int16(mi.GetAverageBadgeTeam0()), int16(mi.GetAverageBadgeTeam1()), DeriveVersion)
+	if err != nil {
+		return err
+	}
+	if tag.RowsAffected() == 0 {
+		return errors.New("derive: match row missing")
+	}
+
+	for _, t := range []string{"match_players", "player_stats", "item_events", "deaths"} {
+		if _, err := tx.Exec(ctx, `DELETE FROM `+t+` WHERE match_id = $1`, matchID); err != nil {
+			return err
+		}
+	}
+
+	var players, stats, items, deaths [][]any
+	for _, p := range mi.GetPlayers() {
+		slot := int16(p.GetPlayerSlot())
+		var dmg, heal uint32
+		if ss := p.GetStats(); len(ss) > 0 {
+			last := ss[len(ss)-1]
+			dmg, heal = last.GetPlayerDamage(), last.GetPlayerHealing()
+		}
+		players = append(players, []any{
+			matchID, slot, int64(p.GetAccountId()), int16(p.GetTeam()), int32(p.GetHeroId()),
+			int16(p.GetAssignedLane()), int32(p.GetKills()), int32(p.GetDeaths()), int32(p.GetAssists()),
+			int32(p.GetNetWorth()), int32(p.GetLastHits()), int32(p.GetDenies()), int32(p.GetLevel()),
+			int32(dmg), int32(heal), int32(p.GetAbandonMatchTimeS()),
+		})
+		for _, s := range p.GetStats() {
+			stats = append(stats, []any{
+				matchID, slot, int32(s.GetTimeStampS()), int32(s.GetNetWorth()), int32(s.GetLevel()),
+				int32(s.GetKills()), int32(s.GetDeaths()), int32(s.GetAssists()),
+				int32(s.GetCreepKills()), int32(s.GetNeutralKills()), int32(s.GetDenies()),
+				int32(s.GetPlayerDamage()), int32(s.GetPlayerDamageTaken()),
+				int32(s.GetPlayerHealing()), int32(s.GetSelfHealing()),
+				int32(s.GetGoldPlayer()), int32(s.GetGoldLaneCreep()), int32(s.GetGoldNeutralCreep()),
+				int32(s.GetGoldBoss()), int32(s.GetGoldTreasure()), int32(s.GetGoldDeathLoss()),
+				int32(s.GetShotsHit()), int32(s.GetShotsMissed()),
+			})
+		}
+		for i, it := range p.GetItems() {
+			items = append(items, []any{
+				matchID, slot, int16(i), int32(it.GetGameTimeS()), int64(it.GetItemId()),
+				int32(it.GetSoldTimeS()), int64(it.GetUpgradeId()), int32(it.GetFlags()),
+			})
+		}
+		for i, dd := range p.GetDeathDetails() {
+			pos, kp := dd.GetDeathPos(), dd.GetKillerPos()
+			deaths = append(deaths, []any{
+				matchID, slot, int16(i), int32(dd.GetGameTimeS()), int16(dd.GetKillerPlayerSlot()),
+				pos.GetX(), pos.GetY(), pos.GetZ(), kp.GetX(), kp.GetY(), kp.GetZ(),
+				int32(dd.GetDeathDurationS()), dd.GetTimeToKillS(),
+			})
+		}
+	}
+
+	copies := []struct {
+		table string
+		cols  []string
+		rows  [][]any
+	}{
+		{"match_players", []string{
+			"match_id", "slot", "account_id", "team", "hero_id", "lane", "kills", "deaths",
+			"assists", "net_worth", "last_hits", "denies", "level", "player_damage", "player_healing", "abandon_time_s",
+		}, players},
+		{"player_stats", []string{
+			"match_id", "slot", "t", "net_worth", "level", "kills", "deaths", "assists",
+			"creep_kills", "neutral_kills", "denies", "player_damage", "player_damage_taken", "player_healing",
+			"self_healing", "gold_player", "gold_lane_creep", "gold_neutral_creep", "gold_boss", "gold_treasure",
+			"gold_death_loss", "shots_hit", "shots_missed",
+		}, stats},
+		{"item_events", []string{"match_id", "slot", "seq", "t", "item_id", "sold_t", "upgrade_id", "flags"}, items},
+		{"deaths", []string{
+			"match_id", "slot", "seq", "t", "killer_slot", "x", "y", "z",
+			"killer_x", "killer_y", "killer_z", "respawn_s", "ttk_s",
+		}, deaths},
+	}
+	for _, c := range copies {
+		if len(c.rows) == 0 {
+			continue
+		}
+		if _, err := tx.CopyFrom(ctx, pgx.Identifier{c.table}, c.cols, pgx.CopyFromRows(c.rows)); err != nil {
+			return fmt.Errorf("copy %s: %w", c.table, err)
+		}
+	}
+	return nil
 }

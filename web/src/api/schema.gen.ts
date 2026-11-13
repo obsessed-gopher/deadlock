@@ -85,6 +85,15 @@ export interface ListPlayerHeroStatsResponse {
   heroes: HeroStats[];
 }
 
+export interface ListPlayerMatchFactsResponse {
+  /** oldest first */
+  matches: MatchFacts[];
+  /** game times of MatchFacts.souls_at */
+  soulMarksS: number[];
+  /** soul totals of MatchFacts.time_to_souls_s */
+  soulTargets: number[];
+}
+
 export interface ListPlayerMatchesResponse {
   matches: PlayerMatchRow[];
   nextPageToken: string;
@@ -101,6 +110,36 @@ export interface Match {
   players: MatchPlayer[];
   startTime: string;
   winningTeam: number;
+}
+
+export interface MatchFacts {
+  assists: number;
+  deaths: number;
+  durationS: number;
+  gameMode: number;
+  /** The rest comes from metadata: zero when has_meta is false. */
+  hasMeta: boolean;
+  heroId: number;
+  kills: number;
+  lastHits: number;
+  /**
+   * Average rank badge of both teams (tier * 10 + subtier); 0 = not reported.
+   * Valve writes no per-player rank into metadata.
+   */
+  lobbyBadge: number;
+  matchId: string;
+  matchMode: number;
+  netWorth: number;
+  playerDamage: number;
+  playerHealing: number;
+  /** Net worth at each soul_marks_s; 0 when the match ended earlier. */
+  soulsAt: number[];
+  soulsFrom: SoulSources | null;
+  /** unix seconds */
+  startTime: string;
+  /** Seconds to reach each soul_targets; 0 when never reached. */
+  timeToSoulsS: number[];
+  won: boolean;
 }
 
 export interface MatchPlayer {
@@ -185,6 +224,16 @@ export interface PlayerMatchRow {
 export interface SlotTimeline {
   points: TimePoint[];
   slot: number;
+}
+
+/** Souls earned by source over the whole match. */
+export interface SoulSources {
+  bosses: number;
+  heroes: number;
+  laneCreeps: number;
+  neutrals: number;
+  /** urns, crates */
+  treasure: number;
 }
 
 export interface StatSnapshot {

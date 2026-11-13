@@ -6,7 +6,7 @@ test.describe("English browser", () => {
   test.use({ locale: "en-US" });
 
   test("interface follows Accept-Language", async ({ page }) => {
-    await page.goto(`/players/${ACCOUNT}`);
+    await page.goto(`/players/${ACCOUNT}/heroes`);
     await expect(page.locator("html")).toHaveAttribute("lang", "en");
     await expect(page.getByRole("heading", { level: 1 })).toHaveText(en.t("player.title", { id: ACCOUNT }));
     await expect(page.getByRole("heading", { name: new RegExp(en.t("heroes.title")) })).toBeVisible();
@@ -14,7 +14,7 @@ test.describe("English browser", () => {
 });
 
 test("header switch changes the interface language and stays on the page", async ({ page }) => {
-  const url = `/players/${ACCOUNT}?sort=souls&dir=desc`;
+  const url = `/players/${ACCOUNT}/matches?sort=souls&dir=desc`;
   await page.goto(url);
   await expect(page.locator("html")).toHaveAttribute("lang", "ru");
   await page.getByRole("button", { name: "EN" }).click();

@@ -8,6 +8,7 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"slices"
 	"testing"
 
 	"github.com/obsessed-gopher/deadlock/internal/pb"
@@ -200,5 +201,51 @@ func TestProcessMetaCancelledIsNotAFailure(t *testing.T) {
 
 	if st.failedMatch != 0 {
 		t.Error("shutdown must not burn a retry attempt")
+	}
+}
+
+// staleStore serves stored .meta files for Rederive and records what was
+// re-derived.
+type staleStore struct {
+	Store
+
+	raws      map[uint64][]byte // match -> meta_raw; derived on rederive
+	rederived []uint64
+	players   int
+}
+
+func (f *staleStore) NextStaleMeta(_ context.Context, after uint64, limit int) ([]uint64, error) {
+	var ids []uint64
+	for id := range f.raws {
+		if id > after && !slices.Contains(f.rederived, id) {
+			ids = append(ids, id)
+		}
+	}
+	slices.Sort(ids)
+	return ids[:min(limit, len(ids))], nil
+}
+
+func (f *staleStore) MetaRaw(_ context.Context, id uint64) ([]byte, error) { return f.raws[id], nil }
+
+func (f *staleStore) RederiveMeta(_ context.Context, id uint64, mi *pb.CMsgMatchMetaDataContents_MatchInfo) error {
+	f.rederived = append(f.rederived, id)
+	f.players = len(mi.GetPlayers())
+	return nil
+}
+
+func TestRederive(t *testing.T) {
+	raw, err := os.ReadFile(testMeta)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// A corrupt file is skipped, not retried forever and not fatal.
+	st := &staleStore{raws: map[uint64][]byte{testMatch: raw, 1: []byte("not zstd")}}
+	s := New(st, nil, nil, slog.New(slog.DiscardHandler))
+	done, failed, err := s.Rederive(context.Background())
+	if err != nil || done != 1 || failed != 1 {
+		t.Fatalf("Rederive = %d, %d, %v; want 1 done, 1 failed", done, failed, err)
+	}
+	if !slices.Equal(st.rederived, []uint64{testMatch}) || st.players != 12 {
+		t.Errorf("rederived %v with %d players", st.rederived, st.players)
 	}
 }

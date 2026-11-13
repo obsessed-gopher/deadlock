@@ -4,6 +4,7 @@ import { test } from "node:test";
 
 import type {
   ListPlayerHeroStatsResponse,
+  ListPlayerMatchFactsResponse,
   ListPlayerMatchesResponse,
   Match,
   Player,
@@ -115,6 +116,24 @@ test("error triggers behave like the real gateway", () => {
   assert.equal(call("POST", "/v1/players/503:sync").status, 503);
   assert.equal(call("GET", "/v1/players/504").status, 404);
   assert.equal(call("POST", "/v1/players/504:sync").status, 503);
+});
+
+test("match facts: the same matches as the history, oldest first", () => {
+  const { status, body } = call<ListPlayerMatchFactsResponse>("GET", `/v1/players/${STEAM_ID64}/facts`);
+  assert.equal(status, 200);
+  const ids = new Set(fx.rows.map((r) => r.matchId));
+  assert.ok(body.matches.length > 0);
+  for (const f of body.matches) assert.ok(ids.has(f.matchId), f.matchId);
+  const starts = body.matches.map((f) => Number(f.startTime));
+  assert.deepEqual(starts, [...starts].sort((a, b) => a - b));
+  assert.deepEqual(body.soulMarksS, [300, 600, 900, 1200]);
+  for (const f of body.matches.filter((x) => x.hasMeta)) {
+    assert.equal(f.soulsAt.length, body.soulMarksS.length);
+    assert.equal(f.timeToSoulsS.length, body.soulTargets.length);
+  }
+  const other = call<ListPlayerMatchFactsResponse>("GET", "/v1/players/42/facts");
+  assert.deepEqual([other.status, other.body.matches], [200, []]);
+  assert.equal(call("GET", "/v1/players/503/facts").status, 503);
 });
 
 test("hero filter and hero stats agree", () => {

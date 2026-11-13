@@ -27,6 +27,7 @@ type Store interface {
 	ListPlayerMatches(ctx context.Context, q db.MatchQuery) ([]*v1.PlayerMatchRow, int, error)
 	ListPlayerHeroStats(ctx context.Context, accountID uint32) ([]*v1.HeroStats, error)
 	ListPlayerMatchFacts(ctx context.Context, accountID uint32) ([]*v1.MatchFacts, error)
+	ListPlayerPeers(ctx context.Context, accountID uint32) (*db.Peers, error)
 	GetMatch(ctx context.Context, matchID uint64) (*v1.Match, error)
 	GetPlayerMatch(ctx context.Context, matchID uint64, accountID uint32) (*v1.PlayerMatch, error)
 }
@@ -155,6 +156,28 @@ func (s *Server) ListPlayerMatchFacts(ctx context.Context, req *v1.ListPlayerMat
 		Matches:     facts,
 		SoulMarksS:  db.SoulMarksS,
 		SoulTargets: db.SoulTargets,
+	}, nil
+}
+
+// ListPlayerPeers implements v1.StatsServiceServer.
+func (s *Server) ListPlayerPeers(ctx context.Context, req *v1.ListPlayerPeersRequest) (*v1.ListPlayerPeersResponse, error) {
+	id, err := accountID(req.GetAccountId())
+	if err != nil {
+		return nil, err
+	}
+	p, err := s.store.ListPlayerPeers(ctx, id)
+	if err != nil {
+		return nil, toStatus(err)
+	}
+	return &v1.ListPlayerPeersResponse{
+		Matches:          p.Matches,
+		Wins:             p.Wins,
+		Allies:           p.Allies,
+		Enemies:          p.Enemies,
+		Heroes:           p.Heroes,
+		PartySizes:       p.PartySizes,
+		PeerMinMatches:   db.PeerMinMatches,
+		FriendMinMatches: db.FriendMinMatches,
 	}, nil
 }
 

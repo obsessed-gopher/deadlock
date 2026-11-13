@@ -4,8 +4,9 @@
 //   node mock/capture.ts [api-url] [account-id]
 //
 // Defaults: http://localhost:8080, 1517505834. Takes the newest 120 history
-// rows, their match facts and full breakdowns (all players) of the 3 newest
-// matches with metadata. Run it only by hand: it talks to a real server.
+// rows, their match facts, the peers aggregate (whole history) and full
+// breakdowns (all players) of the 3 newest matches with metadata. Run it only
+// by hand: it talks to a real server.
 import { mkdir, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 
@@ -13,6 +14,7 @@ import type {
   GameData,
   ListPlayerMatchFactsResponse,
   ListPlayerMatchesResponse,
+  ListPlayerPeersResponse,
   Match,
   PlayerMatch,
 } from "../src/api/schema.gen.ts";
@@ -44,6 +46,8 @@ await save("matches.json", { accountId: Number(account), matches: rows });
 const ids = new Set(rows.map((r) => r.matchId));
 const facts = await get<ListPlayerMatchFactsResponse>(`/v1/players/${account}/facts`);
 await save("facts.json", { ...facts, matches: facts.matches.filter((f) => ids.has(f.matchId)) });
+
+await save("peers.json", await get<ListPlayerPeersResponse>(`/v1/players/${account}/peers`));
 
 const full = rows.filter((r) => r.metaStatus === "META_STATUS_OK").slice(0, FULL_MATCHES);
 for (const r of full) {

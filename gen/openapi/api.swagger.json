@@ -329,6 +329,39 @@
         ]
       }
     },
+    "/v1/players/{accountId}/peers": {
+      "get": {
+        "summary": "People and heroes met in a player's matches with metadata: frequent\nallies and opponents, heroes alongside and against, party sizes.",
+        "operationId": "StatsService_ListPlayerPeers",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ListPlayerPeersResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "accountId",
+            "description": "Account id or SteamID64. Any player seen in a match with metadata works,\ntracked or not.",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "uint64"
+          }
+        ],
+        "tags": [
+          "StatsService"
+        ]
+      }
+    },
     "/v1/players/{accountId}:sync": {
       "post": {
         "summary": "Pull fresh match history and queue metadata downloads for new matches.",
@@ -512,6 +545,32 @@
         }
       }
     },
+    "v1HeroMatchup": {
+      "type": "object",
+      "properties": {
+        "heroId": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "withMatches": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "withWins": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "againstMatches": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "againstWins": {
+          "type": "integer",
+          "format": "int64"
+        }
+      },
+      "description": "A hero seen alongside (on the player's team) or against the player."
+    },
     "v1HeroStats": {
       "type": "object",
       "properties": {
@@ -644,6 +703,59 @@
           "type": "integer",
           "format": "int64",
           "title": "rows matching the filters, all pages"
+        }
+      }
+    },
+    "v1ListPlayerPeersResponse": {
+      "type": "object",
+      "properties": {
+        "matches": {
+          "type": "integer",
+          "format": "int64",
+          "description": "Matches with metadata (rosters known) and the player's wins in them:\nthe base for \"with X\" vs \"without X\"."
+        },
+        "wins": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "allies": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1Peer"
+          },
+          "description": "People met at least peer_min_matches times, most matches first."
+        },
+        "enemies": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1Peer"
+          }
+        },
+        "heroes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1HeroMatchup"
+          },
+          "description": "Every hero seen alongside or against the player."
+        },
+        "partySizes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1PartySize"
+          },
+          "description": "Matches by the number of friends (allies with at least\nfriend_min_matches shared matches) on the player's team."
+        },
+        "peerMinMatches": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "friendMinMatches": {
+          "type": "integer",
+          "format": "int64"
         }
       }
     },
@@ -877,6 +989,60 @@
       ],
       "default": "META_STATUS_UNSPECIFIED",
       "description": "- META_STATUS_PENDING: queued for download\n - META_STATUS_OK: parsed and stored\n - META_STATUS_EXPIRED: Valve no longer hosts the replay\n - META_STATUS_FAILED: gave up after retries"
+    },
+    "v1PartySize": {
+      "type": "object",
+      "properties": {
+        "friends": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "matches": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "wins": {
+          "type": "integer",
+          "format": "int64"
+        }
+      }
+    },
+    "v1Peer": {
+      "type": "object",
+      "properties": {
+        "accountId": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "matches": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "wins": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "firstPlayed": {
+          "type": "string",
+          "format": "int64",
+          "title": "unix seconds"
+        },
+        "lastPlayed": {
+          "type": "string",
+          "format": "int64",
+          "title": "unix seconds"
+        },
+        "lastMatchId": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "topHeroId": {
+          "type": "integer",
+          "format": "int64",
+          "title": "their most played hero in these matches"
+        }
+      },
+      "description": "Another player as met by the requested one. Wins are the requested\nplayer's wins in those matches."
     },
     "v1Player": {
       "type": "object",

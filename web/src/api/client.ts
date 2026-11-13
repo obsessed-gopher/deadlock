@@ -7,6 +7,7 @@ import type {
   GameData,
   ListPlayerHeroStatsResponse,
   ListPlayerMatchFactsResponse,
+  ListPlayerPeersResponse,
   ListPlayerMatchesResponse,
   Match,
   Player,
@@ -60,6 +61,8 @@ export const api = {
   heroStats: (accountId: string) => call<ListPlayerHeroStatsResponse>(`/v1/players/${accountId}/heroes`),
 
   facts: (accountId: string) => call<ListPlayerMatchFactsResponse>(`/v1/players/${accountId}/facts`),
+
+  peers: (accountId: string) => call<ListPlayerPeersResponse>(`/v1/players/${accountId}/peers`),
 
   sync: (accountId: string) =>
     call<SyncPlayerResponse>(`/v1/players/${accountId}:sync`, {

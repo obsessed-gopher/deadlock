@@ -24,6 +24,7 @@ type fakeStore struct {
 	player *v1.Player
 	rows   []*v1.PlayerMatchRow
 	heroes []*v1.HeroStats
+	peers  *db.Peers
 	err    error
 
 	gotAccount uint32
@@ -49,6 +50,14 @@ func (f *fakeStore) ListPlayerHeroStats(_ context.Context, accountID uint32) ([]
 func (f *fakeStore) ListPlayerMatchFacts(_ context.Context, accountID uint32) ([]*v1.MatchFacts, error) {
 	f.gotAccount = accountID
 	return nil, f.err
+}
+
+func (f *fakeStore) ListPlayerPeers(_ context.Context, accountID uint32) (*db.Peers, error) {
+	f.gotAccount = accountID
+	if f.peers == nil {
+		return &db.Peers{}, f.err
+	}
+	return f.peers, f.err
 }
 
 func (f *fakeStore) GetPlayerMatch(_ context.Context, _ uint64, accountID uint32) (*v1.PlayerMatch, error) {
@@ -92,6 +101,10 @@ func TestRequiredIDs(t *testing.T) {
 			_, err := s.ListPlayerMatchFacts(ctx, &v1.ListPlayerMatchFactsRequest{})
 			return err
 		},
+		"ListPlayerPeers": func() error {
+			_, err := s.ListPlayerPeers(ctx, &v1.ListPlayerPeersRequest{})
+			return err
+		},
 		"GetMatch": func() error { _, err := s.GetMatch(ctx, &v1.GetMatchRequest{}); return err },
 		"GetPlayerMatch": func() error {
 			_, err := s.GetPlayerMatch(ctx, &v1.GetPlayerMatchRequest{MatchId: 1})
@@ -132,6 +145,10 @@ func TestAccountIDAcceptsSteamID64(t *testing.T) {
 		},
 		"ListPlayerMatchFacts": func(id uint64) (uint32, error) {
 			_, err := s.ListPlayerMatchFacts(ctx, &v1.ListPlayerMatchFactsRequest{AccountId: id})
+			return st.gotAccount, err
+		},
+		"ListPlayerPeers": func(id uint64) (uint32, error) {
+			_, err := s.ListPlayerPeers(ctx, &v1.ListPlayerPeersRequest{AccountId: id})
 			return st.gotAccount, err
 		},
 		"SyncPlayer": func(id uint64) (uint32, error) {
@@ -278,6 +295,34 @@ func TestListPlayerHeroStats(t *testing.T) {
 
 	s = newServer(&fakeStore{err: errors.New("connection refused")}, fakeSyncer{})
 	_, err = s.ListPlayerHeroStats(context.Background(), &v1.ListPlayerHeroStatsRequest{AccountId: 1})
+	if got := status.Code(err); got != codes.Internal {
+		t.Errorf("store failure: code = %s, want Internal", got)
+	}
+}
+
+func TestListPlayerPeers(t *testing.T) {
+	peers := &db.Peers{
+		Matches: 10, Wins: 6,
+		Allies:     []*v1.Peer{{AccountId: 5, Matches: 7}},
+		Enemies:    []*v1.Peer{{AccountId: 6, Matches: 2}},
+		Heroes:     []*v1.HeroMatchup{{HeroId: 13, WithMatches: 3}},
+		PartySizes: []*v1.PartySize{{Friends: 0, Matches: 3}, {Friends: 1, Matches: 7}},
+	}
+	s := newServer(&fakeStore{peers: peers}, fakeSyncer{})
+	resp, err := s.ListPlayerPeers(context.Background(), &v1.ListPlayerPeersRequest{AccountId: 1})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if resp.GetMatches() != 10 || resp.GetWins() != 6 || resp.GetAllies()[0].GetAccountId() != 5 ||
+		resp.GetEnemies()[0].GetAccountId() != 6 || resp.GetHeroes()[0].GetHeroId() != 13 || len(resp.GetPartySizes()) != 2 {
+		t.Errorf("response = %v, want the store data", resp)
+	}
+	if resp.GetPeerMinMatches() != db.PeerMinMatches || resp.GetFriendMinMatches() != db.FriendMinMatches {
+		t.Errorf("thresholds = %d, %d", resp.GetPeerMinMatches(), resp.GetFriendMinMatches())
+	}
+
+	s = newServer(&fakeStore{err: errors.New("connection refused")}, fakeSyncer{})
+	_, err = s.ListPlayerPeers(context.Background(), &v1.ListPlayerPeersRequest{AccountId: 1})
 	if got := status.Code(err); got != codes.Internal {
 		t.Errorf("store failure: code = %s, want Internal", got)
 	}

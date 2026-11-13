@@ -11,6 +11,7 @@ import type {
   ListPlayerHeroStatsResponse,
   ListPlayerMatchFactsResponse,
   ListPlayerMatchesResponse,
+  ListPlayerPeersResponse,
   Match,
   Player,
   PlayerMatch,
@@ -25,6 +26,8 @@ export interface Fixtures {
   rows: PlayerMatchRow[];
   /** Facts of the same matches, oldest first, as the real server has them. */
   facts: ListPlayerMatchFactsResponse;
+  /** Server-side aggregate over the whole history, not just these rows. */
+  peers: ListPlayerPeersResponse;
   /** Keyed by `${matchId}-${accountId}`. */
   playerMatches: Map<string, PlayerMatch>;
 }
@@ -41,6 +44,7 @@ export function loadFixtures(dir: string): Fixtures {
     accountId,
     rows: matches,
     facts: read<ListPlayerMatchFactsResponse>("facts.json"),
+    peers: read<ListPlayerPeersResponse>("peers.json"),
     playerMatches,
   };
 }
@@ -279,6 +283,20 @@ export function createMockApi(fx: Fixtures, now: () => number = () => Date.now()
         const body: ListPlayerMatchFactsResponse = tracked
           ? fx.facts
           : { matches: [], soulMarksS: fx.facts.soulMarksS, soulTargets: fx.facts.soulTargets };
+        return ok(body);
+      }
+      if (parts.length === 4 && parts[3] === "peers") {
+        const body: ListPlayerPeersResponse = tracked
+          ? fx.peers
+          : {
+              ...fx.peers,
+              matches: 0,
+              wins: 0,
+              allies: [],
+              enemies: [],
+              heroes: [],
+              partySizes: [],
+            };
         return ok(body);
       }
       if (parts.length === 4 && parts[3] === "heroes") {

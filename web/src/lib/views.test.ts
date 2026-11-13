@@ -3,10 +3,11 @@ import { join } from "node:path";
 import { test } from "node:test";
 
 import { createMockApi, loadFixtures } from "../../mock/api.ts";
-import type { ListPlayerHeroStatsResponse, PlayerMatch } from "../api/schema.gen.ts";
+import type { ListPlayerHeroStatsResponse, ListPlayerPeersResponse, PlayerMatch } from "../api/schema.gen.ts";
 import { createI18n } from "../i18n/core.ts";
 import { buildEntries } from "./build.ts";
 import { makeLookup } from "./gamedata.ts";
+import { matchupTable, peerTable } from "./peerViews.ts";
 import { buildTable, deathsTable, heroTable, scoreboardTables } from "./views.ts";
 
 // Real data: the captured fixtures, match 134969900 (Haze, 8 deaths, a leaver).
@@ -83,4 +84,38 @@ test("build: items vs abilities, slots, sold items struck through", () => {
   const item = spec.rows.find((r) => r.filters?.kind === "items" && r.filters.slot === "weapon");
   assert.equal(item?.cells.what?.iconTile, "weapon");
   assert.equal(spec.rows[0]?.cells.type?.text, "ability unlocked");
+});
+
+const peers = mock.handle("GET", `/v1/players/${ACC}/peers`).body as ListPlayerPeersResponse;
+const total = { matches: peers.matches, wins: peers.wins };
+
+test("peer table: allies link to profiles and matches, friends filter", () => {
+  const spec = peerTable(ctx("ru", "en"), {
+    label: "Союзники",
+    peers: peers.allies,
+    total,
+    ownerId: ACC,
+    friendMin: peers.friendMinMatches,
+  });
+  assert.equal(spec.rows.length, peers.allies.length);
+  const top = spec.rows[0]!;
+  const p = peers.allies[0]!;
+  assert.equal(top.cells.player?.href, `/players/${p.accountId}`);
+  assert.equal(top.cells.last?.href, `/matches/${p.lastMatchId}/players/${ACC}`);
+  assert.equal(top.filters?.who, p.matches >= peers.friendMinMatches ? "friends" : "others");
+  assert.match(top.cells.delta?.text ?? "", /^([+−]\d+,\d п\.п\.|0,0 п\.п\.|—)$/);
+  // Opponents have no friends filter.
+  const enemies = peerTable(ctx("en", "en"), { label: "Opponents", peers: peers.enemies, total, ownerId: ACC });
+  assert.equal(enemies.filters, undefined);
+  assert.equal(enemies.rows[0]?.filters, undefined);
+});
+
+test("matchup table: one row per hero, dash for never seen on a side", () => {
+  const spec = matchupTable(ctx("en", "en"), peers.heroes, total);
+  assert.equal(spec.rows.length, peers.heroes.length);
+  const sum = (k: "with" | "against") => spec.rows.reduce((n, r) => n + Number(r.cells[k]?.sort), 0);
+  assert.equal(sum("with"), peers.heroes.reduce((n, h) => n + h.withMatches, 0));
+  assert.equal(sum("against"), peers.heroes.reduce((n, h) => n + h.againstMatches, 0));
+  const none = spec.rows.find((r) => r.cells.with?.sort === 0);
+  if (none) assert.equal(none.cells.withWr?.text, "—");
 });

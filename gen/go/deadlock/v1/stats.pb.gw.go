@@ -205,6 +205,45 @@ func local_request_StatsService_ListPlayerMatchFacts_0(ctx context.Context, mars
 	return msg, metadata, err
 }
 
+func request_StatsService_ListPlayerPeers_0(ctx context.Context, marshaler runtime.Marshaler, client StatsServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq ListPlayerPeersRequest
+		metadata runtime.ServerMetadata
+		err      error
+	)
+	val, ok := pathParams["account_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "account_id")
+	}
+	protoReq.AccountId, err = runtime.Uint64(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "account_id", err)
+	}
+	if req.Body != nil {
+		_, _ = io.Copy(io.Discard, req.Body)
+	}
+	msg, err := client.ListPlayerPeers(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+}
+
+func local_request_StatsService_ListPlayerPeers_0(ctx context.Context, marshaler runtime.Marshaler, server StatsServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq ListPlayerPeersRequest
+		metadata runtime.ServerMetadata
+		err      error
+	)
+	val, ok := pathParams["account_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "account_id")
+	}
+	protoReq.AccountId, err = runtime.Uint64(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "account_id", err)
+	}
+	msg, err := server.ListPlayerPeers(ctx, &protoReq)
+	return msg, metadata, err
+}
+
 func request_StatsService_SyncPlayer_0(ctx context.Context, marshaler runtime.Marshaler, client StatsServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
 		protoReq SyncPlayerRequest
@@ -451,6 +490,26 @@ func RegisterStatsServiceHandlerServer(ctx context.Context, mux *runtime.ServeMu
 		}
 		forward_StatsService_ListPlayerMatchFacts_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
+	mux.Handle(http.MethodGet, pattern_StatsService_ListPlayerPeers_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/deadlock.v1.StatsService/ListPlayerPeers", runtime.WithHTTPPathPattern("/v1/players/{account_id}/peers"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_StatsService_ListPlayerPeers_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_StatsService_ListPlayerPeers_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
 	mux.Handle(http.MethodPost, pattern_StatsService_SyncPlayer_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -639,6 +698,23 @@ func RegisterStatsServiceHandlerClient(ctx context.Context, mux *runtime.ServeMu
 		}
 		forward_StatsService_ListPlayerMatchFacts_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
+	mux.Handle(http.MethodGet, pattern_StatsService_ListPlayerPeers_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/deadlock.v1.StatsService/ListPlayerPeers", runtime.WithHTTPPathPattern("/v1/players/{account_id}/peers"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_StatsService_ListPlayerPeers_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_StatsService_ListPlayerPeers_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
 	mux.Handle(http.MethodPost, pattern_StatsService_SyncPlayer_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -715,6 +791,7 @@ var (
 	pattern_StatsService_ListPlayerMatches_0    = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"v1", "players", "account_id", "matches"}, ""))
 	pattern_StatsService_ListPlayerHeroStats_0  = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"v1", "players", "account_id", "heroes"}, ""))
 	pattern_StatsService_ListPlayerMatchFacts_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"v1", "players", "account_id", "facts"}, ""))
+	pattern_StatsService_ListPlayerPeers_0      = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"v1", "players", "account_id", "peers"}, ""))
 	pattern_StatsService_SyncPlayer_0           = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v1", "players", "account_id"}, "sync"))
 	pattern_StatsService_GetMatch_0             = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v1", "matches", "match_id"}, ""))
 	pattern_StatsService_GetPlayerMatch_0       = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"v1", "matches", "match_id", "players", "account_id"}, ""))
@@ -726,6 +803,7 @@ var (
 	forward_StatsService_ListPlayerMatches_0    = runtime.ForwardResponseMessage
 	forward_StatsService_ListPlayerHeroStats_0  = runtime.ForwardResponseMessage
 	forward_StatsService_ListPlayerMatchFacts_0 = runtime.ForwardResponseMessage
+	forward_StatsService_ListPlayerPeers_0      = runtime.ForwardResponseMessage
 	forward_StatsService_SyncPlayer_0           = runtime.ForwardResponseMessage
 	forward_StatsService_GetMatch_0             = runtime.ForwardResponseMessage
 	forward_StatsService_GetPlayerMatch_0       = runtime.ForwardResponseMessage

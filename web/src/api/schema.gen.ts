@@ -56,6 +56,15 @@ export interface Hero {
   type: string;
 }
 
+/** A hero seen alongside (on the player's team) or against the player. */
+export interface HeroMatchup {
+  againstMatches: number;
+  againstWins: number;
+  heroId: number;
+  withMatches: number;
+  withWins: number;
+}
+
 /** Totals over the player's matches on one hero; averages are total / matches. */
 export interface HeroStats {
   assists: number;
@@ -99,6 +108,27 @@ export interface ListPlayerMatchesResponse {
   nextPageToken: string;
   /** rows matching the filters, all pages */
   total: number;
+}
+
+export interface ListPlayerPeersResponse {
+  /** People met at least peer_min_matches times, most matches first. */
+  allies: Peer[];
+  enemies: Peer[];
+  friendMinMatches: number;
+  /** Every hero seen alongside or against the player. */
+  heroes: HeroMatchup[];
+  /**
+   * Matches with metadata (rosters known) and the player's wins in them:
+   * the base for "with X" vs "without X".
+   */
+  matches: number;
+  /**
+   * Matches by the number of friends (allies with at least
+   * friend_min_matches shared matches) on the player's team.
+   */
+  partySizes: PartySize[];
+  peerMinMatches: number;
+  wins: number;
 }
 
 export interface Match {
@@ -177,6 +207,29 @@ export type MatchSort = "MATCH_SORT_UNSPECIFIED" | "MATCH_SORT_START_TIME" | "MA
  * - META_STATUS_FAILED: gave up after retries
  */
 export type MetaStatus = "META_STATUS_UNSPECIFIED" | "META_STATUS_PENDING" | "META_STATUS_OK" | "META_STATUS_EXPIRED" | "META_STATUS_FAILED";
+
+export interface PartySize {
+  friends: number;
+  matches: number;
+  wins: number;
+}
+
+/**
+ * Another player as met by the requested one. Wins are the requested
+ * player's wins in those matches.
+ */
+export interface Peer {
+  accountId: string;
+  /** unix seconds */
+  firstPlayed: string;
+  lastMatchId: string;
+  /** unix seconds */
+  lastPlayed: string;
+  matches: number;
+  /** their most played hero in these matches */
+  topHeroId: number;
+  wins: number;
+}
 
 export interface Player {
   accountId: number;

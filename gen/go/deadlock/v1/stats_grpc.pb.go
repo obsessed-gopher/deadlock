@@ -23,6 +23,7 @@ const (
 	StatsService_ListPlayerMatches_FullMethodName    = "/deadlock.v1.StatsService/ListPlayerMatches"
 	StatsService_ListPlayerHeroStats_FullMethodName  = "/deadlock.v1.StatsService/ListPlayerHeroStats"
 	StatsService_ListPlayerMatchFacts_FullMethodName = "/deadlock.v1.StatsService/ListPlayerMatchFacts"
+	StatsService_ListPlayerPeers_FullMethodName      = "/deadlock.v1.StatsService/ListPlayerPeers"
 	StatsService_SyncPlayer_FullMethodName           = "/deadlock.v1.StatsService/SyncPlayer"
 	StatsService_GetMatch_FullMethodName             = "/deadlock.v1.StatsService/GetMatch"
 	StatsService_GetPlayerMatch_FullMethodName       = "/deadlock.v1.StatsService/GetPlayerMatch"
@@ -45,6 +46,9 @@ type StatsServiceClient interface {
 	// Compact facts of every match of a player, oldest first: the input of
 	// client-side trends (progress, development speed, sessions, records).
 	ListPlayerMatchFacts(ctx context.Context, in *ListPlayerMatchFactsRequest, opts ...grpc.CallOption) (*ListPlayerMatchFactsResponse, error)
+	// People and heroes met in a player's matches with metadata: frequent
+	// allies and opponents, heroes alongside and against, party sizes.
+	ListPlayerPeers(ctx context.Context, in *ListPlayerPeersRequest, opts ...grpc.CallOption) (*ListPlayerPeersResponse, error)
 	// Pull fresh match history and queue metadata downloads for new matches.
 	SyncPlayer(ctx context.Context, in *SyncPlayerRequest, opts ...grpc.CallOption) (*SyncPlayerResponse, error)
 	// Scoreboard of all players in a match.
@@ -98,6 +102,16 @@ func (c *statsServiceClient) ListPlayerMatchFacts(ctx context.Context, in *ListP
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(ListPlayerMatchFactsResponse)
 	err := c.cc.Invoke(ctx, StatsService_ListPlayerMatchFacts_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *statsServiceClient) ListPlayerPeers(ctx context.Context, in *ListPlayerPeersRequest, opts ...grpc.CallOption) (*ListPlayerPeersResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListPlayerPeersResponse)
+	err := c.cc.Invoke(ctx, StatsService_ListPlayerPeers_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -160,6 +174,9 @@ type StatsServiceServer interface {
 	// Compact facts of every match of a player, oldest first: the input of
 	// client-side trends (progress, development speed, sessions, records).
 	ListPlayerMatchFacts(context.Context, *ListPlayerMatchFactsRequest) (*ListPlayerMatchFactsResponse, error)
+	// People and heroes met in a player's matches with metadata: frequent
+	// allies and opponents, heroes alongside and against, party sizes.
+	ListPlayerPeers(context.Context, *ListPlayerPeersRequest) (*ListPlayerPeersResponse, error)
 	// Pull fresh match history and queue metadata downloads for new matches.
 	SyncPlayer(context.Context, *SyncPlayerRequest) (*SyncPlayerResponse, error)
 	// Scoreboard of all players in a match.
@@ -190,6 +207,9 @@ func (UnimplementedStatsServiceServer) ListPlayerHeroStats(context.Context, *Lis
 }
 func (UnimplementedStatsServiceServer) ListPlayerMatchFacts(context.Context, *ListPlayerMatchFactsRequest) (*ListPlayerMatchFactsResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ListPlayerMatchFacts not implemented")
+}
+func (UnimplementedStatsServiceServer) ListPlayerPeers(context.Context, *ListPlayerPeersRequest) (*ListPlayerPeersResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListPlayerPeers not implemented")
 }
 func (UnimplementedStatsServiceServer) SyncPlayer(context.Context, *SyncPlayerRequest) (*SyncPlayerResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method SyncPlayer not implemented")
@@ -296,6 +316,24 @@ func _StatsService_ListPlayerMatchFacts_Handler(srv interface{}, ctx context.Con
 	return interceptor(ctx, in, info, handler)
 }
 
+func _StatsService_ListPlayerPeers_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListPlayerPeersRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(StatsServiceServer).ListPlayerPeers(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: StatsService_ListPlayerPeers_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(StatsServiceServer).ListPlayerPeers(ctx, req.(*ListPlayerPeersRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _StatsService_SyncPlayer_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(SyncPlayerRequest)
 	if err := dec(in); err != nil {
@@ -390,6 +428,10 @@ var StatsService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListPlayerMatchFacts",
 			Handler:    _StatsService_ListPlayerMatchFacts_Handler,
+		},
+		{
+			MethodName: "ListPlayerPeers",
+			Handler:    _StatsService_ListPlayerPeers_Handler,
 		},
 		{
 			MethodName: "SyncPlayer",

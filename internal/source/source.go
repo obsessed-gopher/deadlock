@@ -14,6 +14,7 @@ import (
 	"math"
 	"strconv"
 	"strings"
+	"time"
 )
 
 // Salts identifies replay artifacts for one match on Valve's CDN.
@@ -68,6 +69,30 @@ type SaltProvider interface {
 // HistoryProvider lists a player's matches, newest first.
 type HistoryProvider interface {
 	MatchHistory(ctx context.Context, accountID uint32) ([]MatchSummary, error)
+}
+
+// ProfileProvider returns Steam profiles of many accounts at once (at most
+// MaxProfileBatch per call).
+type ProfileProvider interface {
+	SteamProfiles(ctx context.Context, ids []uint32) ([]SteamProfile, error)
+}
+
+// SteamProfile is a public Steam profile as deadlock-api caches it.
+type SteamProfile struct {
+	AccountID    uint32        `json:"account_id"`
+	PersonaName  string        `json:"personaname"`
+	ProfileURL   string        `json:"profileurl"`
+	Avatar       string        `json:"avatar"`
+	AvatarMedium string        `json:"avatarmedium"`
+	AvatarFull   string        `json:"avatarfull"`
+	CountryCode  *string       `json:"countrycode"`
+	Friends      []SteamFriend `json:"friends"`
+}
+
+// SteamFriend is one entry of a profile's friend list.
+type SteamFriend struct {
+	AccountID   uint32     `json:"account_id"`
+	FriendSince *time.Time `json:"friend_since"`
 }
 
 // ErrNotFound means the provider has no data for the request (e.g. salts for

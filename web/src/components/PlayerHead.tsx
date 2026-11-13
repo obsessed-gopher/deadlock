@@ -1,9 +1,10 @@
 // Profile header shared by the profile tabs: name, sync state, summary line,
 // sync button and the tab bar.
-import type { Player } from "@/api/schema.gen.ts";
+import type { Player, Profile } from "@/api/schema.gen.ts";
 import type { SyncState } from "@/app/players/[id]/actions.ts";
 import type { I18n } from "@/i18n/core.ts";
 
+import { Avatar } from "./Avatar.tsx";
 import { SyncButton } from "./SyncButton.tsx";
 
 export const PROFILE_TABS = ["progress", "peers", "heroes", "matches"] as const;
@@ -16,16 +17,19 @@ export function tabHref(accountId: string | number, tab: ProfileTab): string {
 export function PlayerHead({
   i18n,
   player: p,
+  profile,
   tab,
   action,
 }: {
   i18n: I18n;
   player: Player;
+  profile?: Profile;
   tab: ProfileTab;
   action: (prev: SyncState | null) => Promise<SyncState>;
 }) {
   const { t } = i18n;
   const id = String(p.accountId);
+  const name = profile?.personaName.trim() || t("player.title", { id });
   const syncLine =
     p.syncState === "SYNC_STATE_RUNNING"
       ? t("player.syncRunning")
@@ -37,9 +41,21 @@ export function PlayerHead({
   return (
     <section className="profile-head">
       <div className="head-row">
-        <div className="stack">
-          <span className="eyebrow">{t("player.account", { id })}</span>
-          <h1>{t("player.title", { id })}</h1>
+        <div className="row player-id">
+          <Avatar src={profile?.avatarFull} name={name} size={72} />
+          <div className="stack">
+          <span className="eyebrow">
+            {t("player.account", { id })}
+            {profile?.profileUrl && (
+              <>
+                {" · "}
+                <a href={profile.profileUrl} target="_blank" rel="noopener noreferrer">
+                  {t("player.steamProfile")}
+                </a>
+              </>
+            )}
+          </span>
+          <h1>{name}</h1>
           <span className="muted">
             {t("player.summary", { matches: i18n.num(p.matchesTotal), winRate: i18n.pct(p.wins, p.matchesTotal) })}
           </span>
@@ -47,6 +63,7 @@ export function PlayerHead({
             {syncLine}
             {p.matchesPending > 0 && ` · ${t("player.pending", { n: i18n.num(p.matchesPending) })}`}
           </span>
+          </div>
         </div>
         <SyncButton action={action} />
       </div>

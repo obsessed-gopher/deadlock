@@ -4,6 +4,7 @@ import type { I18n } from "../i18n/core.ts";
 import type { Lookup } from "./gamedata.ts";
 import { type Bucket, winRate } from "./progress.ts";
 import { MIN_SAMPLE, NOTABLE, withWithout } from "./peers.ts";
+import { NO_PROFILES, type Profiles, avatarOf, playerName } from "./profiles.ts";
 import type { TableSpec, Tone } from "./tableSpec.ts";
 
 type Ctx = { i18n: I18n; look: Lookup };
@@ -29,10 +30,11 @@ const deltaTone = (d: number | null): Tone | undefined =>
  */
 export function peerTable(
   { i18n, look }: Ctx,
-  opts: { label: string; peers: Peer[]; total: Bucket; ownerId: string; friendMin?: number },
+  opts: { label: string; peers: Peer[]; total: Bucket; ownerId: string; friendMin?: number; profiles?: Profiles },
 ): TableSpec {
   const { t } = i18n;
   const { peers, total, ownerId, friendMin } = opts;
+  const profiles = opts.profiles ?? NO_PROFILES;
   return {
     label: opts.label,
     columns: [
@@ -46,12 +48,19 @@ export function peerTable(
     rows: peers.map((p) => {
       const { delta } = withWithout(p, total);
       const wr = winRate(p);
+      const name = playerName(i18n, p.accountId, profiles);
       return {
         id: p.accountId,
-        search: p.accountId,
+        search: `${name} ${p.accountId}`,
         filters: friendMin ? { who: p.matches >= friendMin ? "friends" : "others" } : undefined,
         cells: {
-          player: { text: t("player.title", { id: p.accountId }), href: `/players/${p.accountId}` },
+          player: {
+            text: name,
+            href: `/players/${p.accountId}`,
+            avatar: { src: avatarOf(p.accountId, profiles, "small"), name },
+            tag: p.steamFriend ? t("friends.steamTag") : undefined,
+            tagTitle: p.steamFriend ? t("friends.steamTagTitle") : undefined,
+          },
           matches: { text: i18n.num(p.matches), sort: p.matches },
           winRate: { text: i18n.pct(p.wins, p.matches), sort: wr, bar: wr, tone: wr >= 0.5 ? "win" : undefined },
           delta: {

@@ -13,6 +13,7 @@ function peer(id: number, matches: number, wins: number): Peer {
     lastPlayed: "0",
     lastMatchId: "1",
     topHeroId: 1,
+    steamFriend: false,
   };
 }
 

@@ -16,8 +16,10 @@ import {
   weakestParty,
   withWithout,
 } from "@/lib/peers.ts";
+import { type Profiles, avatarOf, playerName } from "@/lib/profiles.ts";
 import { type Bucket, MIN_BUCKET, winRate } from "@/lib/progress.ts";
 
+import { Avatar } from "./Avatar.tsx";
 import { Icon } from "./Icon.tsx";
 
 type Ctx = { i18n: I18n; look: Lookup };
@@ -27,7 +29,6 @@ const pctOf = (i18n: I18n, share: number) => i18n.pct(share, 1);
 const toneOf = (d: number | null) =>
   d === null ? "faint" : d >= NOTABLE ? "tone-win" : d <= -NOTABLE ? "tone-loss" : "faint";
 
-const playerName = (i18n: I18n, id: string) => i18n.t("player.title", { id });
 
 function HeroIcon({ look, heroId, size }: { look: Lookup; heroId: number; size: number }) {
   const src = look.heroIcon(heroId);
@@ -131,7 +132,8 @@ export function FriendsSection({
   total,
   ownerId,
   friendMin,
-}: Ctx & { friends: Peer[]; total: Bucket; ownerId: string; friendMin: number }) {
+  profiles,
+}: Ctx & { friends: Peer[]; total: Bucket; ownerId: string; friendMin: number; profiles: Profiles }) {
   const { t } = i18n;
   if (friends.length === 0) {
     return (
@@ -154,7 +156,7 @@ export function FriendsSection({
         {impact ? (
           <span className={toneOf(impact.delta)}>
             {t(impact.delta > 0 ? "friends.impactUp" : "friends.impactDown", {
-              name: playerName(i18n, impact.peer.accountId),
+              name: playerName(i18n, impact.peer.accountId, profiles),
               pp: pp(i18n, impact.delta),
             })}
           </span>
@@ -168,13 +170,17 @@ export function FriendsSection({
           return (
             <article key={f.accountId} className="friend" data-testid="friend">
               <div className="row friend-head">
-                <HeroIcon look={look} heroId={f.topHeroId} size={40} />
+                <Avatar src={avatarOf(f.accountId, profiles)} name={playerName(i18n, f.accountId, profiles)} size={44} />
                 <div className="stack gap-4 friend-name">
                   <Link href={`/players/${f.accountId}`} className="ellipsis">
-                    {playerName(i18n, f.accountId)}
+                    {playerName(i18n, f.accountId, profiles)}
                   </Link>
-                  <span className="faint small ellipsis">
-                    {t("friends.topHero", { hero: look.heroName(f.topHeroId) })}
+                  <span
+                    className="row faint small friend-hero"
+                    title={t("friends.topHero", { hero: look.heroName(f.topHeroId) })}
+                  >
+                    <HeroIcon look={look} heroId={f.topHeroId} size={16} />
+                    <span className="ellipsis">{look.heroName(f.topHeroId)}</span>
                   </span>
                 </div>
               </div>
@@ -192,9 +198,16 @@ export function FriendsSection({
                 {ww.delta === null ? "—" : signedPp(i18n, ww.delta)}{" "}
                 <span className="faint">· {t("friends.others", { wr: pctOf(i18n, winRate(ww.without)) })}</span>
               </span>
-              <Link href={`/matches/${f.lastMatchId}/players/${ownerId}`} className="faint small">
-                {t("friends.last", { date: i18n.date(f.lastPlayed).split(",")[0] ?? "" })}
-              </Link>
+              <span className="row between friend-foot">
+                <Link href={`/matches/${f.lastMatchId}/players/${ownerId}`} className="faint small">
+                  {t("friends.last", { date: i18n.date(f.lastPlayed).split(",")[0] ?? "" })}
+                </Link>
+                {f.steamFriend && (
+                  <span className="tag" title={t("friends.steamTagTitle")}>
+                    {t("friends.steamTag")}
+                  </span>
+                )}
+              </span>
             </article>
           );
         })}

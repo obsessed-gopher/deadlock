@@ -32,6 +32,10 @@ type Store interface {
 	NextStaleMeta(ctx context.Context, after uint64, limit int) ([]uint64, error)
 	MetaRaw(ctx context.Context, matchID uint64) ([]byte, error)
 	RederiveMeta(ctx context.Context, matchID uint64, mi *pb.CMsgMatchMetaDataContents_MatchInfo) error
+
+	// Steam profiles of everyone seen.
+	StaleProfiles(ctx context.Context, maxAge time.Duration, limit int) ([]uint32, error)
+	StoreProfiles(ctx context.Context, requested []uint32, got []source.SteamProfile, at time.Time) error
 }
 
 // Syncer coordinates providers and the database.
@@ -47,6 +51,14 @@ type Syncer struct {
 	Interval    time.Duration
 	MaxAttempts int
 
+	// Steam profiles (names, avatars); nil Profiles disables RunProfiles.
+	// One batch per ProfileEvery while there is work, a check per
+	// ProfileIdle otherwise; a profile is refreshed after ProfileMaxAge.
+	Profiles      source.ProfileProvider
+	ProfileEvery  time.Duration
+	ProfileIdle   time.Duration
+	ProfileMaxAge time.Duration
+
 	wake chan struct{}
 }
 
@@ -55,10 +67,13 @@ type Syncer struct {
 func New(d Store, hist source.HistoryProvider, salts source.SaltProvider, log *slog.Logger) *Syncer {
 	return &Syncer{
 		DB: d, History: hist, Salts: salts, Log: log,
-		HTTP:        &http.Client{Timeout: 2 * time.Minute},
-		Interval:    1500 * time.Millisecond,
-		MaxAttempts: 5,
-		wake:        make(chan struct{}, 1),
+		HTTP:          &http.Client{Timeout: 2 * time.Minute},
+		Interval:      1500 * time.Millisecond,
+		MaxAttempts:   5,
+		ProfileEvery:  time.Minute,
+		ProfileIdle:   15 * time.Minute,
+		ProfileMaxAge: 7 * 24 * time.Hour,
+		wake:          make(chan struct{}, 1),
 	}
 }
 
@@ -180,6 +195,47 @@ func (s *Syncer) Run(ctx context.Context) {
 			return
 		case <-s.wake:
 		case <-idle.C:
+		}
+	}
+}
+
+// RefreshProfiles fetches one batch of missing or outdated Steam profiles
+// and returns how many accounts it asked for.
+func (s *Syncer) RefreshProfiles(ctx context.Context) (int, error) {
+	ids, err := s.DB.StaleProfiles(ctx, s.ProfileMaxAge, source.MaxProfileBatch)
+	if err != nil || len(ids) == 0 {
+		return 0, err
+	}
+	got, err := s.Profiles.SteamProfiles(ctx, ids)
+	if err != nil {
+		return 0, fmt.Errorf("steam profiles: %w", err)
+	}
+	return len(ids), s.DB.StoreProfiles(ctx, ids, got, time.Now())
+}
+
+// RunProfiles keeps Steam profiles fresh until ctx is cancelled. A full
+// batch means more work is waiting: the next one follows after ProfileEvery.
+// Otherwise (or after an error) it rests for ProfileIdle.
+func (s *Syncer) RunProfiles(ctx context.Context) {
+	if s.Profiles == nil {
+		return
+	}
+	for {
+		n, err := s.RefreshProfiles(ctx)
+		switch {
+		case err != nil && ctx.Err() == nil:
+			s.Log.Warn("steam profiles", "err", err)
+		case n > 0:
+			s.Log.Info("steam profiles refreshed", "accounts", n)
+		}
+		wait := s.ProfileIdle
+		if err == nil && n == source.MaxProfileBatch {
+			wait = s.ProfileEvery
+		}
+		select {
+		case <-ctx.Done():
+			return
+		case <-time.After(wait):
 		}
 	}
 }

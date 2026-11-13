@@ -9,6 +9,8 @@ replay<N>.valve.net ──(.meta, zstd)──► syncer ──► Postgres ◄�
 ```
 
 1. `SyncPlayer` (RPC или периодический тикер по `SYNC_ACCOUNTS`) тянет историю матчей игрока и кладёт заголовки в `matches` + `player_matches`. Новые матчи получают `meta_status = 'pending'`.
+3. Фоновый `Syncer.RunProfiles` раз в минуту, пока есть работа (иначе раз в 15 минут), берёт до 1000 аккаунтов без профиля Steam или с профилем старше 7 дней (сначала отслеживаемые, потом все из сохранённых матчей) и одним запросом `GET /v1/players/steam?account_ids=…` у deadlock-api получает имена, аватары и, для отслеживаемых, списки друзей.
+
 Кроме того, `ResolveSteamVanity` по запросу пользователя спрашивает `steamcommunity.com/id/<имя>?xml=1` (без ключа API), чтобы превратить ссылку с ником в account id. Это один запрос на поиск, фонового трафика к Steam нет.
 
 2. Фоновый воркер `Syncer.Run` разбирает очередь `pending`: получает соль матча, качает `.meta` с CDN Valve, распаковывает, декодирует protobuf и в одной транзакции сохраняет сырой файл и производные таблицы.
@@ -24,7 +26,7 @@ replay<N>.valve.net ──(.meta, zstd)──► syncer ──► Postgres ◄�
 | `cmd/server` | сборка зависимостей, конфигурация из env, жизненный цикл | всё |
 | `cmd/dlstat` | отладочный CLI (`history`, `match`, `meta`) | `source`, `meta`, `gamedata`, `pb` |
 | `internal/server` | реализация `deadlock.v1.StatsService`: валидация, пагинация, коды ошибок | `gen/go`, `gamedata`, `db` (только `ErrNotFound`), `source` (только `NormalizeAccountID`) |
-| `internal/syncer` | синхронизация истории, очередь загрузки метаданных, ретраи | `source`, `meta`, `compress`, `pb` |
+| `internal/syncer` | синхронизация истории, очередь загрузки метаданных, ретраи, обновление профилей Steam | `source`, `meta`, `compress`, `pb` |
 | `internal/db` | пул pgx, миграции, **весь** SQL | `pb`, `source`, `gen/go` |
 | `internal/source` | провайдеры данных за интерфейсами (`SaltProvider`, `HistoryProvider`), клиент deadlock-api, резолвер ссылок Steam (`SteamCommunity`), дисковый кэш реплеев | — |
 | `internal/meta` | декодирование `.meta` в protobuf-типы | `compress`, `pb` |
@@ -87,6 +89,8 @@ replay<N>.valve.net ──(.meta, zstd)──► syncer ──► Postgres ◄�
 - **Из истории матчей** (есть сразу после синхронизации): `players` (состояние синхронизации), `matches` (заголовок + очередь метаданных: `meta_status`, `meta_attempts`, `meta_next_try`, `meta_raw`), `player_matches` (строка отслеживаемого игрока).
 - **Производные от метаданных** (все 12 игроков матча, пересоздаются в `StoreMeta`/`RederiveMeta`): `match_players`, `player_stats` (срезы по времени), `item_events`, `deaths`, а также колонки `matches.badge_team0/1` (средний бейдж команды) и `matches.derive_version`.
 
+- **Профили Steam** (`RunProfiles`): `steam_profiles` — имя, ссылка, аватары, страна всех встреченных аккаунтов; `found = false` запоминает «у API профиля нет», чтобы не спрашивать снова до следующего обновления; пропавший из API профиль сохраняет последнее известное имя. `steam_friends` — друзья Steam только отслеживаемых игроков (отмечают настоящих друзей среди союзников, `Peer.steam_friend`).
+
 Жизненный цикл `meta_status`: `pending` → `ok` | `expired` (реплей удалён, повторять бессмысленно) | `failed` (исчерпаны попытки; между попытками экспоненциальная пауза от 5 минут).
 
 Идентификаторы `uint32` из игры (`account_id`, `item_id`) хранятся как `bigint`: в `integer` Postgres они не помещаются.
@@ -99,6 +103,7 @@ replay<N>.valve.net ──(.meta, zstd)──► syncer ──► Postgres ◄�
 - `ListPlayerHeroStats` — суммы по героям из истории матчей (метаданные не нужны); средние считает клиент.
 - `ListPlayerMatchFacts` (`GET /v1/players/{account_id}/facts`) — сводка каждого матча игрока, от старых к новым; моменты и пороги выборки — в самом ответе (`soul_marks_s`, `soul_targets`). Души к моменту — линейная интерполяция между срезами статистики (каждые 3 мин), кривая начинается с (0, 0). `lobby_badge` — средний бейдж команд в линейной шкале рангов (см. problems.md).
 - `ListPlayerPeers` (`GET /v1/players/{account_id}/peers`) — люди и герои из матчей с метаданными: союзники и соперники, встреченные `peer_min_matches`+ раз, все герои рядом и против, матчи по числу друзей в команде (друг — союзник с `friend_min_matches`+ общих матчей). Победы везде — победы запрошенного игрока. Агрегирует сервер: составы ~700 матчей — это ~8 тыс. строк, а нужны только суммы. Составы берутся из `match_players`, поэтому работает и для неотслеживаемого игрока.
+- `ListProfiles` (`GET /v1/profiles?account_ids=1&account_ids=2`) — профили Steam пачкой, до 1000 id; аккаунты без профиля просто отсутствуют в ответе. Фронт считает имена украшением: при любой ошибке показывает «Игрок {id}», а не страницу ошибки.
 - `ResolveSteamVanity` (`GET /v1/steam/vanity/{vanity}`) — account id по нику из ссылки `steamcommunity.com/id/<vanity>`: `NotFound` — такого профиля нет, `Unavailable` — Steam не ответил. Остальные формы ввода (SteamID64, `/profiles/<id>`, SteamID2/3) фронт разбирает сам (`web/src/lib/playerRef.ts`), без запросов.
 - `ListPlayerMatches`: фильтры (`hero_id`, `result`, `game_mode`, `meta_status`), сортировка (`sort` — дата, длительность, K/D/A, души, добивания, уровень; `ascending`) и `total` — число строк под фильтрами. Пагинация — keyset по паре (значение сортировки, `match_id`); `page_token` — непрозрачная строка `<значение>_<match_id>`, действует только с той сортировкой, с которой выдан. SQL собирается из констант (`matchSortExprs`), значения — только параметрами. Размер страницы по умолчанию 50, максимум 200.
 - Ошибочные значения запроса (неизвестный enum, битый токен) — `InvalidArgument`, а не `Internal` (`db.ErrBadQuery`).

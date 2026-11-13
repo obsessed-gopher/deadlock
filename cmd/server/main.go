@@ -81,6 +81,7 @@ func run(log *slog.Logger) error {
 	api := source.NewDeadlockAPI()
 	sy := syncer.New(database, api, api, log)
 	sy.Interval = cfg.MetaInterval
+	sy.Profiles = api
 
 	// gRPC
 	gs := grpc.NewServer(grpc.UnaryInterceptor(server.UnaryInterceptor(log)))
@@ -130,6 +131,7 @@ func run(log *slog.Logger) error {
 		}
 	}()
 	go sy.Run(ctx)
+	go sy.RunProfiles(ctx)
 	if len(cfg.SyncAccounts) > 0 {
 		go periodicSync(ctx, sy, cfg.SyncAccounts, cfg.SyncEvery, log)
 	}

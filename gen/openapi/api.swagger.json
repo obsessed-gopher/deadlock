@@ -403,6 +403,43 @@
         ]
       }
     },
+    "/v1/profiles": {
+      "get": {
+        "summary": "Steam names and avatars of many accounts at once (at most 1000). Only\naccounts with a known profile are returned; the rest are not fetched yet\nor have none.",
+        "operationId": "StatsService_ListProfiles",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ListProfilesResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "accountIds",
+            "description": "Account ids or SteamID64s; repeat the query parameter:\n?account_ids=1\u0026account_ids=2.",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uint64"
+            },
+            "collectionFormat": "multi"
+          }
+        ],
+        "tags": [
+          "StatsService"
+        ]
+      }
+    },
     "/v1/steam/vanity/{vanity}": {
       "get": {
         "summary": "Account id behind a Steam custom profile URL\n(steamcommunity.com/id/\u003cvanity\u003e). Asks Steam on every call.",
@@ -791,6 +828,18 @@
         }
       }
     },
+    "v1ListProfilesResponse": {
+      "type": "object",
+      "properties": {
+        "profiles": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1Profile"
+          }
+        }
+      }
+    },
     "v1Match": {
       "type": "object",
       "properties": {
@@ -1072,6 +1121,10 @@
           "type": "integer",
           "format": "int64",
           "title": "their most played hero in these matches"
+        },
+        "steamFriend": {
+          "type": "boolean",
+          "description": "In the requested player's Steam friend list (known for tracked players)."
         }
       },
       "description": "Another player as met by the requested one. Wins are the requested\nplayer's wins in those matches."
@@ -1221,6 +1274,38 @@
           "$ref": "#/definitions/v1MetaStatus"
         }
       }
+    },
+    "v1Profile": {
+      "type": "object",
+      "properties": {
+        "accountId": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "personaName": {
+          "type": "string"
+        },
+        "profileUrl": {
+          "type": "string"
+        },
+        "avatar": {
+          "type": "string",
+          "title": "32 px"
+        },
+        "avatarMedium": {
+          "type": "string",
+          "title": "64 px"
+        },
+        "avatarFull": {
+          "type": "string",
+          "title": "184 px"
+        },
+        "country": {
+          "type": "string",
+          "title": "ISO 3166-1 alpha-2, may be empty"
+        }
+      },
+      "description": "Public Steam profile, refreshed in the background at most weekly."
     },
     "v1ResolveSteamVanityResponse": {
       "type": "object",

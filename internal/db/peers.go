@@ -52,7 +52,8 @@ func (d *DB) ListPlayerPeers(ctx context.Context, accountID uint32) (*Peers, err
 		SELECT o.account_id, o.team = me.team, count(*), count(*) FILTER (WHERE me.won),
 		       min(me.start_time), max(me.start_time),
 		       (array_agg(me.match_id ORDER BY me.start_time DESC, me.match_id DESC))[1],
-		       mode() WITHIN GROUP (ORDER BY o.hero_id)
+		       mode() WITHIN GROUP (ORDER BY o.hero_id),
+		       EXISTS (SELECT 1 FROM steam_friends sf WHERE sf.account_id = $1 AND sf.friend_id = o.account_id)
 		FROM me
 		JOIN match_players o ON o.match_id = me.match_id AND o.account_id <> $1 AND o.account_id <> 0
 		GROUP BY o.account_id, o.team = me.team
@@ -67,7 +68,7 @@ func (d *DB) ListPlayerPeers(ctx context.Context, accountID uint32) (*Peers, err
 			ally        bool
 			first, last time.Time
 		)
-		if err := rows.Scan(&r.AccountId, &ally, &r.Matches, &r.Wins, &first, &last, &r.LastMatchId, &r.TopHeroId); err != nil {
+		if err := rows.Scan(&r.AccountId, &ally, &r.Matches, &r.Wins, &first, &last, &r.LastMatchId, &r.TopHeroId, &r.SteamFriend); err != nil {
 			rows.Close()
 			return nil, err
 		}

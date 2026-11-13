@@ -3,11 +3,13 @@
 // Every failure becomes an ApiError with a kind the UI can localize.
 import { ApiError, kindOf } from "../lib/errors.ts";
 import { type MatchListState, matchApiParams } from "../lib/matchQuery.ts";
+import { NO_PROFILES, type Profiles, profileMap, uniqueIds } from "../lib/profiles.ts";
 import type {
   GameData,
   ListPlayerHeroStatsResponse,
   ListPlayerMatchFactsResponse,
   ListPlayerPeersResponse,
+  ListProfilesResponse,
   ResolveSteamVanityResponse,
   ListPlayerMatchesResponse,
   Match,
@@ -72,6 +74,22 @@ export const api = {
       headers: { "content-type": "application/json" },
       body: "{}",
     }),
+
+  /**
+   * Steam profiles by account id. Names and avatars are decoration: any
+   * failure yields no profiles (pages fall back to "Player <id>"), never an
+   * error page.
+   */
+  profiles: async (ids: Iterable<string | number>): Promise<Profiles> => {
+    const list = uniqueIds(ids);
+    if (list.length === 0) return NO_PROFILES;
+    try {
+      const res = await call<ListProfilesResponse>(`/v1/profiles?${list.map((id) => `account_ids=${id}`).join("&")}`);
+      return profileMap(res.profiles);
+    } catch {
+      return NO_PROFILES;
+    }
+  },
 
   resolveVanity: (name: string) =>
     call<ResolveSteamVanityResponse>(`/v1/steam/vanity/${encodeURIComponent(name)}`, { cache: "no-store" }),

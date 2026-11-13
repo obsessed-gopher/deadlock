@@ -12,10 +12,12 @@ import type {
   ListPlayerMatchFactsResponse,
   ListPlayerMatchesResponse,
   ListPlayerPeersResponse,
+  ListProfilesResponse,
   Match,
   Player,
   PlayerMatch,
   PlayerMatchRow,
+  Profile,
   ResolveSteamVanityResponse,
   RpcStatus,
   SyncPlayerResponse,
@@ -63,6 +65,29 @@ export const SYNC_FAILS_PLAYER = 504;
 /** Steam custom URL names: one resolves to the fixture account, one fails like an unreachable Steam. */
 export const KNOWN_VANITY = "mock-player";
 export const DOWN_VANITY = "steam-down";
+
+/** Name of the fixture account in the mock's synthetic Steam profiles. */
+export const OWNER_NAME = "Mock Owner";
+const NAME_WORDS = ["kestrel", "basalt", "nimbus", "quill", "ember", "tundra", "cobalt", "sable", "fjord", "lumen"];
+
+/**
+ * Synthetic Steam profile: real names and avatars of strangers must not end
+ * up in fixtures of a public repository. Every 7th account has none (not
+ * fetched yet / no profile), as happens with the real API.
+ */
+export function mockProfile(accountId: number, ownerId: number): Profile | null {
+  if (accountId !== ownerId && accountId % 7 === 0) return null;
+  const name = accountId === ownerId ? OWNER_NAME : `${NAME_WORDS[accountId % NAME_WORDS.length]}_${accountId % 1000}`;
+  return {
+    accountId,
+    personaName: name,
+    profileUrl: `https://steamcommunity.com/profiles/${BigInt(accountId) + STEAM_ID64_BASE}/`,
+    avatar: "",
+    avatarMedium: "",
+    avatarFull: "",
+    country: "",
+  };
+}
 
 const STEAM_ID64_BASE = 76561197960265728n;
 const MAX_U32 = 0xffffffffn;
@@ -267,6 +292,20 @@ export function createMockApi(fx: Fixtures, now: () => number = () => Date.now()
     }
 
     if (method === "GET" && parts.length === 2 && parts[1] === "gamedata") return ok(fx.gameData);
+
+    if (method === "GET" && parts.length === 2 && parts[1] === "profiles") {
+      const raw = u.searchParams.getAll("account_ids");
+      if (raw.length > 1000) return badRequest(`${raw.length} account_ids, max 1000`);
+      const profiles: Profile[] = [];
+      for (const r of raw) {
+        const id = normalizeAccountId(r);
+        if (id === null) return badRequest("account_id is neither an account id nor a SteamID64");
+        const p = mockProfile(id, fx.accountId);
+        if (p) profiles.push(p);
+      }
+      const body: ListProfilesResponse = { profiles };
+      return ok(body);
+    }
 
     if (method === "GET" && parts.length === 4 && parts[1] === "steam" && parts[2] === "vanity") {
       const name = decodeURIComponent(parts[3] ?? "");

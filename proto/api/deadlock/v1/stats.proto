@@ -44,6 +44,13 @@ service StatsService {
     };
   }
 
+  // Steam names and avatars of many accounts at once (at most 1000). Only
+  // accounts with a known profile are returned; the rest are not fetched yet
+  // or have none.
+  rpc ListProfiles(ListProfilesRequest) returns (ListProfilesResponse) {
+    option (google.api.http) = {get: "/v1/profiles"};
+  }
+
   // Account id behind a Steam custom profile URL
   // (steamcommunity.com/id/<vanity>). Asks Steam on every call.
   rpc ResolveSteamVanity(ResolveSteamVanityRequest) returns (ResolveSteamVanityResponse) {
@@ -293,6 +300,8 @@ message Peer {
   int64 last_played = 5;      // unix seconds
   uint64 last_match_id = 6;
   uint32 top_hero_id = 7;     // their most played hero in these matches
+  // In the requested player's Steam friend list (known for tracked players).
+  bool steam_friend = 8;
 }
 
 // A hero seen alongside (on the player's team) or against the player.
@@ -321,6 +330,27 @@ message SyncPlayerResponse {
 }
 
 // ---------- match ----------
+
+message ListProfilesRequest {
+  // Account ids or SteamID64s; repeat the query parameter:
+  // ?account_ids=1&account_ids=2.
+  repeated uint64 account_ids = 1;
+}
+
+message ListProfilesResponse {
+  repeated Profile profiles = 1;
+}
+
+// Public Steam profile, refreshed in the background at most weekly.
+message Profile {
+  uint32 account_id = 1;
+  string persona_name = 2;
+  string profile_url = 3;
+  string avatar = 4;          // 32 px
+  string avatar_medium = 5;   // 64 px
+  string avatar_full = 6;     // 184 px
+  string country = 7;         // ISO 3166-1 alpha-2, may be empty
+}
 
 message ResolveSteamVanityRequest {
   string vanity = 1;          // the <vanity> of steamcommunity.com/id/<vanity>

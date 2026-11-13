@@ -15,6 +15,7 @@ import { attempt } from "@/lib/errors.ts";
 import { kda, kdaRatio } from "@/lib/format.ts";
 import { makeLookup } from "@/lib/gamedata.ts";
 import { tileOf } from "@/lib/icons.ts";
+import { playerName } from "@/lib/profiles.ts";
 import { buildTable, deathsTable, scoreboardTables } from "@/lib/views.ts";
 
 type Params = { matchId: string; accountId: string };
@@ -41,6 +42,7 @@ export default async function PlayerMatchPage({ params }: { params: Promise<Para
 
   const look = makeLookup(gd.data, i18n);
   const ctx = { i18n, look };
+  const profiles = await api.profiles(match.players.map((p) => p.accountId));
   const won = me.team === match.winningTeam;
   const last = pm.timeline.at(-1);
   const entries = buildEntries(pm.items, look.ability, look.abilityName);
@@ -51,7 +53,7 @@ export default async function PlayerMatchPage({ params }: { params: Promise<Para
     <>
       <section>
         <nav className="crumbs" aria-label={t("app.title")}>
-          <Link href={`/players/${me.accountId}`}>{t("player.title", { id: me.accountId })}</Link>
+          <Link href={`/players/${me.accountId}`}>{playerName(i18n, me.accountId, profiles)}</Link>
           <span aria-hidden="true">/</span>
           <Link href={`/matches/${match.matchId}`}>{t("match.title", { id: match.matchId })}</Link>
         </nav>
@@ -90,8 +92,8 @@ export default async function PlayerMatchPage({ params }: { params: Promise<Para
 
       <section aria-labelledby="scoreboard-title">
         <h2 id="scoreboard-title">{t("match.scoreboard")}</h2>
-        <div className="grid-2">
-          {scoreboardTables(ctx, match, pm.slot).map((spec) => (
+        <div className="stack gap-16">
+          {scoreboardTables(ctx, match, pm.slot, profiles).map((spec) => (
             <DataTable key={spec.label} spec={spec} />
           ))}
         </div>

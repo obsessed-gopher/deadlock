@@ -2,7 +2,7 @@
 // (lib/peers.ts). Expected values come from the fixtures the mock serves.
 import { friends, party } from "../src/lib/peers.ts";
 import { winRate } from "../src/lib/progress.ts";
-import { ACCOUNT, STEAM_ID64, expect, expectNoHorizontalScroll, fx, look, ru, test } from "./helpers.ts";
+import { ACCOUNT, STEAM_ID64, expect, expectNoHorizontalScroll, fx, look, nameOf, ru, test } from "./helpers.ts";
 
 const { t } = ru;
 const p = fx.peers;
@@ -39,7 +39,7 @@ test("a friend card opens the friend's profile", async ({ page }) => {
     "href",
     `/matches/${fs[0]!.lastMatchId}/players/${ACCOUNT}`,
   );
-  await first.getByRole("link", { name: t("player.title", { id: fs[0]!.accountId }) }).click();
+  await first.getByRole("link", { name: nameOf(ru, fs[0]!.accountId) }).click();
   await expect(page).toHaveURL(`/players/${fs[0]!.accountId}`);
 });
 
@@ -51,7 +51,7 @@ test("allies table filters friends and searches by id", async ({ page }) => {
   await page.getByRole("combobox", { name: `${t("allies.title")}: ${t("filter.who")}` }).selectOption("");
   const target = p.allies[p.allies.length - 1]!;
   await page.getByRole("searchbox", { name: `${t("allies.title")}: ${t("filter.searchPlayer")}` }).fill(target.accountId);
-  await expect(table.getByRole("link", { name: t("player.title", { id: target.accountId }) })).toBeVisible();
+  await expect(table.getByRole("link", { name: nameOf(ru, target.accountId) })).toBeVisible();
 });
 
 test("hero matchups list every hero", async ({ page }) => {
@@ -69,4 +69,20 @@ test("SteamID64 lands on the same tab; unknown players see no data", async ({ pa
   await expect(page).toHaveURL(`/players/${ACCOUNT}/peers`);
   await page.goto("/players/42/peers");
   await expect(page.getByText(t("player.noData"))).toBeVisible();
+});
+
+test("Steam names and friend tags; players without a profile keep their id", async ({ page }) => {
+  const steamFriend = p.allies.find((a) => a.steamFriend);
+  test.skip(!steamFriend, "no Steam friends in the fixtures");
+  await page.goto(`/players/${ACCOUNT}/peers`);
+  const table = page.getByRole("table", { name: t("allies.title") });
+  const search = page.getByRole("searchbox", { name: `${t("allies.title")}: ${t("filter.searchPlayer")}` });
+  await search.fill(steamFriend!.accountId);
+  const row = table.locator("tbody tr").filter({ hasText: nameOf(ru, steamFriend!.accountId) });
+  await expect(row.getByText(t("friends.steamTag"), { exact: true })).toBeVisible();
+  const noProfile = p.allies.find((a) => Number(a.accountId) % 7 === 0);
+  if (noProfile) {
+    await search.fill(noProfile.accountId);
+    await expect(table.getByRole("link", { name: t("player.title", { id: noProfile.accountId }) })).toBeVisible();
+  }
 });

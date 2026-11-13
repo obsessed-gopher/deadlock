@@ -131,6 +131,10 @@ export interface ListPlayerPeersResponse {
   wins: number;
 }
 
+export interface ListProfilesResponse {
+  profiles: Profile[];
+}
+
 export interface Match {
   durationS: number;
   gameMode: number;
@@ -226,6 +230,8 @@ export interface Peer {
   /** unix seconds */
   lastPlayed: string;
   matches: number;
+  /** In the requested player's Steam friend list (known for tracked players). */
+  steamFriend: boolean;
   /** their most played hero in these matches */
   topHeroId: number;
   wins: number;
@@ -272,6 +278,21 @@ export interface PlayerMatchRow {
   startTime: string;
   team: number;
   won: boolean;
+}
+
+/** Public Steam profile, refreshed in the background at most weekly. */
+export interface Profile {
+  accountId: number;
+  /** 32 px */
+  avatar: string;
+  /** 184 px */
+  avatarFull: string;
+  /** 64 px */
+  avatarMedium: string;
+  /** ISO 3166-1 alpha-2, may be empty */
+  country: string;
+  personaName: string;
+  profileUrl: string;
 }
 
 export interface ResolveSteamVanityResponse {

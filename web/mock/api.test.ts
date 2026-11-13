@@ -7,13 +7,14 @@ import type {
   ListPlayerMatchFactsResponse,
   ListPlayerPeersResponse,
   ListPlayerMatchesResponse,
+  ListProfilesResponse,
   Match,
   Player,
   PlayerMatch,
   ResolveSteamVanityResponse,
   RpcStatus,
 } from "../src/api/schema.gen.ts";
-import { DOWN_VANITY, KNOWN_VANITY, createMockApi, loadFixtures, normalizeAccountId } from "./api.ts";
+import { DOWN_VANITY, KNOWN_VANITY, OWNER_NAME, createMockApi, loadFixtures, normalizeAccountId } from "./api.ts";
 
 // Runs against the committed fixtures: they are part of the contract.
 const fx = loadFixtures(join(import.meta.dirname, "fixtures"));
@@ -150,6 +151,19 @@ test("peers: the captured aggregate for the tracked player, empty for others", (
   const other = call<ListPlayerPeersResponse>("GET", "/v1/players/42/peers");
   assert.deepEqual([other.status, other.body.matches, other.body.allies], [200, 0, []]);
   assert.equal(call("GET", "/v1/players/503/peers").status, 503);
+});
+
+test("profiles: synthetic names, every 7th account without one, bad ids rejected", () => {
+  const ids = [fx.accountId, 14, 15];
+  const { status, body } = call<ListProfilesResponse>("GET", `/v1/profiles?${ids.map((i) => `account_ids=${i}`).join("&")}`);
+  assert.equal(status, 200);
+  assert.deepEqual(
+    body.profiles.map((p) => p.accountId),
+    [fx.accountId, 15],
+  );
+  assert.equal(body.profiles[0]?.personaName, OWNER_NAME);
+  assert.equal(call("GET", "/v1/profiles?account_ids=abc").status, 400);
+  assert.deepEqual(call<ListProfilesResponse>("GET", "/v1/profiles").body.profiles, []);
 });
 
 test("steam vanity: one known name, Steam outage and bad names", () => {

@@ -14,7 +14,7 @@ import {
   rows,
   test,
 } from "./helpers.ts";
-import { DOWN_VANITY, KNOWN_VANITY } from "../mock/api.ts";
+import { DOWN_VANITY, KNOWN_VANITY, OWNER_NAME } from "../mock/api.ts";
 
 const { t } = ru;
 
@@ -23,7 +23,7 @@ test("search by SteamID64 opens the canonical profile", async ({ page }) => {
   await page.getByLabel(t("home.inputLabel")).fill(STEAM_ID64);
   await page.getByRole("button", { name: t("home.open") }).click();
   await expect(page).toHaveURL(`/players/${ACCOUNT}`);
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText(t("player.title", { id: ACCOUNT }));
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText(OWNER_NAME);
 });
 
 test("a bad id is explained on the search form, not an error page", async ({ page }) => {
@@ -59,6 +59,15 @@ test("a custom link Steam does not know, or a Steam outage, is explained on the 
     await expect(page).toHaveURL(`/?error=${error}`);
     await expect(page.getByRole("alert").filter({ hasText: t(`error.${error}`) })).toBeVisible();
   }
+});
+
+test("profile shows the Steam name with a link to the Steam profile", async ({ page }) => {
+  await page.goto(`/players/${ACCOUNT}`);
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText(OWNER_NAME);
+  await expect(page.getByRole("link", { name: t("player.steamProfile") })).toHaveAttribute(
+    "href",
+    `https://steamcommunity.com/profiles/${STEAM_ID64}/`,
+  );
 });
 
 test("home lists tracked accounts", async ({ page }) => {
@@ -183,7 +192,7 @@ test("match breakdown: chart, sortable scoreboard, build and deaths filters", as
   const team = `${ru.team(fullMatch.team)} · ${fullMatch.won ? t("result.teamWon") : t("result.teamLost")}`;
   const dmg = page.getByRole("table", { name: team, exact: true }).getByRole("columnheader", { name: t("col.damage") });
   await dmg.getByRole("button").click();
-  const damage = (await column(page, team, 4)).map(parseNum);
+  const damage = (await column(page, team, 5)).map(parseNum);
   expect(damage).toEqual([...damage].sort((a, b) => b - a));
 
   // Build: collapsed, filter by kind, search; ability upgrades numbered by order.

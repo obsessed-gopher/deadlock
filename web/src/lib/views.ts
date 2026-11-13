@@ -7,6 +7,7 @@ import { duration, kda, kdaRatio } from "./format.ts";
 import type { Lookup } from "./gamedata.ts";
 import { heroRows } from "./heroes.ts";
 import { tileOf } from "./icons.ts";
+import { NO_PROFILES, type Profiles, avatarOf, playerName } from "./profiles.ts";
 import type { TableSpec } from "./tableSpec.ts";
 
 type Ctx = { i18n: I18n; look: Lookup };
@@ -78,7 +79,12 @@ export function heroTable({ i18n, look }: Ctx, stats: HeroStats[], accountId: st
 }
 
 /** One table per team, winners' and losers' order as in the match. */
-export function scoreboardTables({ i18n, look }: Ctx, match: Match, highlightSlot?: number): TableSpec[] {
+export function scoreboardTables(
+  { i18n, look }: Ctx,
+  match: Match,
+  highlightSlot?: number,
+  profiles: Profiles = NO_PROFILES,
+): TableSpec[] {
   const { t } = i18n;
   const teams = [...new Set(match.players.map((p) => p.team))].sort((a, b) => a - b);
   return teams.map((team) => {
@@ -92,6 +98,7 @@ export function scoreboardTables({ i18n, look }: Ctx, match: Match, highlightSlo
         note: won ? t("result.teamWon") : t("result.teamLost"),
       },
       columns: [
+        { key: "player", label: t("col.player") },
         { key: "hero", label: t("col.hero") },
         { key: "kda", label: t("col.kdaShort"), numeric: true },
         { key: "souls", label: t("col.souls"), numeric: true },
@@ -102,11 +109,17 @@ export function scoreboardTables({ i18n, look }: Ctx, match: Match, highlightSlo
         .filter((p) => p.team === team)
         .map((p: MatchPlayer) => {
           const name = look.heroName(p.heroId);
+          const player = playerName(i18n, p.accountId, profiles);
           return {
             id: String(p.slot),
             me: p.slot === highlightSlot,
-            search: name,
+            search: `${name} ${player}`,
             cells: {
+              player: {
+                text: player,
+                href: `/players/${p.accountId}`,
+                avatar: { src: avatarOf(p.accountId, profiles, "small"), name: player },
+              },
               hero: {
                 text: name,
                 href: `/matches/${match.matchId}/players/${p.accountId}`,
@@ -122,7 +135,7 @@ export function scoreboardTables({ i18n, look }: Ctx, match: Match, highlightSlo
           };
         }),
       initialSort: { key: "souls", dir: "desc" },
-      searchPlaceholder: t("filter.searchHero"),
+      searchPlaceholder: t("filter.searchHeroOrPlayer"),
     };
   });
 }

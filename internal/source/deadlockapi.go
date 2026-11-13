@@ -3,9 +3,12 @@ package source
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
+	"strconv"
+	"strings"
 	"time"
 )
 
@@ -40,6 +43,31 @@ func (c *DeadlockAPI) Salts(ctx context.Context, matchID uint64) (Salts, error) 
 func (c *DeadlockAPI) MatchHistory(ctx context.Context, accountID uint32) ([]MatchSummary, error) {
 	var out []MatchSummary
 	err := c.getJSON(ctx, fmt.Sprintf("/v1/players/%d/match-history", accountID), &out)
+	return out, err
+}
+
+// MaxProfileBatch is how many account ids /v1/players/steam takes at once.
+const MaxProfileBatch = 1000
+
+// SteamProfiles implements ProfileProvider: cached Steam profiles of up to
+// MaxProfileBatch accounts in one request. Accounts without a profile are
+// simply missing from the result.
+func (c *DeadlockAPI) SteamProfiles(ctx context.Context, ids []uint32) ([]SteamProfile, error) {
+	if len(ids) == 0 {
+		return nil, nil
+	}
+	if len(ids) > MaxProfileBatch {
+		return nil, fmt.Errorf("deadlock-api: %d profiles in one request, max %d", len(ids), MaxProfileBatch)
+	}
+	parts := make([]string, len(ids))
+	for i, id := range ids {
+		parts[i] = strconv.FormatUint(uint64(id), 10)
+	}
+	var out []SteamProfile
+	err := c.getJSON(ctx, "/v1/players/steam?account_ids="+strings.Join(parts, ","), &out)
+	if errors.Is(err, ErrNotFound) { // none of them has a profile
+		return nil, nil
+	}
 	return out, err
 }
 

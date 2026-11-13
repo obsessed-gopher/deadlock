@@ -11,6 +11,7 @@ import { type SortState, filterRows, nextSort, sortRows, visibleRows } from "@/l
 
 import type { Cell, Row, TableSpec } from "@/lib/tableSpec.ts";
 
+import { Avatar } from "./Avatar.tsx";
 import { Icon } from "./Icon.tsx";
 
 export function DataTable({ spec }: { spec: TableSpec }) {
@@ -162,6 +163,7 @@ function CellView({ cell }: { cell: Cell | undefined }) {
   return (
     <span className="cell">
       {cell.slot && <span className={`slot-mark slot-${cell.slot}`} aria-hidden="true" />}
+      {cell.avatar && <Avatar src={cell.avatar.src} name={cell.avatar.name} size={24} />}
       {cell.icon && <Icon src={cell.icon} tile={cell.iconTile} />}
       {cell.bar !== undefined && (
         <span className={cell.tone ? `bar tone-${cell.tone}` : "bar"} aria-hidden="true">

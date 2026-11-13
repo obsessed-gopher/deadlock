@@ -142,3 +142,37 @@ func (d *DB) ListPlayerPeers(ctx context.Context, accountID uint32) (*Peers, err
 	}
 	return &p, rows.Err()
 }
+
+// ListSeenMatches returns the player's line in every stored match with
+// metadata, oldest first. Rosters come from metadata, so this works for any
+// player seen in a match; an unknown one has no rows.
+func (d *DB) ListSeenMatches(ctx context.Context, accountID uint32) ([]*v1.SeenMatch, error) {
+	rows, err := d.Pool.Query(ctx, `
+		SELECT m.match_id, m.start_time, m.duration_s, m.game_mode, m.match_mode,
+		       mp.hero_id, mp.team, m.winning_team = mp.team,
+		       mp.kills, mp.deaths, mp.assists, mp.net_worth, mp.last_hits,
+		       mp.player_damage, mp.player_healing, mp.level
+		FROM match_players mp
+		JOIN matches m ON m.match_id = mp.match_id
+		WHERE mp.account_id = $1
+		ORDER BY m.start_time, m.match_id`, accountID)
+	if err != nil {
+		return nil, err
+	}
+	var out []*v1.SeenMatch
+	for rows.Next() {
+		var (
+			s     v1.SeenMatch
+			start time.Time
+		)
+		if err := rows.Scan(&s.MatchId, &start, &s.DurationS, &s.GameMode, &s.MatchMode,
+			&s.HeroId, &s.Team, &s.Won, &s.Kills, &s.Deaths, &s.Assists, &s.NetWorth, &s.LastHits,
+			&s.PlayerDamage, &s.PlayerHealing, &s.Level); err != nil {
+			rows.Close()
+			return nil, err
+		}
+		s.StartTime = start.Unix()
+		out = append(out, &s)
+	}
+	return out, rows.Err()
+}

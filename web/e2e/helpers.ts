@@ -24,7 +24,7 @@ export function nameOf(i18n: typeof ru, id: string | number): string {
 }
 export const lookRuNames = makeLookup(fx.gameData, createI18n({ locale: "ru", names: "ru" }));
 
-const mock = createMockApi(fx);
+export const mock = createMockApi(fx);
 export const rows = (mock.handle("GET", `/v1/players/${ACCOUNT}/matches?pageSize=200`).body as ListPlayerMatchesResponse)
   .matches;
 export const heroes = (mock.handle("GET", `/v1/players/${ACCOUNT}/heroes`).body as ListPlayerHeroStatsResponse).heroes;

@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { api } from "@/api/client.ts";
 import { ErrorState } from "@/components/ErrorState.tsx";
 import { tabHref } from "@/components/PlayerHead.tsx";
+import { QueueNav } from "@/components/QueueNav.tsx";
 import {
   FormCard,
   LobbyChart,
@@ -18,6 +19,8 @@ import { getI18n } from "@/i18n/server.ts";
 import { attempt } from "@/lib/errors.ts";
 import { makeLookup } from "@/lib/gamedata.ts";
 import { matchStateQuery, parseMatchState } from "@/lib/matchQuery.ts";
+import { type QueueKey, countQueues, parseQueue } from "@/lib/queue.ts";
+import { inQueue } from "@/lib/seen.ts";
 import {
   afterStreaks,
   aggregate,
@@ -51,7 +54,15 @@ export default async function ProgressPage({ params, searchParams }: { params: P
   if (listQuery) redirect(tabHref(id, "matches") + listQuery);
 
   const metric: TrendMetric = TREND_METRICS.find((m) => m === sp.trend) ?? "spm";
-  const query = metric === "spm" ? "" : `?trend=${metric}`;
+  const queue = parseQueue(sp.queue);
+  const queryOf = (m: TrendMetric, q: QueueKey | "") => {
+    const p = new URLSearchParams();
+    if (m !== "spm") p.set("trend", m);
+    if (q) p.set("queue", q);
+    const s = p.toString();
+    return s ? `?${s}` : "";
+  };
+  const query = queryOf(metric, queue);
   const profile = await loadProfile(i18n, id, "progress", query);
   if (!profile.ok) return profile.page;
   const accountId = profile.player.accountId;
@@ -62,11 +73,21 @@ export default async function ProgressPage({ params, searchParams }: { params: P
   if (!facts.ok) return <ErrorState i18n={i18n} kind={facts.kind} retryHref={self} />;
 
   const look = makeLookup(gd.data, i18n);
-  const fs = facts.data.matches;
+  const all = facts.data.matches;
+  const fs = inQueue(all, queue);
+  const nav = (
+    <QueueNav
+      i18n={i18n}
+      counts={countQueues(all)}
+      current={queue}
+      hrefFor={(q) => tabHref(accountId, "progress") + queryOf(metric, q)}
+    />
+  );
   if (fs.length === 0) {
     return (
       <>
         {profile.head}
+        {nav}
         <p className="muted">{t("progress.empty")}</p>
       </>
     );
@@ -79,12 +100,13 @@ export default async function ProgressPage({ params, searchParams }: { params: P
   return (
     <>
       {profile.head}
+      {nav}
       <FormCard i18n={i18n} form={form(fs)} />
       <TrendChart
         i18n={i18n}
         months={ms.slice(-TREND_MONTHS)}
         metric={metric}
-        hrefFor={(m) => tabHref(accountId, "progress") + (m === "spm" ? "" : `?trend=${m}`)}
+        hrefFor={(m) => tabHref(accountId, "progress") + queryOf(m, queue)}
       />
       <LobbyChart i18n={i18n} months={ms.slice(-TREND_MONTHS)} />
       <SpeedSection

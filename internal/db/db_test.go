@@ -198,6 +198,7 @@ func TestIngestRoundTrip(t *testing.T) {
 	testDeferMeta(ctx, t, d, match)
 	testPeers(ctx, t, d, acc, match)
 	testProfiles(ctx, t, d, acc)
+	testSeenMatches(ctx, t, d, acc, match)
 }
 
 // testMatchFacts: the matches of testMatchQueries, oldest first; only match
@@ -612,5 +613,41 @@ func testDeferMeta(ctx context.Context, t *testing.T, d *DB, match uint64) {
 	}
 	if status != MetaOK || msg != "" {
 		t.Errorf("stored match after DeferMeta = %s %q, want untouched", status, msg)
+	}
+}
+
+// testSeenMatches: the six metadata matches of testPeers (the original and
+// its copies), oldest first, for the tracked player and for an untracked
+// teammate alike.
+func testSeenMatches(ctx context.Context, t *testing.T, d *DB, acc uint32, match uint64) {
+	t.Helper()
+	ms, err := d.ListSeenMatches(ctx, acc)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(ms) != 6 || ms[0].MatchId != match {
+		t.Fatalf("seen = %d matches starting %v; want 6 from %d", len(ms), ms[0].GetMatchId(), match)
+	}
+	var wins int
+	for i, m := range ms {
+		if i > 0 && m.StartTime < ms[i-1].StartTime {
+			t.Errorf("not oldest first at %d", i)
+		}
+		if m.Won {
+			wins++
+		}
+	}
+	if wins != 1 || ms[0].NetWorth != 29130 || ms[0].HeroId == 0 || ms[0].PlayerDamage == 0 {
+		t.Errorf("wins %d, first = %+v", wins, ms[0])
+	}
+	var mate uint32
+	if err := d.Pool.QueryRow(ctx, `SELECT account_id FROM match_players WHERE match_id = $1 AND account_id <> $2 LIMIT 1`, match, acc).Scan(&mate); err != nil {
+		t.Fatal(err)
+	}
+	if ms, err := d.ListSeenMatches(ctx, mate); err != nil || len(ms) == 0 {
+		t.Errorf("untracked player seen = %v, %v", ms, err)
+	}
+	if ms, err := d.ListSeenMatches(ctx, 42); err != nil || len(ms) != 0 {
+		t.Errorf("unknown player seen = %v, %v", ms, err)
 	}
 }

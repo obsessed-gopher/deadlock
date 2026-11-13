@@ -28,6 +28,7 @@ type Store interface {
 	ListPlayerHeroStats(ctx context.Context, accountID uint32) ([]*v1.HeroStats, error)
 	ListPlayerMatchFacts(ctx context.Context, accountID uint32) ([]*v1.MatchFacts, error)
 	ListPlayerPeers(ctx context.Context, accountID uint32) (*db.Peers, error)
+	ListSeenMatches(ctx context.Context, accountID uint32) ([]*v1.SeenMatch, error)
 	ListProfiles(ctx context.Context, ids []uint32) ([]*v1.Profile, error)
 	GetMatch(ctx context.Context, matchID uint64) (*v1.Match, error)
 	GetPlayerMatch(ctx context.Context, matchID uint64, accountID uint32) (*v1.PlayerMatch, error)
@@ -203,6 +204,19 @@ func (s *Server) SyncPlayer(ctx context.Context, req *v1.SyncPlayerRequest) (*v1
 		return nil, status.Errorf(codes.Unavailable, "sync: %v", err)
 	}
 	return &v1.SyncPlayerResponse{NewMatches: uint32(n), QueuedMeta: uint32(pending)}, nil
+}
+
+// ListSeenMatches implements v1.StatsServiceServer.
+func (s *Server) ListSeenMatches(ctx context.Context, req *v1.ListSeenMatchesRequest) (*v1.ListSeenMatchesResponse, error) {
+	id, err := accountID(req.GetAccountId())
+	if err != nil {
+		return nil, err
+	}
+	ms, err := s.store.ListSeenMatches(ctx, id)
+	if err != nil {
+		return nil, toStatus(err)
+	}
+	return &v1.ListSeenMatchesResponse{Matches: ms}, nil
 }
 
 // MaxProfiles is how many accounts one ListProfiles call may ask for.

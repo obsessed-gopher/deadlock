@@ -63,6 +63,11 @@ func (f *fakeStore) ListPlayerPeers(_ context.Context, accountID uint32) (*db.Pe
 	return f.peers, f.err
 }
 
+func (f *fakeStore) ListSeenMatches(_ context.Context, accountID uint32) ([]*v1.SeenMatch, error) {
+	f.gotAccount = accountID
+	return []*v1.SeenMatch{{MatchId: 1}}, f.err
+}
+
 func (f *fakeStore) ListProfiles(_ context.Context, ids []uint32) ([]*v1.Profile, error) {
 	f.gotIDs = ids
 	out := make([]*v1.Profile, 0, len(ids))
@@ -172,6 +177,10 @@ func TestRequiredIDs(t *testing.T) {
 			_, err := s.ListPlayerPeers(ctx, &v1.ListPlayerPeersRequest{})
 			return err
 		},
+		"ListSeenMatches": func() error {
+			_, err := s.ListSeenMatches(ctx, &v1.ListSeenMatchesRequest{})
+			return err
+		},
 		"GetMatch": func() error { _, err := s.GetMatch(ctx, &v1.GetMatchRequest{}); return err },
 		"GetPlayerMatch": func() error {
 			_, err := s.GetPlayerMatch(ctx, &v1.GetPlayerMatchRequest{MatchId: 1})
@@ -216,6 +225,10 @@ func TestAccountIDAcceptsSteamID64(t *testing.T) {
 		},
 		"ListPlayerPeers": func(id uint64) (uint32, error) {
 			_, err := s.ListPlayerPeers(ctx, &v1.ListPlayerPeersRequest{AccountId: id})
+			return st.gotAccount, err
+		},
+		"ListSeenMatches": func(id uint64) (uint32, error) {
+			_, err := s.ListSeenMatches(ctx, &v1.ListSeenMatchesRequest{AccountId: id})
 			return st.gotAccount, err
 		},
 		"SyncPlayer": func(id uint64) (uint32, error) {

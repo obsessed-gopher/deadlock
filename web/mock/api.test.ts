@@ -8,6 +8,7 @@ import type {
   ListPlayerPeersResponse,
   ListPlayerMatchesResponse,
   ListProfilesResponse,
+  ListSeenMatchesResponse,
   Match,
   Player,
   PlayerMatch,
@@ -171,6 +172,19 @@ test("profiles: synthetic names, every 7th account without one, bad ids rejected
   assert.equal(body.profiles[0]?.personaName, OWNER_NAME);
   assert.equal(call("GET", "/v1/profiles?account_ids=abc").status, 400);
   assert.deepEqual(call<ListProfilesResponse>("GET", "/v1/profiles").body.profiles, []);
+});
+
+test("seen: rosters of the full breakdowns, for any player in them", () => {
+  const own = call<ListSeenMatchesResponse>("GET", `/v1/players/${STEAM_ID64}/seen`);
+  assert.equal(own.status, 200);
+  const full = new Set([...fx.playerMatches.values()].map((pm) => pm.match?.matchId));
+  assert.equal(own.body.matches.length, full.size);
+  const starts = own.body.matches.map((m) => Number(m.startTime));
+  assert.deepEqual(starts, [...starts].sort((a, b) => a - b));
+  const other = [...fx.playerMatches.values()][0]!.match!.players.find((p) => p.accountId !== fx.accountId)!;
+  const theirs = call<ListSeenMatchesResponse>("GET", `/v1/players/${other.accountId}/seen`).body.matches;
+  assert.ok(theirs.length > 0 && theirs.every((m) => m.heroId > 0));
+  assert.deepEqual(call<ListSeenMatchesResponse>("GET", "/v1/players/42/seen").body.matches, []);
 });
 
 test("steam vanity: one known name, Steam outage and bad names", () => {

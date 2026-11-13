@@ -5,6 +5,7 @@ import Link from "next/link";
 import type { Peer } from "@/api/schema.gen.ts";
 import type { I18n } from "@/i18n/core.ts";
 import type { Lookup } from "@/lib/gamedata.ts";
+import { compareHref } from "@/lib/compareViews.ts";
 import { pp, signedPp } from "@/lib/peerViews.ts";
 import {
   type HeroEdge,
@@ -201,6 +202,9 @@ export function FriendsSection({
               <span className="row between friend-foot">
                 <Link href={`/matches/${f.lastMatchId}/players/${ownerId}`} className="faint small">
                   {t("friends.last", { date: i18n.date(f.lastPlayed).split(",")[0] ?? "" })}
+                </Link>
+                <Link href={compareHref(ownerId, f.accountId)} className="small">
+                  {t("compare.link")}
                 </Link>
                 {f.steamFriend && (
                   <span className="tag" title={t("friends.steamTagTitle")}>

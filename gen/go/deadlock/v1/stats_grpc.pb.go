@@ -25,6 +25,7 @@ const (
 	StatsService_ListPlayerMatchFacts_FullMethodName = "/deadlock.v1.StatsService/ListPlayerMatchFacts"
 	StatsService_ListPlayerPeers_FullMethodName      = "/deadlock.v1.StatsService/ListPlayerPeers"
 	StatsService_SyncPlayer_FullMethodName           = "/deadlock.v1.StatsService/SyncPlayer"
+	StatsService_ListSeenMatches_FullMethodName      = "/deadlock.v1.StatsService/ListSeenMatches"
 	StatsService_ListProfiles_FullMethodName         = "/deadlock.v1.StatsService/ListProfiles"
 	StatsService_ResolveSteamVanity_FullMethodName   = "/deadlock.v1.StatsService/ResolveSteamVanity"
 	StatsService_GetMatch_FullMethodName             = "/deadlock.v1.StatsService/GetMatch"
@@ -53,6 +54,10 @@ type StatsServiceClient interface {
 	ListPlayerPeers(ctx context.Context, in *ListPlayerPeersRequest, opts ...grpc.CallOption) (*ListPlayerPeersResponse, error)
 	// Pull fresh match history and queue metadata downloads for new matches.
 	SyncPlayer(ctx context.Context, in *SyncPlayerRequest, opts ...grpc.CallOption) (*SyncPlayerResponse, error)
+	// Every stored match with metadata the player took part in, oldest first:
+	// works for anyone seen in a match, tracked or not (profiles of other
+	// players, comparisons).
+	ListSeenMatches(ctx context.Context, in *ListSeenMatchesRequest, opts ...grpc.CallOption) (*ListSeenMatchesResponse, error)
 	// Steam names and avatars of many accounts at once (at most 1000). Only
 	// accounts with a known profile are returned; the rest are not fetched yet
 	// or have none.
@@ -137,6 +142,16 @@ func (c *statsServiceClient) SyncPlayer(ctx context.Context, in *SyncPlayerReque
 	return out, nil
 }
 
+func (c *statsServiceClient) ListSeenMatches(ctx context.Context, in *ListSeenMatchesRequest, opts ...grpc.CallOption) (*ListSeenMatchesResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListSeenMatchesResponse)
+	err := c.cc.Invoke(ctx, StatsService_ListSeenMatches_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *statsServiceClient) ListProfiles(ctx context.Context, in *ListProfilesRequest, opts ...grpc.CallOption) (*ListProfilesResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(ListProfilesResponse)
@@ -208,6 +223,10 @@ type StatsServiceServer interface {
 	ListPlayerPeers(context.Context, *ListPlayerPeersRequest) (*ListPlayerPeersResponse, error)
 	// Pull fresh match history and queue metadata downloads for new matches.
 	SyncPlayer(context.Context, *SyncPlayerRequest) (*SyncPlayerResponse, error)
+	// Every stored match with metadata the player took part in, oldest first:
+	// works for anyone seen in a match, tracked or not (profiles of other
+	// players, comparisons).
+	ListSeenMatches(context.Context, *ListSeenMatchesRequest) (*ListSeenMatchesResponse, error)
 	// Steam names and avatars of many accounts at once (at most 1000). Only
 	// accounts with a known profile are returned; the rest are not fetched yet
 	// or have none.
@@ -249,6 +268,9 @@ func (UnimplementedStatsServiceServer) ListPlayerPeers(context.Context, *ListPla
 }
 func (UnimplementedStatsServiceServer) SyncPlayer(context.Context, *SyncPlayerRequest) (*SyncPlayerResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method SyncPlayer not implemented")
+}
+func (UnimplementedStatsServiceServer) ListSeenMatches(context.Context, *ListSeenMatchesRequest) (*ListSeenMatchesResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListSeenMatches not implemented")
 }
 func (UnimplementedStatsServiceServer) ListProfiles(context.Context, *ListProfilesRequest) (*ListProfilesResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ListProfiles not implemented")
@@ -394,6 +416,24 @@ func _StatsService_SyncPlayer_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _StatsService_ListSeenMatches_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListSeenMatchesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(StatsServiceServer).ListSeenMatches(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: StatsService_ListSeenMatches_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(StatsServiceServer).ListSeenMatches(ctx, req.(*ListSeenMatchesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _StatsService_ListProfiles_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ListProfilesRequest)
 	if err := dec(in); err != nil {
@@ -514,6 +554,10 @@ var StatsService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SyncPlayer",
 			Handler:    _StatsService_SyncPlayer_Handler,
+		},
+		{
+			MethodName: "ListSeenMatches",
+			Handler:    _StatsService_ListSeenMatches_Handler,
 		},
 		{
 			MethodName: "ListProfiles",

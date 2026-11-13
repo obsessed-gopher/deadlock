@@ -44,6 +44,13 @@ service StatsService {
     };
   }
 
+  // Every stored match with metadata the player took part in, oldest first:
+  // works for anyone seen in a match, tracked or not (profiles of other
+  // players, comparisons).
+  rpc ListSeenMatches(ListSeenMatchesRequest) returns (ListSeenMatchesResponse) {
+    option (google.api.http) = {get: "/v1/players/{account_id}/seen"};
+  }
+
   // Steam names and avatars of many accounts at once (at most 1000). Only
   // accounts with a known profile are returned; the rest are not fetched yet
   // or have none.
@@ -342,6 +349,35 @@ message SyncPlayerResponse {
 }
 
 // ---------- match ----------
+
+message ListSeenMatchesRequest {
+  // Account id or SteamID64.
+  uint64 account_id = 1;
+}
+
+message ListSeenMatchesResponse {
+  repeated SeenMatch matches = 1;  // oldest first
+}
+
+// One player's line in a stored match, from metadata.
+message SeenMatch {
+  uint64 match_id = 1;
+  int64 start_time = 2;       // unix seconds
+  uint32 duration_s = 3;
+  int32 game_mode = 4;
+  int32 match_mode = 5;
+  uint32 hero_id = 6;
+  uint32 team = 7;
+  bool won = 8;
+  uint32 kills = 9;
+  uint32 deaths = 10;
+  uint32 assists = 11;
+  uint32 net_worth = 12;
+  uint32 last_hits = 13;
+  uint32 player_damage = 14;
+  uint32 player_healing = 15;
+  uint32 level = 16;
+}
 
 message ListProfilesRequest {
   // Account ids or SteamID64s; repeat the query parameter:

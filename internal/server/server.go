@@ -27,6 +27,7 @@ type Store interface {
 	ListPlayerMatches(ctx context.Context, q db.MatchQuery) ([]*v1.PlayerMatchRow, int, error)
 	ListPlayerHeroStats(ctx context.Context, accountID uint32) ([]*v1.HeroStats, error)
 	ListPlayerMatchFacts(ctx context.Context, accountID uint32) ([]*v1.MatchFacts, error)
+	ListPlayerPeers(ctx context.Context, accountID uint32) (*db.Peers, error)
 	GetMatch(ctx context.Context, matchID uint64) (*v1.Match, error)
 	GetPlayerMatch(ctx context.Context, matchID uint64, accountID uint32) (*v1.PlayerMatch, error)
 }
@@ -36,18 +37,25 @@ type PlayerSyncer interface {
 	SyncPlayer(ctx context.Context, accountID uint32) (newMatches, pending int, err error)
 }
 
+// VanityResolver maps a Steam custom URL name to an account id.
+// *source.SteamCommunity implements it.
+type VanityResolver interface {
+	ResolveVanity(ctx context.Context, name string) (uint32, error)
+}
+
 // Server implements v1.StatsServiceServer.
 type Server struct {
 	v1.UnimplementedStatsServiceServer
 	store  Store
 	syncer PlayerSyncer
+	steam  VanityResolver
 
 	gameData *v1.GameData
 }
 
 // New builds the service; the game data snapshot is converted once here.
-func New(store Store, sy PlayerSyncer, gd *gamedata.Data) *Server {
-	return &Server{store: store, syncer: sy, gameData: gameDataToAPI(gd)}
+func New(store Store, sy PlayerSyncer, steam VanityResolver, gd *gamedata.Data) *Server {
+	return &Server{store: store, syncer: sy, steam: steam, gameData: gameDataToAPI(gd)}
 }
 
 // GetPlayer implements v1.StatsServiceServer.
@@ -158,6 +166,28 @@ func (s *Server) ListPlayerMatchFacts(ctx context.Context, req *v1.ListPlayerMat
 	}, nil
 }
 
+// ListPlayerPeers implements v1.StatsServiceServer.
+func (s *Server) ListPlayerPeers(ctx context.Context, req *v1.ListPlayerPeersRequest) (*v1.ListPlayerPeersResponse, error) {
+	id, err := accountID(req.GetAccountId())
+	if err != nil {
+		return nil, err
+	}
+	p, err := s.store.ListPlayerPeers(ctx, id)
+	if err != nil {
+		return nil, toStatus(err)
+	}
+	return &v1.ListPlayerPeersResponse{
+		Matches:          p.Matches,
+		Wins:             p.Wins,
+		Allies:           p.Allies,
+		Enemies:          p.Enemies,
+		Heroes:           p.Heroes,
+		PartySizes:       p.PartySizes,
+		PeerMinMatches:   db.PeerMinMatches,
+		FriendMinMatches: db.FriendMinMatches,
+	}, nil
+}
+
 // SyncPlayer implements v1.StatsServiceServer.
 func (s *Server) SyncPlayer(ctx context.Context, req *v1.SyncPlayerRequest) (*v1.SyncPlayerResponse, error) {
 	id, err := accountID(req.GetAccountId())
@@ -169,6 +199,23 @@ func (s *Server) SyncPlayer(ctx context.Context, req *v1.SyncPlayerRequest) (*v1
 		return nil, status.Errorf(codes.Unavailable, "sync: %v", err)
 	}
 	return &v1.SyncPlayerResponse{NewMatches: uint32(n), QueuedMeta: uint32(pending)}, nil
+}
+
+// ResolveSteamVanity implements v1.StatsServiceServer.
+func (s *Server) ResolveSteamVanity(ctx context.Context, req *v1.ResolveSteamVanityRequest) (*v1.ResolveSteamVanityResponse, error) {
+	id, err := s.steam.ResolveVanity(ctx, req.GetVanity())
+	switch {
+	case err == nil:
+		return &v1.ResolveSteamVanityResponse{AccountId: id}, nil
+	case errors.Is(err, source.ErrBadVanity):
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	case errors.Is(err, source.ErrNotFound):
+		return nil, status.Error(codes.NotFound, "no steam profile with this custom url")
+	case errors.Is(err, context.Canceled), errors.Is(err, context.DeadlineExceeded):
+		return nil, toStatus(err)
+	default:
+		return nil, status.Errorf(codes.Unavailable, "steam: %v", err)
+	}
 }
 
 // GetMatch implements v1.StatsServiceServer.

@@ -84,7 +84,7 @@ func run(log *slog.Logger) error {
 
 	// gRPC
 	gs := grpc.NewServer(grpc.UnaryInterceptor(server.UnaryInterceptor(log)))
-	v1.RegisterStatsServiceServer(gs, server.New(database, sy, gd))
+	v1.RegisterStatsServiceServer(gs, server.New(database, sy, source.NewSteamCommunity(), gd))
 	reflection.Register(gs)
 	lis, err := (&net.ListenConfig{}).Listen(ctx, "tcp", cfg.GRPCAddr)
 	if err != nil {

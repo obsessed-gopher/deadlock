@@ -6,7 +6,7 @@ import type { I18n } from "@/i18n/core.ts";
 
 import { SyncButton } from "./SyncButton.tsx";
 
-export const PROFILE_TABS = ["progress", "heroes", "matches"] as const;
+export const PROFILE_TABS = ["progress", "peers", "heroes", "matches"] as const;
 export type ProfileTab = (typeof PROFILE_TABS)[number];
 
 export function tabHref(accountId: string | number, tab: ProfileTab): string {

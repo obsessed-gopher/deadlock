@@ -9,6 +9,7 @@ import (
 
 	"github.com/obsessed-gopher/deadlock/internal/db"
 	"github.com/obsessed-gopher/deadlock/internal/gamedata"
+	"github.com/obsessed-gopher/deadlock/internal/source"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -24,6 +25,7 @@ type fakeStore struct {
 	player *v1.Player
 	rows   []*v1.PlayerMatchRow
 	heroes []*v1.HeroStats
+	peers  *db.Peers
 	err    error
 
 	gotAccount uint32
@@ -51,6 +53,14 @@ func (f *fakeStore) ListPlayerMatchFacts(_ context.Context, accountID uint32) ([
 	return nil, f.err
 }
 
+func (f *fakeStore) ListPlayerPeers(_ context.Context, accountID uint32) (*db.Peers, error) {
+	f.gotAccount = accountID
+	if f.peers == nil {
+		return &db.Peers{}, f.err
+	}
+	return f.peers, f.err
+}
+
 func (f *fakeStore) GetPlayerMatch(_ context.Context, _ uint64, accountID uint32) (*v1.PlayerMatch, error) {
 	f.gotAccount = accountID
 	return &v1.PlayerMatch{}, f.err
@@ -74,7 +84,37 @@ func (r *recordingSyncer) SyncPlayer(_ context.Context, accountID uint32) (int, 
 }
 
 func newServer(st Store, sy PlayerSyncer) *Server {
-	return New(st, sy, &gamedata.Data{})
+	return New(st, sy, fakeSteam{}, &gamedata.Data{})
+}
+
+// fakeSteam knows one name; "down" fails like an unreachable Steam.
+type fakeSteam struct{}
+
+func (fakeSteam) ResolveVanity(_ context.Context, name string) (uint32, error) {
+	switch name {
+	case "known":
+		return 1517505834, nil
+	case "down":
+		return 0, errors.New("connection refused")
+	case "":
+		return 0, source.ErrBadVanity
+	default:
+		return 0, source.ErrNotFound
+	}
+}
+
+func TestResolveSteamVanity(t *testing.T) {
+	s := newServer(&fakeStore{}, fakeSyncer{})
+	ctx := context.Background()
+	resp, err := s.ResolveSteamVanity(ctx, &v1.ResolveSteamVanityRequest{Vanity: "known"})
+	if err != nil || resp.GetAccountId() != 1517505834 {
+		t.Fatalf("known = %v, %v", resp, err)
+	}
+	for name, want := range map[string]codes.Code{"": codes.InvalidArgument, "nobody": codes.NotFound, "down": codes.Unavailable} {
+		if _, err := s.ResolveSteamVanity(ctx, &v1.ResolveSteamVanityRequest{Vanity: name}); status.Code(err) != want {
+			t.Errorf("%q: code = %s, want %s", name, status.Code(err), want)
+		}
+	}
 }
 
 func TestRequiredIDs(t *testing.T) {
@@ -90,6 +130,10 @@ func TestRequiredIDs(t *testing.T) {
 		},
 		"ListPlayerMatchFacts": func() error {
 			_, err := s.ListPlayerMatchFacts(ctx, &v1.ListPlayerMatchFactsRequest{})
+			return err
+		},
+		"ListPlayerPeers": func() error {
+			_, err := s.ListPlayerPeers(ctx, &v1.ListPlayerPeersRequest{})
 			return err
 		},
 		"GetMatch": func() error { _, err := s.GetMatch(ctx, &v1.GetMatchRequest{}); return err },
@@ -132,6 +176,10 @@ func TestAccountIDAcceptsSteamID64(t *testing.T) {
 		},
 		"ListPlayerMatchFacts": func(id uint64) (uint32, error) {
 			_, err := s.ListPlayerMatchFacts(ctx, &v1.ListPlayerMatchFactsRequest{AccountId: id})
+			return st.gotAccount, err
+		},
+		"ListPlayerPeers": func(id uint64) (uint32, error) {
+			_, err := s.ListPlayerPeers(ctx, &v1.ListPlayerPeersRequest{AccountId: id})
 			return st.gotAccount, err
 		},
 		"SyncPlayer": func(id uint64) (uint32, error) {
@@ -283,6 +331,34 @@ func TestListPlayerHeroStats(t *testing.T) {
 	}
 }
 
+func TestListPlayerPeers(t *testing.T) {
+	peers := &db.Peers{
+		Matches: 10, Wins: 6,
+		Allies:     []*v1.Peer{{AccountId: 5, Matches: 7}},
+		Enemies:    []*v1.Peer{{AccountId: 6, Matches: 2}},
+		Heroes:     []*v1.HeroMatchup{{HeroId: 13, WithMatches: 3}},
+		PartySizes: []*v1.PartySize{{Friends: 0, Matches: 3}, {Friends: 1, Matches: 7}},
+	}
+	s := newServer(&fakeStore{peers: peers}, fakeSyncer{})
+	resp, err := s.ListPlayerPeers(context.Background(), &v1.ListPlayerPeersRequest{AccountId: 1})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if resp.GetMatches() != 10 || resp.GetWins() != 6 || resp.GetAllies()[0].GetAccountId() != 5 ||
+		resp.GetEnemies()[0].GetAccountId() != 6 || resp.GetHeroes()[0].GetHeroId() != 13 || len(resp.GetPartySizes()) != 2 {
+		t.Errorf("response = %v, want the store data", resp)
+	}
+	if resp.GetPeerMinMatches() != db.PeerMinMatches || resp.GetFriendMinMatches() != db.FriendMinMatches {
+		t.Errorf("thresholds = %d, %d", resp.GetPeerMinMatches(), resp.GetFriendMinMatches())
+	}
+
+	s = newServer(&fakeStore{err: errors.New("connection refused")}, fakeSyncer{})
+	_, err = s.ListPlayerPeers(context.Background(), &v1.ListPlayerPeersRequest{AccountId: 1})
+	if got := status.Code(err); got != codes.Internal {
+		t.Errorf("store failure: code = %s, want Internal", got)
+	}
+}
+
 func TestSyncPlayer(t *testing.T) {
 	s := newServer(&fakeStore{}, fakeSyncer{newMatches: 4, pending: 9})
 	resp, err := s.SyncPlayer(context.Background(), &v1.SyncPlayerRequest{AccountId: 1})
@@ -311,7 +387,7 @@ func TestGameDataToAPI(t *testing.T) {
 		},
 		Abilities: []*gamedata.Ability{{ID: 7, Key: "upgrade_x", Type: "item", Slot: "weapon", Tier: 2}},
 	}
-	out, err := New(nil, nil, gd).GetGameData(context.Background(), &v1.GetGameDataRequest{})
+	out, err := New(nil, nil, nil, gd).GetGameData(context.Background(), &v1.GetGameDataRequest{})
 	if err != nil {
 		t.Fatal(err)
 	}

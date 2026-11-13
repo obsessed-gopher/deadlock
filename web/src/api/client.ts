@@ -7,6 +7,8 @@ import type {
   GameData,
   ListPlayerHeroStatsResponse,
   ListPlayerMatchFactsResponse,
+  ListPlayerPeersResponse,
+  ResolveSteamVanityResponse,
   ListPlayerMatchesResponse,
   Match,
   Player,
@@ -61,6 +63,8 @@ export const api = {
 
   facts: (accountId: string) => call<ListPlayerMatchFactsResponse>(`/v1/players/${accountId}/facts`),
 
+  peers: (accountId: string) => call<ListPlayerPeersResponse>(`/v1/players/${accountId}/peers`),
+
   sync: (accountId: string) =>
     call<SyncPlayerResponse>(`/v1/players/${accountId}:sync`, {
       method: "POST",
@@ -68,6 +72,9 @@ export const api = {
       headers: { "content-type": "application/json" },
       body: "{}",
     }),
+
+  resolveVanity: (name: string) =>
+    call<ResolveSteamVanityResponse>(`/v1/steam/vanity/${encodeURIComponent(name)}`, { cache: "no-store" }),
 
   match: (matchId: string) => call<Match>(`/v1/matches/${matchId}`),
 

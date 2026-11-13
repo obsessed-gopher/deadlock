@@ -1580,6 +1580,389 @@ func (x *SoulSources) GetTreasure() uint32 {
 	return 0
 }
 
+type ListPlayerPeersRequest struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Account id or SteamID64. Any player seen in a match with metadata works,
+	// tracked or not.
+	AccountId     uint64 `protobuf:"varint,1,opt,name=account_id,json=accountId,proto3" json:"account_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListPlayerPeersRequest) Reset() {
+	*x = ListPlayerPeersRequest{}
+	mi := &file_deadlock_v1_stats_proto_msgTypes[16]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListPlayerPeersRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListPlayerPeersRequest) ProtoMessage() {}
+
+func (x *ListPlayerPeersRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_deadlock_v1_stats_proto_msgTypes[16]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListPlayerPeersRequest.ProtoReflect.Descriptor instead.
+func (*ListPlayerPeersRequest) Descriptor() ([]byte, []int) {
+	return file_deadlock_v1_stats_proto_rawDescGZIP(), []int{16}
+}
+
+func (x *ListPlayerPeersRequest) GetAccountId() uint64 {
+	if x != nil {
+		return x.AccountId
+	}
+	return 0
+}
+
+type ListPlayerPeersResponse struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Matches with metadata (rosters known) and the player's wins in them:
+	// the base for "with X" vs "without X".
+	Matches uint32 `protobuf:"varint,1,opt,name=matches,proto3" json:"matches,omitempty"`
+	Wins    uint32 `protobuf:"varint,2,opt,name=wins,proto3" json:"wins,omitempty"`
+	// People met at least peer_min_matches times, most matches first.
+	Allies  []*Peer `protobuf:"bytes,3,rep,name=allies,proto3" json:"allies,omitempty"`
+	Enemies []*Peer `protobuf:"bytes,4,rep,name=enemies,proto3" json:"enemies,omitempty"`
+	// Every hero seen alongside or against the player.
+	Heroes []*HeroMatchup `protobuf:"bytes,5,rep,name=heroes,proto3" json:"heroes,omitempty"`
+	// Matches by the number of friends (allies with at least
+	// friend_min_matches shared matches) on the player's team.
+	PartySizes       []*PartySize `protobuf:"bytes,6,rep,name=party_sizes,json=partySizes,proto3" json:"party_sizes,omitempty"`
+	PeerMinMatches   uint32       `protobuf:"varint,7,opt,name=peer_min_matches,json=peerMinMatches,proto3" json:"peer_min_matches,omitempty"`
+	FriendMinMatches uint32       `protobuf:"varint,8,opt,name=friend_min_matches,json=friendMinMatches,proto3" json:"friend_min_matches,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
+}
+
+func (x *ListPlayerPeersResponse) Reset() {
+	*x = ListPlayerPeersResponse{}
+	mi := &file_deadlock_v1_stats_proto_msgTypes[17]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListPlayerPeersResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListPlayerPeersResponse) ProtoMessage() {}
+
+func (x *ListPlayerPeersResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_deadlock_v1_stats_proto_msgTypes[17]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListPlayerPeersResponse.ProtoReflect.Descriptor instead.
+func (*ListPlayerPeersResponse) Descriptor() ([]byte, []int) {
+	return file_deadlock_v1_stats_proto_rawDescGZIP(), []int{17}
+}
+
+func (x *ListPlayerPeersResponse) GetMatches() uint32 {
+	if x != nil {
+		return x.Matches
+	}
+	return 0
+}
+
+func (x *ListPlayerPeersResponse) GetWins() uint32 {
+	if x != nil {
+		return x.Wins
+	}
+	return 0
+}
+
+func (x *ListPlayerPeersResponse) GetAllies() []*Peer {
+	if x != nil {
+		return x.Allies
+	}
+	return nil
+}
+
+func (x *ListPlayerPeersResponse) GetEnemies() []*Peer {
+	if x != nil {
+		return x.Enemies
+	}
+	return nil
+}
+
+func (x *ListPlayerPeersResponse) GetHeroes() []*HeroMatchup {
+	if x != nil {
+		return x.Heroes
+	}
+	return nil
+}
+
+func (x *ListPlayerPeersResponse) GetPartySizes() []*PartySize {
+	if x != nil {
+		return x.PartySizes
+	}
+	return nil
+}
+
+func (x *ListPlayerPeersResponse) GetPeerMinMatches() uint32 {
+	if x != nil {
+		return x.PeerMinMatches
+	}
+	return 0
+}
+
+func (x *ListPlayerPeersResponse) GetFriendMinMatches() uint32 {
+	if x != nil {
+		return x.FriendMinMatches
+	}
+	return 0
+}
+
+// Another player as met by the requested one. Wins are the requested
+// player's wins in those matches.
+type Peer struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	AccountId     uint64                 `protobuf:"varint,1,opt,name=account_id,json=accountId,proto3" json:"account_id,omitempty"`
+	Matches       uint32                 `protobuf:"varint,2,opt,name=matches,proto3" json:"matches,omitempty"`
+	Wins          uint32                 `protobuf:"varint,3,opt,name=wins,proto3" json:"wins,omitempty"`
+	FirstPlayed   int64                  `protobuf:"varint,4,opt,name=first_played,json=firstPlayed,proto3" json:"first_played,omitempty"` // unix seconds
+	LastPlayed    int64                  `protobuf:"varint,5,opt,name=last_played,json=lastPlayed,proto3" json:"last_played,omitempty"`    // unix seconds
+	LastMatchId   uint64                 `protobuf:"varint,6,opt,name=last_match_id,json=lastMatchId,proto3" json:"last_match_id,omitempty"`
+	TopHeroId     uint32                 `protobuf:"varint,7,opt,name=top_hero_id,json=topHeroId,proto3" json:"top_hero_id,omitempty"` // their most played hero in these matches
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Peer) Reset() {
+	*x = Peer{}
+	mi := &file_deadlock_v1_stats_proto_msgTypes[18]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Peer) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Peer) ProtoMessage() {}
+
+func (x *Peer) ProtoReflect() protoreflect.Message {
+	mi := &file_deadlock_v1_stats_proto_msgTypes[18]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Peer.ProtoReflect.Descriptor instead.
+func (*Peer) Descriptor() ([]byte, []int) {
+	return file_deadlock_v1_stats_proto_rawDescGZIP(), []int{18}
+}
+
+func (x *Peer) GetAccountId() uint64 {
+	if x != nil {
+		return x.AccountId
+	}
+	return 0
+}
+
+func (x *Peer) GetMatches() uint32 {
+	if x != nil {
+		return x.Matches
+	}
+	return 0
+}
+
+func (x *Peer) GetWins() uint32 {
+	if x != nil {
+		return x.Wins
+	}
+	return 0
+}
+
+func (x *Peer) GetFirstPlayed() int64 {
+	if x != nil {
+		return x.FirstPlayed
+	}
+	return 0
+}
+
+func (x *Peer) GetLastPlayed() int64 {
+	if x != nil {
+		return x.LastPlayed
+	}
+	return 0
+}
+
+func (x *Peer) GetLastMatchId() uint64 {
+	if x != nil {
+		return x.LastMatchId
+	}
+	return 0
+}
+
+func (x *Peer) GetTopHeroId() uint32 {
+	if x != nil {
+		return x.TopHeroId
+	}
+	return 0
+}
+
+// A hero seen alongside (on the player's team) or against the player.
+type HeroMatchup struct {
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	HeroId         uint32                 `protobuf:"varint,1,opt,name=hero_id,json=heroId,proto3" json:"hero_id,omitempty"`
+	WithMatches    uint32                 `protobuf:"varint,2,opt,name=with_matches,json=withMatches,proto3" json:"with_matches,omitempty"`
+	WithWins       uint32                 `protobuf:"varint,3,opt,name=with_wins,json=withWins,proto3" json:"with_wins,omitempty"`
+	AgainstMatches uint32                 `protobuf:"varint,4,opt,name=against_matches,json=againstMatches,proto3" json:"against_matches,omitempty"`
+	AgainstWins    uint32                 `protobuf:"varint,5,opt,name=against_wins,json=againstWins,proto3" json:"against_wins,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
+}
+
+func (x *HeroMatchup) Reset() {
+	*x = HeroMatchup{}
+	mi := &file_deadlock_v1_stats_proto_msgTypes[19]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *HeroMatchup) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*HeroMatchup) ProtoMessage() {}
+
+func (x *HeroMatchup) ProtoReflect() protoreflect.Message {
+	mi := &file_deadlock_v1_stats_proto_msgTypes[19]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use HeroMatchup.ProtoReflect.Descriptor instead.
+func (*HeroMatchup) Descriptor() ([]byte, []int) {
+	return file_deadlock_v1_stats_proto_rawDescGZIP(), []int{19}
+}
+
+func (x *HeroMatchup) GetHeroId() uint32 {
+	if x != nil {
+		return x.HeroId
+	}
+	return 0
+}
+
+func (x *HeroMatchup) GetWithMatches() uint32 {
+	if x != nil {
+		return x.WithMatches
+	}
+	return 0
+}
+
+func (x *HeroMatchup) GetWithWins() uint32 {
+	if x != nil {
+		return x.WithWins
+	}
+	return 0
+}
+
+func (x *HeroMatchup) GetAgainstMatches() uint32 {
+	if x != nil {
+		return x.AgainstMatches
+	}
+	return 0
+}
+
+func (x *HeroMatchup) GetAgainstWins() uint32 {
+	if x != nil {
+		return x.AgainstWins
+	}
+	return 0
+}
+
+type PartySize struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Friends       uint32                 `protobuf:"varint,1,opt,name=friends,proto3" json:"friends,omitempty"`
+	Matches       uint32                 `protobuf:"varint,2,opt,name=matches,proto3" json:"matches,omitempty"`
+	Wins          uint32                 `protobuf:"varint,3,opt,name=wins,proto3" json:"wins,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *PartySize) Reset() {
+	*x = PartySize{}
+	mi := &file_deadlock_v1_stats_proto_msgTypes[20]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *PartySize) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PartySize) ProtoMessage() {}
+
+func (x *PartySize) ProtoReflect() protoreflect.Message {
+	mi := &file_deadlock_v1_stats_proto_msgTypes[20]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PartySize.ProtoReflect.Descriptor instead.
+func (*PartySize) Descriptor() ([]byte, []int) {
+	return file_deadlock_v1_stats_proto_rawDescGZIP(), []int{20}
+}
+
+func (x *PartySize) GetFriends() uint32 {
+	if x != nil {
+		return x.Friends
+	}
+	return 0
+}
+
+func (x *PartySize) GetMatches() uint32 {
+	if x != nil {
+		return x.Matches
+	}
+	return 0
+}
+
+func (x *PartySize) GetWins() uint32 {
+	if x != nil {
+		return x.Wins
+	}
+	return 0
+}
+
 type SyncPlayerRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Account id or SteamID64. Widened from uint32, which is wire-compatible.
@@ -1590,7 +1973,7 @@ type SyncPlayerRequest struct {
 
 func (x *SyncPlayerRequest) Reset() {
 	*x = SyncPlayerRequest{}
-	mi := &file_deadlock_v1_stats_proto_msgTypes[16]
+	mi := &file_deadlock_v1_stats_proto_msgTypes[21]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1602,7 +1985,7 @@ func (x *SyncPlayerRequest) String() string {
 func (*SyncPlayerRequest) ProtoMessage() {}
 
 func (x *SyncPlayerRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_deadlock_v1_stats_proto_msgTypes[16]
+	mi := &file_deadlock_v1_stats_proto_msgTypes[21]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1615,7 +1998,7 @@ func (x *SyncPlayerRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SyncPlayerRequest.ProtoReflect.Descriptor instead.
 func (*SyncPlayerRequest) Descriptor() ([]byte, []int) {
-	return file_deadlock_v1_stats_proto_rawDescGZIP(), []int{16}
+	return file_deadlock_v1_stats_proto_rawDescGZIP(), []int{21}
 }
 
 func (x *SyncPlayerRequest) GetAccountId() uint64 {
@@ -1635,7 +2018,7 @@ type SyncPlayerResponse struct {
 
 func (x *SyncPlayerResponse) Reset() {
 	*x = SyncPlayerResponse{}
-	mi := &file_deadlock_v1_stats_proto_msgTypes[17]
+	mi := &file_deadlock_v1_stats_proto_msgTypes[22]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1647,7 +2030,7 @@ func (x *SyncPlayerResponse) String() string {
 func (*SyncPlayerResponse) ProtoMessage() {}
 
 func (x *SyncPlayerResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_deadlock_v1_stats_proto_msgTypes[17]
+	mi := &file_deadlock_v1_stats_proto_msgTypes[22]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1660,7 +2043,7 @@ func (x *SyncPlayerResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SyncPlayerResponse.ProtoReflect.Descriptor instead.
 func (*SyncPlayerResponse) Descriptor() ([]byte, []int) {
-	return file_deadlock_v1_stats_proto_rawDescGZIP(), []int{17}
+	return file_deadlock_v1_stats_proto_rawDescGZIP(), []int{22}
 }
 
 func (x *SyncPlayerResponse) GetNewMatches() uint32 {
@@ -1677,6 +2060,94 @@ func (x *SyncPlayerResponse) GetQueuedMeta() uint32 {
 	return 0
 }
 
+type ResolveSteamVanityRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Vanity        string                 `protobuf:"bytes,1,opt,name=vanity,proto3" json:"vanity,omitempty"` // the <vanity> of steamcommunity.com/id/<vanity>
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ResolveSteamVanityRequest) Reset() {
+	*x = ResolveSteamVanityRequest{}
+	mi := &file_deadlock_v1_stats_proto_msgTypes[23]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ResolveSteamVanityRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ResolveSteamVanityRequest) ProtoMessage() {}
+
+func (x *ResolveSteamVanityRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_deadlock_v1_stats_proto_msgTypes[23]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ResolveSteamVanityRequest.ProtoReflect.Descriptor instead.
+func (*ResolveSteamVanityRequest) Descriptor() ([]byte, []int) {
+	return file_deadlock_v1_stats_proto_rawDescGZIP(), []int{23}
+}
+
+func (x *ResolveSteamVanityRequest) GetVanity() string {
+	if x != nil {
+		return x.Vanity
+	}
+	return ""
+}
+
+type ResolveSteamVanityResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	AccountId     uint32                 `protobuf:"varint,1,opt,name=account_id,json=accountId,proto3" json:"account_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ResolveSteamVanityResponse) Reset() {
+	*x = ResolveSteamVanityResponse{}
+	mi := &file_deadlock_v1_stats_proto_msgTypes[24]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ResolveSteamVanityResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ResolveSteamVanityResponse) ProtoMessage() {}
+
+func (x *ResolveSteamVanityResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_deadlock_v1_stats_proto_msgTypes[24]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ResolveSteamVanityResponse.ProtoReflect.Descriptor instead.
+func (*ResolveSteamVanityResponse) Descriptor() ([]byte, []int) {
+	return file_deadlock_v1_stats_proto_rawDescGZIP(), []int{24}
+}
+
+func (x *ResolveSteamVanityResponse) GetAccountId() uint32 {
+	if x != nil {
+		return x.AccountId
+	}
+	return 0
+}
+
 type GetMatchRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	MatchId       uint64                 `protobuf:"varint,1,opt,name=match_id,json=matchId,proto3" json:"match_id,omitempty"`
@@ -1686,7 +2157,7 @@ type GetMatchRequest struct {
 
 func (x *GetMatchRequest) Reset() {
 	*x = GetMatchRequest{}
-	mi := &file_deadlock_v1_stats_proto_msgTypes[18]
+	mi := &file_deadlock_v1_stats_proto_msgTypes[25]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1698,7 +2169,7 @@ func (x *GetMatchRequest) String() string {
 func (*GetMatchRequest) ProtoMessage() {}
 
 func (x *GetMatchRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_deadlock_v1_stats_proto_msgTypes[18]
+	mi := &file_deadlock_v1_stats_proto_msgTypes[25]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1711,7 +2182,7 @@ func (x *GetMatchRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetMatchRequest.ProtoReflect.Descriptor instead.
 func (*GetMatchRequest) Descriptor() ([]byte, []int) {
-	return file_deadlock_v1_stats_proto_rawDescGZIP(), []int{18}
+	return file_deadlock_v1_stats_proto_rawDescGZIP(), []int{25}
 }
 
 func (x *GetMatchRequest) GetMatchId() uint64 {
@@ -1737,7 +2208,7 @@ type Match struct {
 
 func (x *Match) Reset() {
 	*x = Match{}
-	mi := &file_deadlock_v1_stats_proto_msgTypes[19]
+	mi := &file_deadlock_v1_stats_proto_msgTypes[26]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1749,7 +2220,7 @@ func (x *Match) String() string {
 func (*Match) ProtoMessage() {}
 
 func (x *Match) ProtoReflect() protoreflect.Message {
-	mi := &file_deadlock_v1_stats_proto_msgTypes[19]
+	mi := &file_deadlock_v1_stats_proto_msgTypes[26]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1762,7 +2233,7 @@ func (x *Match) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Match.ProtoReflect.Descriptor instead.
 func (*Match) Descriptor() ([]byte, []int) {
-	return file_deadlock_v1_stats_proto_rawDescGZIP(), []int{19}
+	return file_deadlock_v1_stats_proto_rawDescGZIP(), []int{26}
 }
 
 func (x *Match) GetMatchId() uint64 {
@@ -1844,7 +2315,7 @@ type MatchPlayer struct {
 
 func (x *MatchPlayer) Reset() {
 	*x = MatchPlayer{}
-	mi := &file_deadlock_v1_stats_proto_msgTypes[20]
+	mi := &file_deadlock_v1_stats_proto_msgTypes[27]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1856,7 +2327,7 @@ func (x *MatchPlayer) String() string {
 func (*MatchPlayer) ProtoMessage() {}
 
 func (x *MatchPlayer) ProtoReflect() protoreflect.Message {
-	mi := &file_deadlock_v1_stats_proto_msgTypes[20]
+	mi := &file_deadlock_v1_stats_proto_msgTypes[27]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1869,7 +2340,7 @@ func (x *MatchPlayer) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MatchPlayer.ProtoReflect.Descriptor instead.
 func (*MatchPlayer) Descriptor() ([]byte, []int) {
-	return file_deadlock_v1_stats_proto_rawDescGZIP(), []int{20}
+	return file_deadlock_v1_stats_proto_rawDescGZIP(), []int{27}
 }
 
 func (x *MatchPlayer) GetSlot() uint32 {
@@ -1988,7 +2459,7 @@ type GetPlayerMatchRequest struct {
 
 func (x *GetPlayerMatchRequest) Reset() {
 	*x = GetPlayerMatchRequest{}
-	mi := &file_deadlock_v1_stats_proto_msgTypes[21]
+	mi := &file_deadlock_v1_stats_proto_msgTypes[28]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2000,7 +2471,7 @@ func (x *GetPlayerMatchRequest) String() string {
 func (*GetPlayerMatchRequest) ProtoMessage() {}
 
 func (x *GetPlayerMatchRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_deadlock_v1_stats_proto_msgTypes[21]
+	mi := &file_deadlock_v1_stats_proto_msgTypes[28]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2013,7 +2484,7 @@ func (x *GetPlayerMatchRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetPlayerMatchRequest.ProtoReflect.Descriptor instead.
 func (*GetPlayerMatchRequest) Descriptor() ([]byte, []int) {
-	return file_deadlock_v1_stats_proto_rawDescGZIP(), []int{21}
+	return file_deadlock_v1_stats_proto_rawDescGZIP(), []int{28}
 }
 
 func (x *GetPlayerMatchRequest) GetMatchId() uint64 {
@@ -2045,7 +2516,7 @@ type PlayerMatch struct {
 
 func (x *PlayerMatch) Reset() {
 	*x = PlayerMatch{}
-	mi := &file_deadlock_v1_stats_proto_msgTypes[22]
+	mi := &file_deadlock_v1_stats_proto_msgTypes[29]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2057,7 +2528,7 @@ func (x *PlayerMatch) String() string {
 func (*PlayerMatch) ProtoMessage() {}
 
 func (x *PlayerMatch) ProtoReflect() protoreflect.Message {
-	mi := &file_deadlock_v1_stats_proto_msgTypes[22]
+	mi := &file_deadlock_v1_stats_proto_msgTypes[29]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2070,7 +2541,7 @@ func (x *PlayerMatch) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PlayerMatch.ProtoReflect.Descriptor instead.
 func (*PlayerMatch) Descriptor() ([]byte, []int) {
-	return file_deadlock_v1_stats_proto_rawDescGZIP(), []int{22}
+	return file_deadlock_v1_stats_proto_rawDescGZIP(), []int{29}
 }
 
 func (x *PlayerMatch) GetMatch() *Match {
@@ -2144,7 +2615,7 @@ type StatSnapshot struct {
 
 func (x *StatSnapshot) Reset() {
 	*x = StatSnapshot{}
-	mi := &file_deadlock_v1_stats_proto_msgTypes[23]
+	mi := &file_deadlock_v1_stats_proto_msgTypes[30]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2156,7 +2627,7 @@ func (x *StatSnapshot) String() string {
 func (*StatSnapshot) ProtoMessage() {}
 
 func (x *StatSnapshot) ProtoReflect() protoreflect.Message {
-	mi := &file_deadlock_v1_stats_proto_msgTypes[23]
+	mi := &file_deadlock_v1_stats_proto_msgTypes[30]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2169,7 +2640,7 @@ func (x *StatSnapshot) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use StatSnapshot.ProtoReflect.Descriptor instead.
 func (*StatSnapshot) Descriptor() ([]byte, []int) {
-	return file_deadlock_v1_stats_proto_rawDescGZIP(), []int{23}
+	return file_deadlock_v1_stats_proto_rawDescGZIP(), []int{30}
 }
 
 func (x *StatSnapshot) GetT() uint32 {
@@ -2332,7 +2803,7 @@ type ItemEvent struct {
 
 func (x *ItemEvent) Reset() {
 	*x = ItemEvent{}
-	mi := &file_deadlock_v1_stats_proto_msgTypes[24]
+	mi := &file_deadlock_v1_stats_proto_msgTypes[31]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2344,7 +2815,7 @@ func (x *ItemEvent) String() string {
 func (*ItemEvent) ProtoMessage() {}
 
 func (x *ItemEvent) ProtoReflect() protoreflect.Message {
-	mi := &file_deadlock_v1_stats_proto_msgTypes[24]
+	mi := &file_deadlock_v1_stats_proto_msgTypes[31]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2357,7 +2828,7 @@ func (x *ItemEvent) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ItemEvent.ProtoReflect.Descriptor instead.
 func (*ItemEvent) Descriptor() ([]byte, []int) {
-	return file_deadlock_v1_stats_proto_rawDescGZIP(), []int{24}
+	return file_deadlock_v1_stats_proto_rawDescGZIP(), []int{31}
 }
 
 func (x *ItemEvent) GetT() uint32 {
@@ -2409,7 +2880,7 @@ type Death struct {
 
 func (x *Death) Reset() {
 	*x = Death{}
-	mi := &file_deadlock_v1_stats_proto_msgTypes[25]
+	mi := &file_deadlock_v1_stats_proto_msgTypes[32]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2421,7 +2892,7 @@ func (x *Death) String() string {
 func (*Death) ProtoMessage() {}
 
 func (x *Death) ProtoReflect() protoreflect.Message {
-	mi := &file_deadlock_v1_stats_proto_msgTypes[25]
+	mi := &file_deadlock_v1_stats_proto_msgTypes[32]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2434,7 +2905,7 @@ func (x *Death) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Death.ProtoReflect.Descriptor instead.
 func (*Death) Descriptor() ([]byte, []int) {
-	return file_deadlock_v1_stats_proto_rawDescGZIP(), []int{25}
+	return file_deadlock_v1_stats_proto_rawDescGZIP(), []int{32}
 }
 
 func (x *Death) GetT() uint32 {
@@ -2490,7 +2961,7 @@ type Vec3 struct {
 
 func (x *Vec3) Reset() {
 	*x = Vec3{}
-	mi := &file_deadlock_v1_stats_proto_msgTypes[26]
+	mi := &file_deadlock_v1_stats_proto_msgTypes[33]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2502,7 +2973,7 @@ func (x *Vec3) String() string {
 func (*Vec3) ProtoMessage() {}
 
 func (x *Vec3) ProtoReflect() protoreflect.Message {
-	mi := &file_deadlock_v1_stats_proto_msgTypes[26]
+	mi := &file_deadlock_v1_stats_proto_msgTypes[33]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2515,7 +2986,7 @@ func (x *Vec3) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Vec3.ProtoReflect.Descriptor instead.
 func (*Vec3) Descriptor() ([]byte, []int) {
-	return file_deadlock_v1_stats_proto_rawDescGZIP(), []int{26}
+	return file_deadlock_v1_stats_proto_rawDescGZIP(), []int{33}
 }
 
 func (x *Vec3) GetX() float32 {
@@ -2549,7 +3020,7 @@ type SlotTimeline struct {
 
 func (x *SlotTimeline) Reset() {
 	*x = SlotTimeline{}
-	mi := &file_deadlock_v1_stats_proto_msgTypes[27]
+	mi := &file_deadlock_v1_stats_proto_msgTypes[34]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2561,7 +3032,7 @@ func (x *SlotTimeline) String() string {
 func (*SlotTimeline) ProtoMessage() {}
 
 func (x *SlotTimeline) ProtoReflect() protoreflect.Message {
-	mi := &file_deadlock_v1_stats_proto_msgTypes[27]
+	mi := &file_deadlock_v1_stats_proto_msgTypes[34]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2574,7 +3045,7 @@ func (x *SlotTimeline) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SlotTimeline.ProtoReflect.Descriptor instead.
 func (*SlotTimeline) Descriptor() ([]byte, []int) {
-	return file_deadlock_v1_stats_proto_rawDescGZIP(), []int{27}
+	return file_deadlock_v1_stats_proto_rawDescGZIP(), []int{34}
 }
 
 func (x *SlotTimeline) GetSlot() uint32 {
@@ -2601,7 +3072,7 @@ type TimePoint struct {
 
 func (x *TimePoint) Reset() {
 	*x = TimePoint{}
-	mi := &file_deadlock_v1_stats_proto_msgTypes[28]
+	mi := &file_deadlock_v1_stats_proto_msgTypes[35]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2613,7 +3084,7 @@ func (x *TimePoint) String() string {
 func (*TimePoint) ProtoMessage() {}
 
 func (x *TimePoint) ProtoReflect() protoreflect.Message {
-	mi := &file_deadlock_v1_stats_proto_msgTypes[28]
+	mi := &file_deadlock_v1_stats_proto_msgTypes[35]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2626,7 +3097,7 @@ func (x *TimePoint) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TimePoint.ProtoReflect.Descriptor instead.
 func (*TimePoint) Descriptor() ([]byte, []int) {
-	return file_deadlock_v1_stats_proto_rawDescGZIP(), []int{28}
+	return file_deadlock_v1_stats_proto_rawDescGZIP(), []int{35}
 }
 
 func (x *TimePoint) GetT() uint32 {
@@ -2783,7 +3254,40 @@ const file_deadlock_v1_stats_proto_rawDesc = "" +
 	"laneCreeps\x12\x1a\n" +
 	"\bneutrals\x18\x03 \x01(\rR\bneutrals\x12\x16\n" +
 	"\x06bosses\x18\x04 \x01(\rR\x06bosses\x12\x1a\n" +
-	"\btreasure\x18\x05 \x01(\rR\btreasure\"2\n" +
+	"\btreasure\x18\x05 \x01(\rR\btreasure\"7\n" +
+	"\x16ListPlayerPeersRequest\x12\x1d\n" +
+	"\n" +
+	"account_id\x18\x01 \x01(\x04R\taccountId\"\xe2\x02\n" +
+	"\x17ListPlayerPeersResponse\x12\x18\n" +
+	"\amatches\x18\x01 \x01(\rR\amatches\x12\x12\n" +
+	"\x04wins\x18\x02 \x01(\rR\x04wins\x12)\n" +
+	"\x06allies\x18\x03 \x03(\v2\x11.deadlock.v1.PeerR\x06allies\x12+\n" +
+	"\aenemies\x18\x04 \x03(\v2\x11.deadlock.v1.PeerR\aenemies\x120\n" +
+	"\x06heroes\x18\x05 \x03(\v2\x18.deadlock.v1.HeroMatchupR\x06heroes\x127\n" +
+	"\vparty_sizes\x18\x06 \x03(\v2\x16.deadlock.v1.PartySizeR\n" +
+	"partySizes\x12(\n" +
+	"\x10peer_min_matches\x18\a \x01(\rR\x0epeerMinMatches\x12,\n" +
+	"\x12friend_min_matches\x18\b \x01(\rR\x10friendMinMatches\"\xdb\x01\n" +
+	"\x04Peer\x12\x1d\n" +
+	"\n" +
+	"account_id\x18\x01 \x01(\x04R\taccountId\x12\x18\n" +
+	"\amatches\x18\x02 \x01(\rR\amatches\x12\x12\n" +
+	"\x04wins\x18\x03 \x01(\rR\x04wins\x12!\n" +
+	"\ffirst_played\x18\x04 \x01(\x03R\vfirstPlayed\x12\x1f\n" +
+	"\vlast_played\x18\x05 \x01(\x03R\n" +
+	"lastPlayed\x12\"\n" +
+	"\rlast_match_id\x18\x06 \x01(\x04R\vlastMatchId\x12\x1e\n" +
+	"\vtop_hero_id\x18\a \x01(\rR\ttopHeroId\"\xb2\x01\n" +
+	"\vHeroMatchup\x12\x17\n" +
+	"\ahero_id\x18\x01 \x01(\rR\x06heroId\x12!\n" +
+	"\fwith_matches\x18\x02 \x01(\rR\vwithMatches\x12\x1b\n" +
+	"\twith_wins\x18\x03 \x01(\rR\bwithWins\x12'\n" +
+	"\x0fagainst_matches\x18\x04 \x01(\rR\x0eagainstMatches\x12!\n" +
+	"\fagainst_wins\x18\x05 \x01(\rR\vagainstWins\"S\n" +
+	"\tPartySize\x12\x18\n" +
+	"\afriends\x18\x01 \x01(\rR\afriends\x12\x18\n" +
+	"\amatches\x18\x02 \x01(\rR\amatches\x12\x12\n" +
+	"\x04wins\x18\x03 \x01(\rR\x04wins\"2\n" +
 	"\x11SyncPlayerRequest\x12\x1d\n" +
 	"\n" +
 	"account_id\x18\x01 \x01(\x04R\taccountId\"V\n" +
@@ -2791,7 +3295,12 @@ const file_deadlock_v1_stats_proto_rawDesc = "" +
 	"\vnew_matches\x18\x01 \x01(\rR\n" +
 	"newMatches\x12\x1f\n" +
 	"\vqueued_meta\x18\x02 \x01(\rR\n" +
-	"queuedMeta\",\n" +
+	"queuedMeta\"3\n" +
+	"\x19ResolveSteamVanityRequest\x12\x16\n" +
+	"\x06vanity\x18\x01 \x01(\tR\x06vanity\";\n" +
+	"\x1aResolveSteamVanityResponse\x12\x1d\n" +
+	"\n" +
+	"account_id\x18\x01 \x01(\rR\taccountId\",\n" +
 	"\x0fGetMatchRequest\x12\x19\n" +
 	"\bmatch_id\x18\x01 \x01(\x04R\amatchId\"\xad\x02\n" +
 	"\x05Match\x12\x19\n" +
@@ -2913,14 +3422,16 @@ const file_deadlock_v1_stats_proto_rawDesc = "" +
 	"\vMatchResult\x12\x1c\n" +
 	"\x18MATCH_RESULT_UNSPECIFIED\x10\x00\x12\x14\n" +
 	"\x10MATCH_RESULT_WIN\x10\x01\x12\x15\n" +
-	"\x11MATCH_RESULT_LOSS\x10\x022\xe4\a\n" +
+	"\x11MATCH_RESULT_LOSS\x10\x022\xf6\t\n" +
 	"\fStatsService\x12a\n" +
 	"\tGetPlayer\x12\x1d.deadlock.v1.GetPlayerRequest\x1a\x13.deadlock.v1.Player\" \x82\xd3\xe4\x93\x02\x1a\x12\x18/v1/players/{account_id}\x12\x8c\x01\n" +
 	"\x11ListPlayerMatches\x12%.deadlock.v1.ListPlayerMatchesRequest\x1a&.deadlock.v1.ListPlayerMatchesResponse\"(\x82\xd3\xe4\x93\x02\"\x12 /v1/players/{account_id}/matches\x12\x91\x01\n" +
 	"\x13ListPlayerHeroStats\x12'.deadlock.v1.ListPlayerHeroStatsRequest\x1a(.deadlock.v1.ListPlayerHeroStatsResponse\"'\x82\xd3\xe4\x93\x02!\x12\x1f/v1/players/{account_id}/heroes\x12\x93\x01\n" +
-	"\x14ListPlayerMatchFacts\x12(.deadlock.v1.ListPlayerMatchFactsRequest\x1a).deadlock.v1.ListPlayerMatchFactsResponse\"&\x82\xd3\xe4\x93\x02 \x12\x1e/v1/players/{account_id}/facts\x12w\n" +
+	"\x14ListPlayerMatchFacts\x12(.deadlock.v1.ListPlayerMatchFactsRequest\x1a).deadlock.v1.ListPlayerMatchFactsResponse\"&\x82\xd3\xe4\x93\x02 \x12\x1e/v1/players/{account_id}/facts\x12\x84\x01\n" +
+	"\x0fListPlayerPeers\x12#.deadlock.v1.ListPlayerPeersRequest\x1a$.deadlock.v1.ListPlayerPeersResponse\"&\x82\xd3\xe4\x93\x02 \x12\x1e/v1/players/{account_id}/peers\x12w\n" +
 	"\n" +
-	"SyncPlayer\x12\x1e.deadlock.v1.SyncPlayerRequest\x1a\x1f.deadlock.v1.SyncPlayerResponse\"(\x82\xd3\xe4\x93\x02\":\x01*\"\x1d/v1/players/{account_id}:sync\x12\\\n" +
+	"SyncPlayer\x12\x1e.deadlock.v1.SyncPlayerRequest\x1a\x1f.deadlock.v1.SyncPlayerResponse\"(\x82\xd3\xe4\x93\x02\":\x01*\"\x1d/v1/players/{account_id}:sync\x12\x88\x01\n" +
+	"\x12ResolveSteamVanity\x12&.deadlock.v1.ResolveSteamVanityRequest\x1a'.deadlock.v1.ResolveSteamVanityResponse\"!\x82\xd3\xe4\x93\x02\x1b\x12\x19/v1/steam/vanity/{vanity}\x12\\\n" +
 	"\bGetMatch\x12\x1c.deadlock.v1.GetMatchRequest\x1a\x12.deadlock.v1.Match\"\x1e\x82\xd3\xe4\x93\x02\x18\x12\x16/v1/matches/{match_id}\x12\x83\x01\n" +
 	"\x0eGetPlayerMatch\x12\".deadlock.v1.GetPlayerMatchRequest\x1a\x18.deadlock.v1.PlayerMatch\"3\x82\xd3\xe4\x93\x02-\x12+/v1/matches/{match_id}/players/{account_id}\x12[\n" +
 	"\vGetGameData\x12\x1f.deadlock.v1.GetGameDataRequest\x1a\x15.deadlock.v1.GameData\"\x14\x82\xd3\xe4\x93\x02\x0e\x12\f/v1/gamedataBCZAgithub.com/obsessed-gopher/deadlock/gen/go/deadlock/v1;deadlockv1b\x06proto3"
@@ -2938,7 +3449,7 @@ func file_deadlock_v1_stats_proto_rawDescGZIP() []byte {
 }
 
 var file_deadlock_v1_stats_proto_enumTypes = make([]protoimpl.EnumInfo, 4)
-var file_deadlock_v1_stats_proto_msgTypes = make([]protoimpl.MessageInfo, 29)
+var file_deadlock_v1_stats_proto_msgTypes = make([]protoimpl.MessageInfo, 36)
 var file_deadlock_v1_stats_proto_goTypes = []any{
 	(MetaStatus)(0),                      // 0: deadlock.v1.MetaStatus
 	(SyncState)(0),                       // 1: deadlock.v1.SyncState
@@ -2960,19 +3471,26 @@ var file_deadlock_v1_stats_proto_goTypes = []any{
 	(*ListPlayerMatchFactsResponse)(nil), // 17: deadlock.v1.ListPlayerMatchFactsResponse
 	(*MatchFacts)(nil),                   // 18: deadlock.v1.MatchFacts
 	(*SoulSources)(nil),                  // 19: deadlock.v1.SoulSources
-	(*SyncPlayerRequest)(nil),            // 20: deadlock.v1.SyncPlayerRequest
-	(*SyncPlayerResponse)(nil),           // 21: deadlock.v1.SyncPlayerResponse
-	(*GetMatchRequest)(nil),              // 22: deadlock.v1.GetMatchRequest
-	(*Match)(nil),                        // 23: deadlock.v1.Match
-	(*MatchPlayer)(nil),                  // 24: deadlock.v1.MatchPlayer
-	(*GetPlayerMatchRequest)(nil),        // 25: deadlock.v1.GetPlayerMatchRequest
-	(*PlayerMatch)(nil),                  // 26: deadlock.v1.PlayerMatch
-	(*StatSnapshot)(nil),                 // 27: deadlock.v1.StatSnapshot
-	(*ItemEvent)(nil),                    // 28: deadlock.v1.ItemEvent
-	(*Death)(nil),                        // 29: deadlock.v1.Death
-	(*Vec3)(nil),                         // 30: deadlock.v1.Vec3
-	(*SlotTimeline)(nil),                 // 31: deadlock.v1.SlotTimeline
-	(*TimePoint)(nil),                    // 32: deadlock.v1.TimePoint
+	(*ListPlayerPeersRequest)(nil),       // 20: deadlock.v1.ListPlayerPeersRequest
+	(*ListPlayerPeersResponse)(nil),      // 21: deadlock.v1.ListPlayerPeersResponse
+	(*Peer)(nil),                         // 22: deadlock.v1.Peer
+	(*HeroMatchup)(nil),                  // 23: deadlock.v1.HeroMatchup
+	(*PartySize)(nil),                    // 24: deadlock.v1.PartySize
+	(*SyncPlayerRequest)(nil),            // 25: deadlock.v1.SyncPlayerRequest
+	(*SyncPlayerResponse)(nil),           // 26: deadlock.v1.SyncPlayerResponse
+	(*ResolveSteamVanityRequest)(nil),    // 27: deadlock.v1.ResolveSteamVanityRequest
+	(*ResolveSteamVanityResponse)(nil),   // 28: deadlock.v1.ResolveSteamVanityResponse
+	(*GetMatchRequest)(nil),              // 29: deadlock.v1.GetMatchRequest
+	(*Match)(nil),                        // 30: deadlock.v1.Match
+	(*MatchPlayer)(nil),                  // 31: deadlock.v1.MatchPlayer
+	(*GetPlayerMatchRequest)(nil),        // 32: deadlock.v1.GetPlayerMatchRequest
+	(*PlayerMatch)(nil),                  // 33: deadlock.v1.PlayerMatch
+	(*StatSnapshot)(nil),                 // 34: deadlock.v1.StatSnapshot
+	(*ItemEvent)(nil),                    // 35: deadlock.v1.ItemEvent
+	(*Death)(nil),                        // 36: deadlock.v1.Death
+	(*Vec3)(nil),                         // 37: deadlock.v1.Vec3
+	(*SlotTimeline)(nil),                 // 38: deadlock.v1.SlotTimeline
+	(*TimePoint)(nil),                    // 39: deadlock.v1.TimePoint
 }
 var file_deadlock_v1_stats_proto_depIdxs = []int32{
 	6,  // 0: deadlock.v1.GameData.heroes:type_name -> deadlock.v1.Hero
@@ -2986,37 +3504,45 @@ var file_deadlock_v1_stats_proto_depIdxs = []int32{
 	15, // 8: deadlock.v1.ListPlayerHeroStatsResponse.heroes:type_name -> deadlock.v1.HeroStats
 	18, // 9: deadlock.v1.ListPlayerMatchFactsResponse.matches:type_name -> deadlock.v1.MatchFacts
 	19, // 10: deadlock.v1.MatchFacts.souls_from:type_name -> deadlock.v1.SoulSources
-	0,  // 11: deadlock.v1.Match.meta_status:type_name -> deadlock.v1.MetaStatus
-	24, // 12: deadlock.v1.Match.players:type_name -> deadlock.v1.MatchPlayer
-	23, // 13: deadlock.v1.PlayerMatch.match:type_name -> deadlock.v1.Match
-	27, // 14: deadlock.v1.PlayerMatch.timeline:type_name -> deadlock.v1.StatSnapshot
-	28, // 15: deadlock.v1.PlayerMatch.items:type_name -> deadlock.v1.ItemEvent
-	29, // 16: deadlock.v1.PlayerMatch.deaths:type_name -> deadlock.v1.Death
-	31, // 17: deadlock.v1.PlayerMatch.net_worth_by_slot:type_name -> deadlock.v1.SlotTimeline
-	30, // 18: deadlock.v1.Death.pos:type_name -> deadlock.v1.Vec3
-	30, // 19: deadlock.v1.Death.killer_pos:type_name -> deadlock.v1.Vec3
-	32, // 20: deadlock.v1.SlotTimeline.points:type_name -> deadlock.v1.TimePoint
-	8,  // 21: deadlock.v1.StatsService.GetPlayer:input_type -> deadlock.v1.GetPlayerRequest
-	10, // 22: deadlock.v1.StatsService.ListPlayerMatches:input_type -> deadlock.v1.ListPlayerMatchesRequest
-	13, // 23: deadlock.v1.StatsService.ListPlayerHeroStats:input_type -> deadlock.v1.ListPlayerHeroStatsRequest
-	16, // 24: deadlock.v1.StatsService.ListPlayerMatchFacts:input_type -> deadlock.v1.ListPlayerMatchFactsRequest
-	20, // 25: deadlock.v1.StatsService.SyncPlayer:input_type -> deadlock.v1.SyncPlayerRequest
-	22, // 26: deadlock.v1.StatsService.GetMatch:input_type -> deadlock.v1.GetMatchRequest
-	25, // 27: deadlock.v1.StatsService.GetPlayerMatch:input_type -> deadlock.v1.GetPlayerMatchRequest
-	4,  // 28: deadlock.v1.StatsService.GetGameData:input_type -> deadlock.v1.GetGameDataRequest
-	9,  // 29: deadlock.v1.StatsService.GetPlayer:output_type -> deadlock.v1.Player
-	11, // 30: deadlock.v1.StatsService.ListPlayerMatches:output_type -> deadlock.v1.ListPlayerMatchesResponse
-	14, // 31: deadlock.v1.StatsService.ListPlayerHeroStats:output_type -> deadlock.v1.ListPlayerHeroStatsResponse
-	17, // 32: deadlock.v1.StatsService.ListPlayerMatchFacts:output_type -> deadlock.v1.ListPlayerMatchFactsResponse
-	21, // 33: deadlock.v1.StatsService.SyncPlayer:output_type -> deadlock.v1.SyncPlayerResponse
-	23, // 34: deadlock.v1.StatsService.GetMatch:output_type -> deadlock.v1.Match
-	26, // 35: deadlock.v1.StatsService.GetPlayerMatch:output_type -> deadlock.v1.PlayerMatch
-	5,  // 36: deadlock.v1.StatsService.GetGameData:output_type -> deadlock.v1.GameData
-	29, // [29:37] is the sub-list for method output_type
-	21, // [21:29] is the sub-list for method input_type
-	21, // [21:21] is the sub-list for extension type_name
-	21, // [21:21] is the sub-list for extension extendee
-	0,  // [0:21] is the sub-list for field type_name
+	22, // 11: deadlock.v1.ListPlayerPeersResponse.allies:type_name -> deadlock.v1.Peer
+	22, // 12: deadlock.v1.ListPlayerPeersResponse.enemies:type_name -> deadlock.v1.Peer
+	23, // 13: deadlock.v1.ListPlayerPeersResponse.heroes:type_name -> deadlock.v1.HeroMatchup
+	24, // 14: deadlock.v1.ListPlayerPeersResponse.party_sizes:type_name -> deadlock.v1.PartySize
+	0,  // 15: deadlock.v1.Match.meta_status:type_name -> deadlock.v1.MetaStatus
+	31, // 16: deadlock.v1.Match.players:type_name -> deadlock.v1.MatchPlayer
+	30, // 17: deadlock.v1.PlayerMatch.match:type_name -> deadlock.v1.Match
+	34, // 18: deadlock.v1.PlayerMatch.timeline:type_name -> deadlock.v1.StatSnapshot
+	35, // 19: deadlock.v1.PlayerMatch.items:type_name -> deadlock.v1.ItemEvent
+	36, // 20: deadlock.v1.PlayerMatch.deaths:type_name -> deadlock.v1.Death
+	38, // 21: deadlock.v1.PlayerMatch.net_worth_by_slot:type_name -> deadlock.v1.SlotTimeline
+	37, // 22: deadlock.v1.Death.pos:type_name -> deadlock.v1.Vec3
+	37, // 23: deadlock.v1.Death.killer_pos:type_name -> deadlock.v1.Vec3
+	39, // 24: deadlock.v1.SlotTimeline.points:type_name -> deadlock.v1.TimePoint
+	8,  // 25: deadlock.v1.StatsService.GetPlayer:input_type -> deadlock.v1.GetPlayerRequest
+	10, // 26: deadlock.v1.StatsService.ListPlayerMatches:input_type -> deadlock.v1.ListPlayerMatchesRequest
+	13, // 27: deadlock.v1.StatsService.ListPlayerHeroStats:input_type -> deadlock.v1.ListPlayerHeroStatsRequest
+	16, // 28: deadlock.v1.StatsService.ListPlayerMatchFacts:input_type -> deadlock.v1.ListPlayerMatchFactsRequest
+	20, // 29: deadlock.v1.StatsService.ListPlayerPeers:input_type -> deadlock.v1.ListPlayerPeersRequest
+	25, // 30: deadlock.v1.StatsService.SyncPlayer:input_type -> deadlock.v1.SyncPlayerRequest
+	27, // 31: deadlock.v1.StatsService.ResolveSteamVanity:input_type -> deadlock.v1.ResolveSteamVanityRequest
+	29, // 32: deadlock.v1.StatsService.GetMatch:input_type -> deadlock.v1.GetMatchRequest
+	32, // 33: deadlock.v1.StatsService.GetPlayerMatch:input_type -> deadlock.v1.GetPlayerMatchRequest
+	4,  // 34: deadlock.v1.StatsService.GetGameData:input_type -> deadlock.v1.GetGameDataRequest
+	9,  // 35: deadlock.v1.StatsService.GetPlayer:output_type -> deadlock.v1.Player
+	11, // 36: deadlock.v1.StatsService.ListPlayerMatches:output_type -> deadlock.v1.ListPlayerMatchesResponse
+	14, // 37: deadlock.v1.StatsService.ListPlayerHeroStats:output_type -> deadlock.v1.ListPlayerHeroStatsResponse
+	17, // 38: deadlock.v1.StatsService.ListPlayerMatchFacts:output_type -> deadlock.v1.ListPlayerMatchFactsResponse
+	21, // 39: deadlock.v1.StatsService.ListPlayerPeers:output_type -> deadlock.v1.ListPlayerPeersResponse
+	26, // 40: deadlock.v1.StatsService.SyncPlayer:output_type -> deadlock.v1.SyncPlayerResponse
+	28, // 41: deadlock.v1.StatsService.ResolveSteamVanity:output_type -> deadlock.v1.ResolveSteamVanityResponse
+	30, // 42: deadlock.v1.StatsService.GetMatch:output_type -> deadlock.v1.Match
+	33, // 43: deadlock.v1.StatsService.GetPlayerMatch:output_type -> deadlock.v1.PlayerMatch
+	5,  // 44: deadlock.v1.StatsService.GetGameData:output_type -> deadlock.v1.GameData
+	35, // [35:45] is the sub-list for method output_type
+	25, // [25:35] is the sub-list for method input_type
+	25, // [25:25] is the sub-list for extension type_name
+	25, // [25:25] is the sub-list for extension extendee
+	0,  // [0:25] is the sub-list for field type_name
 }
 
 func init() { file_deadlock_v1_stats_proto_init() }
@@ -3030,7 +3556,7 @@ func file_deadlock_v1_stats_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_deadlock_v1_stats_proto_rawDesc), len(file_deadlock_v1_stats_proto_rawDesc)),
 			NumEnums:      4,
-			NumMessages:   29,
+			NumMessages:   36,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

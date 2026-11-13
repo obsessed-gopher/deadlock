@@ -23,7 +23,9 @@ const (
 	StatsService_ListPlayerMatches_FullMethodName    = "/deadlock.v1.StatsService/ListPlayerMatches"
 	StatsService_ListPlayerHeroStats_FullMethodName  = "/deadlock.v1.StatsService/ListPlayerHeroStats"
 	StatsService_ListPlayerMatchFacts_FullMethodName = "/deadlock.v1.StatsService/ListPlayerMatchFacts"
+	StatsService_ListPlayerPeers_FullMethodName      = "/deadlock.v1.StatsService/ListPlayerPeers"
 	StatsService_SyncPlayer_FullMethodName           = "/deadlock.v1.StatsService/SyncPlayer"
+	StatsService_ResolveSteamVanity_FullMethodName   = "/deadlock.v1.StatsService/ResolveSteamVanity"
 	StatsService_GetMatch_FullMethodName             = "/deadlock.v1.StatsService/GetMatch"
 	StatsService_GetPlayerMatch_FullMethodName       = "/deadlock.v1.StatsService/GetPlayerMatch"
 	StatsService_GetGameData_FullMethodName          = "/deadlock.v1.StatsService/GetGameData"
@@ -45,8 +47,14 @@ type StatsServiceClient interface {
 	// Compact facts of every match of a player, oldest first: the input of
 	// client-side trends (progress, development speed, sessions, records).
 	ListPlayerMatchFacts(ctx context.Context, in *ListPlayerMatchFactsRequest, opts ...grpc.CallOption) (*ListPlayerMatchFactsResponse, error)
+	// People and heroes met in a player's matches with metadata: frequent
+	// allies and opponents, heroes alongside and against, party sizes.
+	ListPlayerPeers(ctx context.Context, in *ListPlayerPeersRequest, opts ...grpc.CallOption) (*ListPlayerPeersResponse, error)
 	// Pull fresh match history and queue metadata downloads for new matches.
 	SyncPlayer(ctx context.Context, in *SyncPlayerRequest, opts ...grpc.CallOption) (*SyncPlayerResponse, error)
+	// Account id behind a Steam custom profile URL
+	// (steamcommunity.com/id/<vanity>). Asks Steam on every call.
+	ResolveSteamVanity(ctx context.Context, in *ResolveSteamVanityRequest, opts ...grpc.CallOption) (*ResolveSteamVanityResponse, error)
 	// Scoreboard of all players in a match.
 	GetMatch(ctx context.Context, in *GetMatchRequest, opts ...grpc.CallOption) (*Match, error)
 	// Detailed breakdown of one player in one match: timelines, items, deaths.
@@ -104,10 +112,30 @@ func (c *statsServiceClient) ListPlayerMatchFacts(ctx context.Context, in *ListP
 	return out, nil
 }
 
+func (c *statsServiceClient) ListPlayerPeers(ctx context.Context, in *ListPlayerPeersRequest, opts ...grpc.CallOption) (*ListPlayerPeersResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListPlayerPeersResponse)
+	err := c.cc.Invoke(ctx, StatsService_ListPlayerPeers_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *statsServiceClient) SyncPlayer(ctx context.Context, in *SyncPlayerRequest, opts ...grpc.CallOption) (*SyncPlayerResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(SyncPlayerResponse)
 	err := c.cc.Invoke(ctx, StatsService_SyncPlayer_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *statsServiceClient) ResolveSteamVanity(ctx context.Context, in *ResolveSteamVanityRequest, opts ...grpc.CallOption) (*ResolveSteamVanityResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ResolveSteamVanityResponse)
+	err := c.cc.Invoke(ctx, StatsService_ResolveSteamVanity_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -160,8 +188,14 @@ type StatsServiceServer interface {
 	// Compact facts of every match of a player, oldest first: the input of
 	// client-side trends (progress, development speed, sessions, records).
 	ListPlayerMatchFacts(context.Context, *ListPlayerMatchFactsRequest) (*ListPlayerMatchFactsResponse, error)
+	// People and heroes met in a player's matches with metadata: frequent
+	// allies and opponents, heroes alongside and against, party sizes.
+	ListPlayerPeers(context.Context, *ListPlayerPeersRequest) (*ListPlayerPeersResponse, error)
 	// Pull fresh match history and queue metadata downloads for new matches.
 	SyncPlayer(context.Context, *SyncPlayerRequest) (*SyncPlayerResponse, error)
+	// Account id behind a Steam custom profile URL
+	// (steamcommunity.com/id/<vanity>). Asks Steam on every call.
+	ResolveSteamVanity(context.Context, *ResolveSteamVanityRequest) (*ResolveSteamVanityResponse, error)
 	// Scoreboard of all players in a match.
 	GetMatch(context.Context, *GetMatchRequest) (*Match, error)
 	// Detailed breakdown of one player in one match: timelines, items, deaths.
@@ -191,8 +225,14 @@ func (UnimplementedStatsServiceServer) ListPlayerHeroStats(context.Context, *Lis
 func (UnimplementedStatsServiceServer) ListPlayerMatchFacts(context.Context, *ListPlayerMatchFactsRequest) (*ListPlayerMatchFactsResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ListPlayerMatchFacts not implemented")
 }
+func (UnimplementedStatsServiceServer) ListPlayerPeers(context.Context, *ListPlayerPeersRequest) (*ListPlayerPeersResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListPlayerPeers not implemented")
+}
 func (UnimplementedStatsServiceServer) SyncPlayer(context.Context, *SyncPlayerRequest) (*SyncPlayerResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method SyncPlayer not implemented")
+}
+func (UnimplementedStatsServiceServer) ResolveSteamVanity(context.Context, *ResolveSteamVanityRequest) (*ResolveSteamVanityResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ResolveSteamVanity not implemented")
 }
 func (UnimplementedStatsServiceServer) GetMatch(context.Context, *GetMatchRequest) (*Match, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetMatch not implemented")
@@ -296,6 +336,24 @@ func _StatsService_ListPlayerMatchFacts_Handler(srv interface{}, ctx context.Con
 	return interceptor(ctx, in, info, handler)
 }
 
+func _StatsService_ListPlayerPeers_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListPlayerPeersRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(StatsServiceServer).ListPlayerPeers(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: StatsService_ListPlayerPeers_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(StatsServiceServer).ListPlayerPeers(ctx, req.(*ListPlayerPeersRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _StatsService_SyncPlayer_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(SyncPlayerRequest)
 	if err := dec(in); err != nil {
@@ -310,6 +368,24 @@ func _StatsService_SyncPlayer_Handler(srv interface{}, ctx context.Context, dec 
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(StatsServiceServer).SyncPlayer(ctx, req.(*SyncPlayerRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _StatsService_ResolveSteamVanity_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ResolveSteamVanityRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(StatsServiceServer).ResolveSteamVanity(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: StatsService_ResolveSteamVanity_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(StatsServiceServer).ResolveSteamVanity(ctx, req.(*ResolveSteamVanityRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -392,8 +468,16 @@ var StatsService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _StatsService_ListPlayerMatchFacts_Handler,
 		},
 		{
+			MethodName: "ListPlayerPeers",
+			Handler:    _StatsService_ListPlayerPeers_Handler,
+		},
+		{
 			MethodName: "SyncPlayer",
 			Handler:    _StatsService_SyncPlayer_Handler,
+		},
+		{
+			MethodName: "ResolveSteamVanity",
+			Handler:    _StatsService_ResolveSteamVanity_Handler,
 		},
 		{
 			MethodName: "GetMatch",

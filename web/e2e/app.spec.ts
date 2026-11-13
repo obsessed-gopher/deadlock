@@ -14,6 +14,7 @@ import {
   rows,
   test,
 } from "./helpers.ts";
+import { DOWN_VANITY, KNOWN_VANITY } from "../mock/api.ts";
 
 const { t } = ru;
 
@@ -32,6 +33,32 @@ test("a bad id is explained on the search form, not an error page", async ({ pag
   await expect(page).toHaveURL("/?error=badId");
   // Next.js has its own (empty) role=alert route announcer: match by text.
   await expect(page.getByRole("alert").filter({ hasText: t("error.badId") })).toBeVisible();
+});
+
+test("search by a Steam profile link, numeric or custom", async ({ page }) => {
+  for (const link of [
+    `https://steamcommunity.com/profiles/${STEAM_ID64}/`,
+    `steamcommunity.com/id/${KNOWN_VANITY}`,
+    `[U:1:${ACCOUNT}]`,
+  ]) {
+    await page.goto("/");
+    await page.getByLabel(t("home.inputLabel")).fill(link);
+    await page.getByRole("button", { name: t("home.open") }).click();
+    await expect(page).toHaveURL(`/players/${ACCOUNT}`);
+  }
+});
+
+test("a custom link Steam does not know, or a Steam outage, is explained on the form", async ({ page }) => {
+  for (const [name, error] of [
+    ["nobody-here", "steamNotFound"],
+    [DOWN_VANITY, "steamDown"],
+  ] as const) {
+    await page.goto("/");
+    await page.getByLabel(t("home.inputLabel")).fill(`https://steamcommunity.com/id/${name}`);
+    await page.getByRole("button", { name: t("home.open") }).click();
+    await expect(page).toHaveURL(`/?error=${error}`);
+    await expect(page.getByRole("alert").filter({ hasText: t(`error.${error}`) })).toBeVisible();
+  }
 });
 
 test("home lists tracked accounts", async ({ page }) => {

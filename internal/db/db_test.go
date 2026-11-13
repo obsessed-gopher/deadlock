@@ -195,6 +195,7 @@ func TestIngestRoundTrip(t *testing.T) {
 	testMatchQueries(ctx, t, d, acc, match)
 	testMatchFacts(ctx, t, d, acc, match, mi.GetAverageBadgeTeam0(), mi.GetAverageBadgeTeam1())
 	testRederive(ctx, t, d, match, raw, mi)
+	testPeers(ctx, t, d, acc, match)
 }
 
 // testMatchFacts: the matches of testMatchQueries, oldest first; only match
@@ -360,4 +361,110 @@ func testMatchQueries(ctx context.Context, t *testing.T, d *DB, acc uint32, matc
 func with(q MatchQuery, f func(*MatchQuery)) MatchQuery {
 	f(&q)
 	return q
+}
+
+// testPeers copies the metadata match into five more: +10 won (teams
+// swapped), +11..+13 as is, one ally replaced by stranger 998 in +12 and +13,
+// and +14 with all allies replaced. So allies a1..a4 share 5 matches
+// (friends), a5 shares 3, 998 shares 2; +14 is the only match without friends.
+func testPeers(ctx context.Context, t *testing.T, d *DB, acc uint32, match uint64) {
+	t.Helper()
+	exec := func(sql string, args ...any) {
+		t.Helper()
+		if _, err := d.Pool.Exec(ctx, sql, args...); err != nil {
+			t.Fatal(err)
+		}
+	}
+	for _, k := range []int{10, 11, 12, 13, 14} {
+		exec(`INSERT INTO matches (match_id, start_time, duration_s, game_mode, match_mode, winning_team)
+			SELECT match_id + $2, start_time + make_interval(hours => $2::int), duration_s, game_mode, match_mode, winning_team
+			FROM matches WHERE match_id = $1`, match, k)
+		exec(`INSERT INTO match_players
+			SELECT match_id + $2, slot, account_id, team, hero_id, lane, kills, deaths, assists, net_worth,
+			       last_hits, denies, level, player_damage, player_healing, abandon_time_s
+			FROM match_players WHERE match_id = $1`, match, k)
+	}
+	exec(`UPDATE match_players SET team = 1 - team WHERE match_id = $1`, match+10)
+
+	var team int16
+	if err := d.Pool.QueryRow(ctx, `SELECT team FROM match_players WHERE match_id = $1 AND account_id = $2`, match, acc).Scan(&team); err != nil {
+		t.Fatal(err)
+	}
+	var allies []uint64
+	rows, err := d.Pool.Query(ctx, `SELECT account_id FROM match_players WHERE match_id = $1 AND team = $2 AND account_id <> $3 ORDER BY slot`, match, team, acc)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for rows.Next() {
+		var a uint64
+		if err := rows.Scan(&a); err != nil {
+			t.Fatal(err)
+		}
+		allies = append(allies, a)
+	}
+	if len(allies) != 5 {
+		t.Fatalf("allies in the fixture = %v", allies)
+	}
+	a5 := allies[4]
+	exec(`UPDATE match_players SET account_id = 998 WHERE match_id IN ($1, $2) AND account_id = $3`, match+12, match+13, a5)
+	exec(`UPDATE match_players SET account_id = account_id + 1000000000 WHERE match_id = $1 AND team = $2 AND account_id <> $3`, match+14, team, acc)
+
+	p, err := d.ListPlayerPeers(ctx, acc)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if p.Matches != 6 || p.Wins != 1 {
+		t.Errorf("matches, wins = %d, %d; want 6, 1", p.Matches, p.Wins)
+	}
+	byID := map[uint64]*v1.Peer{}
+	for _, a := range p.Allies {
+		byID[a.AccountId] = a
+	}
+	if len(p.Allies) != 6 {
+		t.Errorf("allies = %v, want a1..a5 and 998", p.Allies)
+	}
+	for _, a := range allies[:4] {
+		if r := byID[a]; r == nil || r.Matches != 5 || r.Wins != 1 || r.LastMatchId != match+13 || r.TopHeroId == 0 || r.FirstPlayed >= r.LastPlayed {
+			t.Errorf("ally %d = %+v", a, r)
+		}
+	}
+	if r := byID[a5]; r == nil || r.Matches != 3 {
+		t.Errorf("a5 = %+v, want 3 matches", r)
+	}
+	if r := byID[998]; r == nil || r.Matches != 2 || r.Wins != 0 {
+		t.Errorf("998 = %+v, want 2 matches", r)
+	}
+	if p.Allies[0].Matches != 5 || p.Allies[len(p.Allies)-1].Matches != 2 {
+		t.Errorf("allies not sorted by matches: %v", p.Allies)
+	}
+	if len(p.Enemies) != 6 {
+		t.Fatalf("enemies = %v", p.Enemies)
+	}
+	for _, e := range p.Enemies {
+		if e.Matches != 6 || e.Wins != 1 {
+			t.Errorf("enemy = %+v, want 6 matches, 1 win", e)
+		}
+	}
+	var with, against, withWins uint32
+	for _, h := range p.Heroes {
+		with += h.WithMatches
+		against += h.AgainstMatches
+		withWins += h.WithWins
+	}
+	if with != 30 || against != 36 || withWins != 5 {
+		t.Errorf("hero matchups with %d (%d wins), against %d; want 30 (5), 36", with, withWins, against)
+	}
+	want := []*v1.PartySize{{Friends: 0, Matches: 1, Wins: 0}, {Friends: 4, Matches: 5, Wins: 1}}
+	if len(p.PartySizes) != len(want) {
+		t.Fatalf("party sizes = %v, want %v", p.PartySizes, want)
+	}
+	for i, w := range want {
+		if g := p.PartySizes[i]; g.Friends != w.Friends || g.Matches != w.Matches || g.Wins != w.Wins {
+			t.Errorf("party size %d = %+v, want %+v", i, g, w)
+		}
+	}
+
+	if p, err := d.ListPlayerPeers(ctx, 42); err != nil || p.Matches != 0 || p.Allies != nil || p.PartySizes != nil {
+		t.Errorf("unknown player peers = %+v, %v", p, err)
+	}
 }

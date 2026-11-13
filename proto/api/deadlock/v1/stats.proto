@@ -30,12 +30,24 @@ service StatsService {
     option (google.api.http) = {get: "/v1/players/{account_id}/facts"};
   }
 
+  // People and heroes met in a player's matches with metadata: frequent
+  // allies and opponents, heroes alongside and against, party sizes.
+  rpc ListPlayerPeers(ListPlayerPeersRequest) returns (ListPlayerPeersResponse) {
+    option (google.api.http) = {get: "/v1/players/{account_id}/peers"};
+  }
+
   // Pull fresh match history and queue metadata downloads for new matches.
   rpc SyncPlayer(SyncPlayerRequest) returns (SyncPlayerResponse) {
     option (google.api.http) = {
       post: "/v1/players/{account_id}:sync"
       body: "*"
     };
+  }
+
+  // Account id behind a Steam custom profile URL
+  // (steamcommunity.com/id/<vanity>). Asks Steam on every call.
+  rpc ResolveSteamVanity(ResolveSteamVanityRequest) returns (ResolveSteamVanityResponse) {
+    option (google.api.http) = {get: "/v1/steam/vanity/{vanity}"};
   }
 
   // Scoreboard of all players in a match.
@@ -248,6 +260,56 @@ message SoulSources {
   uint32 treasure = 5;        // urns, crates
 }
 
+message ListPlayerPeersRequest {
+  // Account id or SteamID64. Any player seen in a match with metadata works,
+  // tracked or not.
+  uint64 account_id = 1;
+}
+
+message ListPlayerPeersResponse {
+  // Matches with metadata (rosters known) and the player's wins in them:
+  // the base for "with X" vs "without X".
+  uint32 matches = 1;
+  uint32 wins = 2;
+  // People met at least peer_min_matches times, most matches first.
+  repeated Peer allies = 3;
+  repeated Peer enemies = 4;
+  // Every hero seen alongside or against the player.
+  repeated HeroMatchup heroes = 5;
+  // Matches by the number of friends (allies with at least
+  // friend_min_matches shared matches) on the player's team.
+  repeated PartySize party_sizes = 6;
+  uint32 peer_min_matches = 7;
+  uint32 friend_min_matches = 8;
+}
+
+// Another player as met by the requested one. Wins are the requested
+// player's wins in those matches.
+message Peer {
+  uint64 account_id = 1;
+  uint32 matches = 2;
+  uint32 wins = 3;
+  int64 first_played = 4;     // unix seconds
+  int64 last_played = 5;      // unix seconds
+  uint64 last_match_id = 6;
+  uint32 top_hero_id = 7;     // their most played hero in these matches
+}
+
+// A hero seen alongside (on the player's team) or against the player.
+message HeroMatchup {
+  uint32 hero_id = 1;
+  uint32 with_matches = 2;
+  uint32 with_wins = 3;
+  uint32 against_matches = 4;
+  uint32 against_wins = 5;
+}
+
+message PartySize {
+  uint32 friends = 1;
+  uint32 matches = 2;
+  uint32 wins = 3;
+}
+
 message SyncPlayerRequest {
   // Account id or SteamID64. Widened from uint32, which is wire-compatible.
   uint64 account_id = 1;
@@ -259,6 +321,14 @@ message SyncPlayerResponse {
 }
 
 // ---------- match ----------
+
+message ResolveSteamVanityRequest {
+  string vanity = 1;          // the <vanity> of steamcommunity.com/id/<vanity>
+}
+
+message ResolveSteamVanityResponse {
+  uint32 account_id = 1;
+}
 
 message GetMatchRequest {
   uint64 match_id = 1;

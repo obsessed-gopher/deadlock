@@ -8,6 +8,7 @@ import type {
   ListPlayerHeroStatsResponse,
   ListPlayerMatchFactsResponse,
   ListPlayerPeersResponse,
+  ResolveSteamVanityResponse,
   ListPlayerMatchesResponse,
   Match,
   Player,
@@ -71,6 +72,9 @@ export const api = {
       headers: { "content-type": "application/json" },
       body: "{}",
     }),
+
+  resolveVanity: (name: string) =>
+    call<ResolveSteamVanityResponse>(`/v1/steam/vanity/${encodeURIComponent(name)}`, { cache: "no-store" }),
 
   match: (matchId: string) => call<Match>(`/v1/matches/${matchId}`),
 

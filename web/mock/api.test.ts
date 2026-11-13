@@ -10,9 +10,10 @@ import type {
   Match,
   Player,
   PlayerMatch,
+  ResolveSteamVanityResponse,
   RpcStatus,
 } from "../src/api/schema.gen.ts";
-import { createMockApi, loadFixtures, normalizeAccountId } from "./api.ts";
+import { DOWN_VANITY, KNOWN_VANITY, createMockApi, loadFixtures, normalizeAccountId } from "./api.ts";
 
 // Runs against the committed fixtures: they are part of the contract.
 const fx = loadFixtures(join(import.meta.dirname, "fixtures"));
@@ -149,6 +150,14 @@ test("peers: the captured aggregate for the tracked player, empty for others", (
   const other = call<ListPlayerPeersResponse>("GET", "/v1/players/42/peers");
   assert.deepEqual([other.status, other.body.matches, other.body.allies], [200, 0, []]);
   assert.equal(call("GET", "/v1/players/503/peers").status, 503);
+});
+
+test("steam vanity: one known name, Steam outage and bad names", () => {
+  const known = call<ResolveSteamVanityResponse>("GET", `/v1/steam/vanity/${KNOWN_VANITY}`);
+  assert.deepEqual([known.status, known.body.accountId], [200, fx.accountId]);
+  assert.equal(call("GET", "/v1/steam/vanity/nobody").status, 404);
+  assert.equal(call("GET", `/v1/steam/vanity/${DOWN_VANITY}`).status, 503);
+  assert.equal(call("GET", "/v1/steam/vanity/a").status, 400);
 });
 
 test("hero filter and hero stats agree", () => {

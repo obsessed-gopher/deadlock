@@ -9,6 +9,7 @@ import (
 
 	"github.com/obsessed-gopher/deadlock/internal/db"
 	"github.com/obsessed-gopher/deadlock/internal/gamedata"
+	"github.com/obsessed-gopher/deadlock/internal/source"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -83,7 +84,37 @@ func (r *recordingSyncer) SyncPlayer(_ context.Context, accountID uint32) (int, 
 }
 
 func newServer(st Store, sy PlayerSyncer) *Server {
-	return New(st, sy, &gamedata.Data{})
+	return New(st, sy, fakeSteam{}, &gamedata.Data{})
+}
+
+// fakeSteam knows one name; "down" fails like an unreachable Steam.
+type fakeSteam struct{}
+
+func (fakeSteam) ResolveVanity(_ context.Context, name string) (uint32, error) {
+	switch name {
+	case "known":
+		return 1517505834, nil
+	case "down":
+		return 0, errors.New("connection refused")
+	case "":
+		return 0, source.ErrBadVanity
+	default:
+		return 0, source.ErrNotFound
+	}
+}
+
+func TestResolveSteamVanity(t *testing.T) {
+	s := newServer(&fakeStore{}, fakeSyncer{})
+	ctx := context.Background()
+	resp, err := s.ResolveSteamVanity(ctx, &v1.ResolveSteamVanityRequest{Vanity: "known"})
+	if err != nil || resp.GetAccountId() != 1517505834 {
+		t.Fatalf("known = %v, %v", resp, err)
+	}
+	for name, want := range map[string]codes.Code{"": codes.InvalidArgument, "nobody": codes.NotFound, "down": codes.Unavailable} {
+		if _, err := s.ResolveSteamVanity(ctx, &v1.ResolveSteamVanityRequest{Vanity: name}); status.Code(err) != want {
+			t.Errorf("%q: code = %s, want %s", name, status.Code(err), want)
+		}
+	}
 }
 
 func TestRequiredIDs(t *testing.T) {
@@ -356,7 +387,7 @@ func TestGameDataToAPI(t *testing.T) {
 		},
 		Abilities: []*gamedata.Ability{{ID: 7, Key: "upgrade_x", Type: "item", Slot: "weapon", Tier: 2}},
 	}
-	out, err := New(nil, nil, gd).GetGameData(context.Background(), &v1.GetGameDataRequest{})
+	out, err := New(nil, nil, nil, gd).GetGameData(context.Background(), &v1.GetGameDataRequest{})
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -37,18 +37,25 @@ type PlayerSyncer interface {
 	SyncPlayer(ctx context.Context, accountID uint32) (newMatches, pending int, err error)
 }
 
+// VanityResolver maps a Steam custom URL name to an account id.
+// *source.SteamCommunity implements it.
+type VanityResolver interface {
+	ResolveVanity(ctx context.Context, name string) (uint32, error)
+}
+
 // Server implements v1.StatsServiceServer.
 type Server struct {
 	v1.UnimplementedStatsServiceServer
 	store  Store
 	syncer PlayerSyncer
+	steam  VanityResolver
 
 	gameData *v1.GameData
 }
 
 // New builds the service; the game data snapshot is converted once here.
-func New(store Store, sy PlayerSyncer, gd *gamedata.Data) *Server {
-	return &Server{store: store, syncer: sy, gameData: gameDataToAPI(gd)}
+func New(store Store, sy PlayerSyncer, steam VanityResolver, gd *gamedata.Data) *Server {
+	return &Server{store: store, syncer: sy, steam: steam, gameData: gameDataToAPI(gd)}
 }
 
 // GetPlayer implements v1.StatsServiceServer.
@@ -192,6 +199,23 @@ func (s *Server) SyncPlayer(ctx context.Context, req *v1.SyncPlayerRequest) (*v1
 		return nil, status.Errorf(codes.Unavailable, "sync: %v", err)
 	}
 	return &v1.SyncPlayerResponse{NewMatches: uint32(n), QueuedMeta: uint32(pending)}, nil
+}
+
+// ResolveSteamVanity implements v1.StatsServiceServer.
+func (s *Server) ResolveSteamVanity(ctx context.Context, req *v1.ResolveSteamVanityRequest) (*v1.ResolveSteamVanityResponse, error) {
+	id, err := s.steam.ResolveVanity(ctx, req.GetVanity())
+	switch {
+	case err == nil:
+		return &v1.ResolveSteamVanityResponse{AccountId: id}, nil
+	case errors.Is(err, source.ErrBadVanity):
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	case errors.Is(err, source.ErrNotFound):
+		return nil, status.Error(codes.NotFound, "no steam profile with this custom url")
+	case errors.Is(err, context.Canceled), errors.Is(err, context.DeadlineExceeded):
+		return nil, toStatus(err)
+	default:
+		return nil, status.Errorf(codes.Unavailable, "steam: %v", err)
+	}
 }
 
 // GetMatch implements v1.StatsServiceServer.

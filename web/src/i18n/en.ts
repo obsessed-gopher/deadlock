@@ -11,7 +11,8 @@ export const en = {
 
   "home.title": "Your Deadlock matches, decoded",
   "home.subtitle": "Match history, builds and net worth curves from Valve match metadata.",
-  "home.inputLabel": "Account id or SteamID64",
+  "home.inputLabel": "Account id, SteamID64 or Steam profile link",
+  "home.placeholder": "Account id or Steam link",
   "home.open": "Open",
   "home.tracked": "Tracked accounts",
 
@@ -195,7 +196,9 @@ export const en = {
   "error.retry": "Try again",
   "error.home": "Home",
   "error.syncFailed": "Sync failed. {reason}",
-  "error.badId": "An id is a positive number: an account id or a SteamID64.",
+  "error.badId": "Enter an account id, a SteamID64 or a Steam profile link: steamcommunity.com/profiles/… or steamcommunity.com/id/….",
+  "error.steamNotFound": "Steam has no profile at this link.",
+  "error.steamDown": "Steam did not answer. Try again later or paste the steamcommunity.com/profiles/… link: it works without Steam.",
 
   // Profile progress (lib/progress.ts).
   "tab.label": "Profile sections",

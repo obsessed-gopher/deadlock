@@ -16,6 +16,7 @@ import type {
   Player,
   PlayerMatch,
   PlayerMatchRow,
+  ResolveSteamVanityResponse,
   RpcStatus,
   SyncPlayerResponse,
 } from "../src/api/schema.gen.ts";
@@ -59,6 +60,9 @@ export const ERROR_MATCH = 500;
 export const UNAVAILABLE_PLAYER = 503;
 /** Unknown player (404) whose sync fails with Unavailable. */
 export const SYNC_FAILS_PLAYER = 504;
+/** Steam custom URL names: one resolves to the fixture account, one fails like an unreachable Steam. */
+export const KNOWN_VANITY = "mock-player";
+export const DOWN_VANITY = "steam-down";
 
 const STEAM_ID64_BASE = 76561197960265728n;
 const MAX_U32 = 0xffffffffn;
@@ -263,6 +267,15 @@ export function createMockApi(fx: Fixtures, now: () => number = () => Date.now()
     }
 
     if (method === "GET" && parts.length === 2 && parts[1] === "gamedata") return ok(fx.gameData);
+
+    if (method === "GET" && parts.length === 4 && parts[1] === "steam" && parts[2] === "vanity") {
+      const name = decodeURIComponent(parts[3] ?? "");
+      if (!/^[A-Za-z0-9_-]{2,64}$/.test(name)) return badRequest("not a steam custom url name");
+      if (name === DOWN_VANITY) return error(503, 14, "steam: connection refused");
+      if (name !== KNOWN_VANITY) return notFound();
+      const body: ResolveSteamVanityResponse = { accountId: fx.accountId };
+      return ok(body);
+    }
 
     if (parts[1] === "players" && parts[2]) {
       const [rawId, verb] = parts[2].split(":");

@@ -274,6 +274,10 @@ export interface PlayerMatchRow {
   won: boolean;
 }
 
+export interface ResolveSteamVanityResponse {
+  accountId: number;
+}
+
 export interface SlotTimeline {
   points: TimePoint[];
   slot: number;

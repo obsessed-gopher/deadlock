@@ -11,7 +11,8 @@ export const ru: Messages = {
 
   "home.title": "Твои матчи в Deadlock — по полочкам",
   "home.subtitle": "История матчей, сборки и кривые душ из метаданных матчей Valve.",
-  "home.inputLabel": "Account id или SteamID64",
+  "home.inputLabel": "Account id, SteamID64 или ссылка на профиль Steam",
+  "home.placeholder": "Account id или ссылка Steam",
   "home.open": "Открыть",
   "home.tracked": "Отслеживаемые аккаунты",
 
@@ -195,7 +196,9 @@ export const ru: Messages = {
   "error.retry": "Повторить",
   "error.home": "На главную",
   "error.syncFailed": "Не удалось синхронизировать. {reason}",
-  "error.badId": "Id — положительное число: account id или SteamID64.",
+  "error.badId": "Введи account id, SteamID64 или ссылку на профиль Steam: steamcommunity.com/profiles/… или steamcommunity.com/id/….",
+  "error.steamNotFound": "В Steam нет профиля по этой ссылке.",
+  "error.steamDown": "Steam не ответил. Попробуй позже или вставь ссылку вида steamcommunity.com/profiles/…: она работает без Steam.",
 
   // Profile progress (lib/progress.ts).
   "tab.label": "Разделы профиля",

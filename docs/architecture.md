@@ -9,6 +9,8 @@ replay<N>.valve.net ──(.meta, zstd)──► syncer ──► Postgres ◄�
 ```
 
 1. `SyncPlayer` (RPC или периодический тикер по `SYNC_ACCOUNTS`) тянет историю матчей игрока и кладёт заголовки в `matches` + `player_matches`. Новые матчи получают `meta_status = 'pending'`.
+Кроме того, `ResolveSteamVanity` по запросу пользователя спрашивает `steamcommunity.com/id/<имя>?xml=1` (без ключа API), чтобы превратить ссылку с ником в account id. Это один запрос на поиск, фонового трафика к Steam нет.
+
 2. Фоновый воркер `Syncer.Run` разбирает очередь `pending`: получает соль матча, качает `.meta` с CDN Valve, распаковывает, декодирует protobuf и в одной транзакции сохраняет сырой файл и производные таблицы.
 3. API только читает из Postgres. Статические данные игры (герои, предметы) встроены в бинарник.
 4. Веб-интерфейс (`web/`, Next.js) рендерит страницы на сервере, запрашивая REST-gateway; браузер с Go API напрямую не общается. Локализация ru/en — свой словарь без библиотек (`web/src/i18n`): язык интерфейса и язык имён из игры — независимые настройки в cookies.
@@ -24,7 +26,7 @@ replay<N>.valve.net ──(.meta, zstd)──► syncer ──► Postgres ◄�
 | `internal/server` | реализация `deadlock.v1.StatsService`: валидация, пагинация, коды ошибок | `gen/go`, `gamedata`, `db` (только `ErrNotFound`), `source` (только `NormalizeAccountID`) |
 | `internal/syncer` | синхронизация истории, очередь загрузки метаданных, ретраи | `source`, `meta`, `compress`, `pb` |
 | `internal/db` | пул pgx, миграции, **весь** SQL | `pb`, `source`, `gen/go` |
-| `internal/source` | провайдеры данных за интерфейсами (`SaltProvider`, `HistoryProvider`), клиент deadlock-api, дисковый кэш реплеев | — |
+| `internal/source` | провайдеры данных за интерфейсами (`SaltProvider`, `HistoryProvider`), клиент deadlock-api, резолвер ссылок Steam (`SteamCommunity`), дисковый кэш реплеев | — |
 | `internal/meta` | декодирование `.meta` в protobuf-типы | `compress`, `pb` |
 | `internal/compress` | определение сжатия по magic-байтам (zstd / bzip2 / без сжатия) | `zstd` |
 | `internal/gamedata` | снимок героев/предметов + парсеры файлов игры (`vpk`, `resource`, `kv3`, `vtex` — текстуры) и выгрузка иконок | свои подпакеты |
@@ -97,6 +99,7 @@ replay<N>.valve.net ──(.meta, zstd)──► syncer ──► Postgres ◄�
 - `ListPlayerHeroStats` — суммы по героям из истории матчей (метаданные не нужны); средние считает клиент.
 - `ListPlayerMatchFacts` (`GET /v1/players/{account_id}/facts`) — сводка каждого матча игрока, от старых к новым; моменты и пороги выборки — в самом ответе (`soul_marks_s`, `soul_targets`). Души к моменту — линейная интерполяция между срезами статистики (каждые 3 мин), кривая начинается с (0, 0). `lobby_badge` — средний бейдж команд в линейной шкале рангов (см. problems.md).
 - `ListPlayerPeers` (`GET /v1/players/{account_id}/peers`) — люди и герои из матчей с метаданными: союзники и соперники, встреченные `peer_min_matches`+ раз, все герои рядом и против, матчи по числу друзей в команде (друг — союзник с `friend_min_matches`+ общих матчей). Победы везде — победы запрошенного игрока. Агрегирует сервер: составы ~700 матчей — это ~8 тыс. строк, а нужны только суммы. Составы берутся из `match_players`, поэтому работает и для неотслеживаемого игрока.
+- `ResolveSteamVanity` (`GET /v1/steam/vanity/{vanity}`) — account id по нику из ссылки `steamcommunity.com/id/<vanity>`: `NotFound` — такого профиля нет, `Unavailable` — Steam не ответил. Остальные формы ввода (SteamID64, `/profiles/<id>`, SteamID2/3) фронт разбирает сам (`web/src/lib/playerRef.ts`), без запросов.
 - `ListPlayerMatches`: фильтры (`hero_id`, `result`, `game_mode`, `meta_status`), сортировка (`sort` — дата, длительность, K/D/A, души, добивания, уровень; `ascending`) и `total` — число строк под фильтрами. Пагинация — keyset по паре (значение сортировки, `match_id`); `page_token` — непрозрачная строка `<значение>_<match_id>`, действует только с той сортировкой, с которой выдан. SQL собирается из констант (`matchSortExprs`), значения — только параметрами. Размер страницы по умолчанию 50, максимум 200.
 - Ошибочные значения запроса (неизвестный enum, битый токен) — `InvalidArgument`, а не `Internal` (`db.ErrBadQuery`).
 - Ошибки: `InvalidArgument` (нет обязательного id, битый токен), `NotFound`, `Unavailable` (не ответил провайдер при синхронизации), `Internal`. Текст внутренних ошибок клиенту не отдаётся (подменяется в интерцепторе), подробности — в логе.

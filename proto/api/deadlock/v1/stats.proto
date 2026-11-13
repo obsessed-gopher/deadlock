@@ -44,6 +44,12 @@ service StatsService {
     };
   }
 
+  // Account id behind a Steam custom profile URL
+  // (steamcommunity.com/id/<vanity>). Asks Steam on every call.
+  rpc ResolveSteamVanity(ResolveSteamVanityRequest) returns (ResolveSteamVanityResponse) {
+    option (google.api.http) = {get: "/v1/steam/vanity/{vanity}"};
+  }
+
   // Scoreboard of all players in a match.
   rpc GetMatch(GetMatchRequest) returns (Match) {
     option (google.api.http) = {get: "/v1/matches/{match_id}"};
@@ -315,6 +321,14 @@ message SyncPlayerResponse {
 }
 
 // ---------- match ----------
+
+message ResolveSteamVanityRequest {
+  string vanity = 1;          // the <vanity> of steamcommunity.com/id/<vanity>
+}
+
+message ResolveSteamVanityResponse {
+  uint32 account_id = 1;
+}
 
 message GetMatchRequest {
   uint64 match_id = 1;

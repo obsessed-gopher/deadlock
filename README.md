@@ -16,7 +16,7 @@ replay*.valve.net ──(.meta, zstd)──► syncer ──► Postgres ◄─�
 - `proto/deadlock` — протобафы Deadlock (копия SteamDatabase/Protobufs), `internal/pb` — сгенерированный код
 - `internal/db` — Postgres (pgx), миграции в `internal/db/migrations`, применяются при старте
 - `internal/syncer` — синхронизация истории и загрузка метаданных
-- `internal/source` — провайдеры данных за интерфейсами (сейчас deadlock-api)
+- `internal/source` — провайдеры данных за интерфейсами (deadlock-api, ссылки Steam)
 - `internal/zstd` — декодер zstd, скопирован из Go stdlib (BSD)
 - `tools/dev` — раннер задач разработки (проверки, тесты, кодогенерация)
 - `web` — веб-интерфейс (Next.js + TypeScript): профиль игрока, история матчей, разбор матча. Данные запрашивает на сервере у REST-gateway, типы API генерируются из OpenAPI
@@ -36,7 +36,7 @@ curl localhost:8080/v1/players/1517505834/matches?pageSize=5
 curl localhost:8080/v1/matches/134969900/players/1517505834
 ```
 
-Веб-интерфейс: http://localhost:3000. Вместо account id везде можно указать SteamID64.
+Веб-интерфейс: http://localhost:3000. Вместо account id везде можно указать SteamID64, а в поиск — ещё и ссылку на профиль Steam (`steamcommunity.com/profiles/…` или `steamcommunity.com/id/…`), SteamID2 или SteamID3.
 
 ### Dev на мок-данных
 

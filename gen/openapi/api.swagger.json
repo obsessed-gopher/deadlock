@@ -402,6 +402,38 @@
           "StatsService"
         ]
       }
+    },
+    "/v1/steam/vanity/{vanity}": {
+      "get": {
+        "summary": "Account id behind a Steam custom profile URL\n(steamcommunity.com/id/\u003cvanity\u003e). Asks Steam on every call.",
+        "operationId": "StatsService_ResolveSteamVanity",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ResolveSteamVanityResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "vanity",
+            "description": "the \u003cvanity\u003e of steamcommunity.com/id/\u003cvanity\u003e",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "StatsService"
+        ]
+      }
     }
   },
   "definitions": {
@@ -1187,6 +1219,15 @@
         },
         "metaStatus": {
           "$ref": "#/definitions/v1MetaStatus"
+        }
+      }
+    },
+    "v1ResolveSteamVanityResponse": {
+      "type": "object",
+      "properties": {
+        "accountId": {
+          "type": "integer",
+          "format": "int64"
         }
       }
     },

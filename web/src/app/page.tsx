@@ -13,6 +13,10 @@ function trackedAccounts(): string[] {
     .filter((s) => /^\d+$/.test(s));
 }
 
+/** ?error= values set by the search redirect (app/players/page.tsx). */
+const SEARCH_ERRORS = ["badId", "steamNotFound", "steamDown"] as const;
+type SearchError = (typeof SEARCH_ERRORS)[number];
+
 export default async function Home({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
   const i18n = await getI18n();
   const { t } = i18n;
@@ -30,19 +34,18 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ e
             <input
               name="id"
               required
-              inputMode="numeric"
               autoComplete="off"
-              placeholder="1517505834"
+              placeholder={t("home.placeholder")}
               aria-label={t("home.inputLabel")}
-              aria-describedby={error ? "search-error" : undefined}
+              aria-describedby={error && SEARCH_ERRORS.includes(error as SearchError) ? "search-error" : undefined}
             />
             <button type="submit" className="btn primary">
               {t("home.open")}
             </button>
           </label>
-          {error === "badId" && (
+          {error && SEARCH_ERRORS.includes(error as SearchError) && (
             <p id="search-error" className="notice error" role="alert">
-              {t("error.badId")}
+              {t(`error.${error as SearchError}`)}
             </p>
           )}
         </form>

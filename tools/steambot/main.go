@@ -5,9 +5,10 @@
 //	go run ./tools/steambot probe [account]  # newest matches of account + salts of the newest
 //
 // login asks for the bot's login and password (the password is not echoed,
-// used once and not stored), walks through Steam Guard and writes
-// STEAM_BOT_USER and STEAM_BOT_TOKEN to .env. probe reads them from the
-// environment or .env.
+// used once and not stored), walks through Steam Guard and adds the bot to
+// the comma-separated STEAM_BOT_USER and STEAM_BOT_TOKEN lists in .env (run
+// it once per bot; logging in a known bot again renews its token). probe
+// uses the first bot from the environment or .env.
 package main
 
 import (
@@ -83,16 +84,48 @@ func login(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	if err := setEnv(envFile, map[string]string{"STEAM_BOT_USER": user, "STEAM_BOT_TOKEN": token}); err != nil {
+	env := readEnv(envFile)
+	users, tokens := withBot(list(env("STEAM_BOT_USER")), list(env("STEAM_BOT_TOKEN")), user, token)
+	if err := setEnv(envFile, map[string]string{
+		"STEAM_BOT_USER":  strings.Join(users, ","),
+		"STEAM_BOT_TOKEN": strings.Join(tokens, ","),
+	}); err != nil {
 		return err
 	}
-	fmt.Println("Done: STEAM_BOT_USER and STEAM_BOT_TOKEN are in .env. Check with: go run ./tools/steambot probe")
+	fmt.Printf("Done: %d bot(s) in .env. Check with: go run ./tools/steambot probe\n", len(users))
 	return nil
+}
+
+// withBot puts a bot into the parallel login/token lists: a new token for a
+// known login replaces the old one, a new login is appended.
+func withBot(users, tokens []string, user, token string) ([]string, []string) {
+	users, tokens = users[:min(len(users), len(tokens))], tokens[:min(len(users), len(tokens))]
+	for i, u := range users {
+		if u == user {
+			tokens[i] = token
+			return users, tokens
+		}
+	}
+	return append(users, user), append(tokens, token)
+}
+
+func list(s string) []string {
+	var out []string
+	for p := range strings.SplitSeq(s, ",") {
+		if p = strings.TrimSpace(p); p != "" {
+			out = append(out, p)
+		}
+	}
+	return out
 }
 
 func probe(ctx context.Context, args []string) error {
 	env := readEnv(envFile)
-	user, token := env("STEAM_BOT_USER"), env("STEAM_BOT_TOKEN")
+	users, tokens := list(env("STEAM_BOT_USER")), list(env("STEAM_BOT_TOKEN"))
+	if len(users) == 0 || len(users) != len(tokens) {
+		return errors.New("no bot in STEAM_BOT_USER/STEAM_BOT_TOKEN: go run ./tools/steambot login")
+	}
+	user, token := users[0], tokens[0] // the first bot
 	var account uint32
 	if len(args) > 0 {
 		id, err := source.ParseAccountID(args[0])

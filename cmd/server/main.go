@@ -87,20 +87,23 @@ func run(log *slog.Logger) error {
 	log.Info("deadlock-api", "key", cfg.DeadlockAPIKey != "")
 	var history source.HistoryProvider = api
 	var salts source.SaltProvider = api
-	if cfg.SteamBotUser != "" {
+	if len(cfg.SteamBots) > 0 {
 		// The GC is first-hand and fresh; deadlock-api has the full history
-		// and covers the GC being down.
-		bot := steamgc.NewBot(log, cfg.SteamBotUser, cfg.SteamBotToken)
-		go bot.Run(ctx)
+		// and covers the GC being down or out of budget.
+		bots := steamgc.NewPool(log, cfg.SteamBots)
+		go bots.Run(ctx)
 		history = source.MergedHistory{
-			Providers: []source.HistoryProvider{bot, api},
+			Providers: []source.HistoryProvider{bots, api},
 			OnError: func(i int, err error) {
+				if errors.Is(err, steamgc.ErrNotFriend) {
+					return // the usual case for players the bots don't know
+				}
 				log.Warn("match history source failed", "source", []string{"steam gc", "deadlock-api"}[i], "err", err)
 			},
 		}
-		salts = source.SaltChain{bot, api}
+		salts = source.SaltChain{bots, api}
 	}
-	log.Info("steam gc", "bot", cfg.SteamBotUser != "")
+	log.Info("steam gc", "bots", len(cfg.SteamBots))
 	sy := syncer.New(database, history, salts, log)
 	sy.Interval = cfg.MetaInterval
 	sy.Profiles = api

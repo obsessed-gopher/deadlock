@@ -20,6 +20,8 @@ import (
 	devents "github.com/paralin/go-deadlock/events"
 	gc "github.com/paralin/go-deadlock/protocol"
 	steam "github.com/paralin/go-steam"
+	"github.com/paralin/go-steam/protocol/steamlang"
+	"github.com/paralin/go-steam/steamid"
 	"github.com/sirupsen/logrus"
 
 	"github.com/obsessed-gopher/deadlock/internal/source"
@@ -113,6 +115,12 @@ func (c *Client) loop(ctx context.Context) {
 			c.log.Info("steam bot logged on", "steam_id", c.sc.SteamId().ToUint64())
 			c.dl.SetPlaying(true)
 			go c.hello()
+		case *steam.FriendStateEvent:
+			// Players add the bot to let it read their match history.
+			if e.Relationship == steamlang.EFriendRelationship_RequestRecipient {
+				c.sc.Social.AddFriend(e.SteamId)
+				c.log.Info("steam friend request accepted", "account", e.SteamId.GetAccountId())
+			}
 		case *devents.GCConnectionStatusChanged:
 			c.log.Info("deadlock gc status", "old", e.OldState.String(), "new", e.NewState.String())
 		case *devents.UnhandledGCPacket:
@@ -197,6 +205,12 @@ func (c *Client) Err() error {
 // Close ends the session.
 func (c *Client) Close() {
 	c.fail(errors.New("steam gc: closed"))
+}
+
+// IsFriend reports whether the account is the bot's Steam friend.
+func (c *Client) IsFriend(accountID uint32) bool {
+	f, err := c.sc.Social.Friends.ById(steamid.NewIdAdv(accountID, 1, int32(steamlang.EUniverse_Public), steamlang.EAccountType_Individual))
+	return err == nil && f.Relationship == steamlang.EFriendRelationship_Friend
 }
 
 // MatchHistory is the newest page of a player's match history, newest first.

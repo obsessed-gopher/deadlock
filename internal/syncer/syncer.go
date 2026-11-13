@@ -24,7 +24,7 @@ type Store interface {
 	SetSyncState(ctx context.Context, accountID uint32, state, errMsg string, synced bool) error
 	UpsertHistory(ctx context.Context, accountID uint32, ms []source.MatchSummary) (newMatches int, err error)
 	CountPendingMeta(ctx context.Context, accountID uint32) (int, error)
-	NextPendingMeta(ctx context.Context, limit int) ([]uint64, error)
+	ClaimPendingMeta(ctx context.Context, limit int, lease time.Duration) ([]source.QueuedMatch, error)
 	StoreMeta(ctx context.Context, matchID uint64, raw []byte, version uint32, mi *pb.CMsgMatchMetaDataContents_MatchInfo) error
 	MarkMetaFailure(ctx context.Context, matchID uint64, expired bool, cause error, maxAttempts int) error
 	DeferMeta(ctx context.Context, matchID uint64, until time.Time, cause error) error
@@ -39,8 +39,13 @@ type Store interface {
 	StoreProfiles(ctx context.Context, requested []uint32, got []source.SteamProfile, at time.Time) error
 }
 
-// metaBatch is how many queued matches the worker takes at a time.
-const metaBatch = 10
+// The worker takes metaBatch queued matches at a time and leases them for
+// metaLease: enough to download a batch, short enough that matches of a
+// worker that died come back soon.
+const (
+	metaBatch = 10
+	metaLease = 10 * time.Minute
+)
 
 // Syncer coordinates providers and the database.
 type Syncer struct {
@@ -68,9 +73,9 @@ type Syncer struct {
 
 	wake chan struct{}
 
-	// The salts provider said 429: no salts requests before this moment.
-	// Touched only by the Run goroutine.
-	saltsPausedUntil time.Time
+	// The salts provider is out of budget: no salts requests of a priority
+	// before this moment. Touched only by the Run goroutine.
+	saltsPausedUntil map[source.Priority]time.Time
 }
 
 // New returns a Syncer with production defaults; tune the exported fields
@@ -85,6 +90,8 @@ func New(d Store, hist source.HistoryProvider, salts source.SaltProvider, log *s
 		ProfileIdle:   15 * time.Minute,
 		ProfileMaxAge: 7 * 24 * time.Hour,
 		wake:          make(chan struct{}, 1),
+
+		saltsPausedUntil: map[source.Priority]time.Time{},
 	}
 }
 
@@ -185,15 +192,17 @@ func (s *Syncer) Run(ctx context.Context) {
 	for {
 		// Small batches: a match that arrives meanwhile (a fresh one, newest
 		// first) waits for at most this many downloads.
-		ids, err := s.DB.NextPendingMeta(ctx, metaBatch)
+		ids, err := s.DB.ClaimPendingMeta(ctx, metaBatch, metaLease)
 		if err != nil && ctx.Err() == nil {
 			s.Log.Error("meta queue", "err", err)
 		}
-		for _, id := range ids {
+		for _, q := range ids {
 			if ctx.Err() != nil {
 				return
 			}
-			pause := s.processMeta(ctx, id)
+			// Old matches get only the spare budget of the salts provider.
+			pctx := source.WithPriority(ctx, source.PriorityFor(q.StartTime, time.Now()))
+			pause := s.processMeta(pctx, q.MatchID)
 			select {
 			case <-ctx.Done():
 				return
@@ -250,6 +259,16 @@ func (s *Syncer) RunProfiles(ctx context.Context) {
 			return
 		case <-time.After(wait):
 		}
+	}
+}
+
+// pauseSalts holds back salts requests of a priority until at least until.
+func (s *Syncer) pauseSalts(p source.Priority, until time.Time) {
+	if s.saltsPausedUntil == nil {
+		s.saltsPausedUntil = map[source.Priority]time.Time{}
+	}
+	if until.After(s.saltsPausedUntil[p]) {
+		s.saltsPausedUntil[p] = until
 	}
 }
 
@@ -324,16 +343,22 @@ func (s *Syncer) downloadMeta(ctx context.Context, matchID uint64) ([]byte, erro
 			return raw, err
 		}
 	}
-	if now := time.Now(); now.Before(s.saltsPausedUntil) {
-		return nil, &deferredError{until: s.saltsPausedUntil, err: errors.New("salts: paused after a rate limit")}
+	prio := source.PriorityOf(ctx)
+	if until := s.saltsPausedUntil[prio]; time.Now().Before(until) {
+		return nil, &deferredError{until: until, err: errors.New("salts: paused after a rate limit")}
 	}
 	salts, err := s.Salts.Salts(ctx, matchID)
 	if rl, ok := errors.AsType[*source.RateLimitError](err); ok {
-		// Salts not in deadlock-api's database come from Steam: 3 requests
-		// an hour. Stop asking until the window ends; matches it stores are
-		// still downloaded meanwhile.
-		s.saltsPausedUntil = time.Now().Add(rl.RetryAfter)
-		return nil, &deferredError{until: s.saltsPausedUntil, err: err}
+		// Out of budget (the GC bots', deadlock-api's 3 an hour from Steam):
+		// stop asking until it refills; matches deadlock-api stores are still
+		// downloaded meanwhile. Fresh matches out of budget hold back the
+		// backlog too; the backlog out of budget leaves fresh matches be.
+		until := time.Now().Add(rl.RetryAfter)
+		s.pauseSalts(prio, until)
+		if prio == source.Fresh {
+			s.pauseSalts(source.Backlog, until)
+		}
+		return nil, &deferredError{until: until, err: err}
 	}
 	if err != nil {
 		if errors.Is(err, source.ErrNotFound) {

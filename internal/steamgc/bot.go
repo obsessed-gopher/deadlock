@@ -2,57 +2,72 @@ package steamgc
 
 import (
 	"context"
-	"fmt"
 	"log/slog"
 	"sync"
 	"time"
-
-	"github.com/obsessed-gopher/deadlock/internal/source"
 )
 
-// Pacing of the bot: one GC request at a time, at least MinGap apart, and
-// reconnects backing off from ReconnectFirst up to ReconnectLongest.
+// Pacing of one bot. The GC answered "rate limited" after ~50 salts in a row
+// (the window looked longer than 10 minutes), so salts run at 40 an hour with
+// half of the burst kept for fresh matches: the backlog gets one request every
+// ~1.5 minutes and a match that just ended never waits for it.
 const (
-	MinGap           = 3 * time.Second
+	SaltsPerHour   = 40
+	saltsBurst     = 40
+	saltsReserve   = 20
+	HistoryPerHour = 60
+	historyBurst   = 20
+
+	// MinGap is the least time between two requests of one bot.
+	MinGap = 3 * time.Second
+
 	ReconnectFirst   = time.Minute
 	ReconnectLongest = 30 * time.Minute
 	dialTimeout      = time.Minute
 	// requestTimeout bounds one GC request: the GC drops some silently.
 	requestTimeout = 30 * time.Second
-	// readyWait is how long a request waits for a session (startup,
-	// reconnects) before the caller falls back to another source.
-	readyWait = 30 * time.Second
-	readyPoll = 500 * time.Millisecond
 )
 
-// Bot keeps a GC session alive and serves source.HistoryProvider and
-// source.SaltProvider over it. Without a session its methods fail fast with
-// ErrNotReady, so a source.SaltChain / source.MergedHistory moves on.
+// Account is a bot's login: the name and the refresh token from Login (a
+// secret: never logged).
+type Account struct {
+	Username string
+	Token    string
+}
+
+// Bot keeps one GC session alive and owns that account's request budget.
 type Bot struct {
-	log      *slog.Logger
-	username string
-	token    string // a secret: never logged
+	log *slog.Logger
+	acc Account
 
 	mu         sync.Mutex
 	cur        *Client
-	connecting bool // a dial is in progress
+	connecting bool
+	salts      *bucket
+	history    *bucket
+	last       time.Time // when the previous request was sent
 
-	req  sync.Mutex // one GC request at a time
-	last time.Time  // when the previous one was sent
+	req sync.Mutex // one GC request at a time
 }
 
 // NewBot returns a bot; Run connects it.
-func NewBot(log *slog.Logger, username, token string) *Bot {
-	return &Bot{log: log, username: username, token: token}
+func NewBot(log *slog.Logger, acc Account) *Bot {
+	now := time.Now()
+	return &Bot{
+		log:     log.With("bot", acc.Username),
+		acc:     acc,
+		salts:   newBucket(SaltsPerHour, saltsBurst, saltsReserve, now),
+		history: newBucket(HistoryPerHour, historyBurst, 0, now),
+	}
 }
 
-// Run keeps the session up until ctx ends.
+// Run keeps the session up until ctx ends, reconnecting with a backoff.
 func (b *Bot) Run(ctx context.Context) {
 	backoff := ReconnectFirst
 	for ctx.Err() == nil {
 		b.setConnecting(true)
 		dctx, cancel := context.WithTimeout(ctx, dialTimeout)
-		c, err := Dial(dctx, b.log, b.username, b.token)
+		c, err := Dial(dctx, b.log, b.acc.Username, b.acc.Token)
 		cancel()
 		b.setConnecting(false)
 		if err != nil {
@@ -85,13 +100,10 @@ func (b *Bot) Run(ctx context.Context) {
 	}
 }
 
-func (b *Bot) live() *Client {
+func (b *Bot) set(c *Client) {
 	b.mu.Lock()
-	defer b.mu.Unlock()
-	if b.cur == nil || b.cur.Err() != nil {
-		return nil
-	}
-	return b.cur
+	b.cur = c
+	b.mu.Unlock()
 }
 
 func (b *Bot) setConnecting(v bool) {
@@ -100,60 +112,55 @@ func (b *Bot) setConnecting(v bool) {
 	b.mu.Unlock()
 }
 
-func (b *Bot) isConnecting() bool {
+// state is the live session (nil if none) and whether a dial is under way.
+func (b *Bot) state() (*Client, bool) {
 	b.mu.Lock()
 	defer b.mu.Unlock()
-	return b.connecting
+	if b.cur == nil || b.cur.Err() != nil {
+		return nil, b.connecting
+	}
+	return b.cur, b.connecting
 }
 
-func (b *Bot) set(c *Client) {
+// reserve spends a token of the kind's budget or tells how long to wait.
+func (b *Bot) reserve(kind *bucket, fresh bool) (time.Duration, bool) {
 	b.mu.Lock()
-	b.cur = c
-	b.mu.Unlock()
+	defer b.mu.Unlock()
+	return kind.take(time.Now(), fresh)
 }
 
-// session waits for its turn and returns the live session, giving a bot
-// that is dialing right now up to readyWait.
-func (b *Bot) session(ctx context.Context) (*Client, func(), error) {
-	c := b.live()
-	for deadline := time.Now().Add(readyWait); c == nil && b.isConnecting() && time.Now().Before(deadline); c = b.live() {
-		if !sleep(ctx, readyPoll) {
-			return nil, nil, ctx.Err()
-		}
+// outcome feeds a GC answer back into the budget: a rate limit pauses the
+// kind with an escalating backoff, a success resets it.
+func (b *Bot) outcome(kind *bucket, err error) {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	if isRateLimit(err) {
+		d := kind.limited(time.Now())
+		b.log.Warn("steam gc rate limit", "pause", d.String(), "in_a_row", kind.strikes)
+		return
 	}
-	if c == nil {
-		return nil, nil, ErrNotReady
+	if err == nil {
+		kind.succeeded()
 	}
+}
+
+// turn waits for the bot's previous request to be MinGap old; release must
+// be called after the request.
+func (b *Bot) turn(ctx context.Context) (release func(), err error) {
 	b.req.Lock()
-	if wait := MinGap - time.Since(b.last); wait > 0 && !sleep(ctx, wait) {
+	b.mu.Lock()
+	wait := MinGap - time.Since(b.last)
+	b.mu.Unlock()
+	if wait > 0 && !sleep(ctx, wait) {
 		b.req.Unlock()
-		return nil, nil, ctx.Err()
+		return nil, ctx.Err()
 	}
-	return c, func() { b.last = time.Now(); b.req.Unlock() }, nil
-}
-
-// MatchHistory is the newest page of a player's history over the live session.
-func (b *Bot) MatchHistory(ctx context.Context, accountID uint32) ([]source.MatchSummary, error) {
-	c, done, err := b.session(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("steam gc: match history of %d: %w", accountID, err)
-	}
-	defer done()
-	ctx, cancel := context.WithTimeout(ctx, requestTimeout)
-	defer cancel()
-	return c.MatchHistory(ctx, accountID)
-}
-
-// Salts are a match's replay salts over the live session.
-func (b *Bot) Salts(ctx context.Context, matchID uint64) (source.Salts, error) {
-	c, done, err := b.session(ctx)
-	if err != nil {
-		return source.Salts{}, fmt.Errorf("steam gc: salts of %d: %w", matchID, err)
-	}
-	defer done()
-	ctx, cancel := context.WithTimeout(ctx, requestTimeout)
-	defer cancel()
-	return c.Salts(ctx, matchID)
+	return func() {
+		b.mu.Lock()
+		b.last = time.Now()
+		b.mu.Unlock()
+		b.req.Unlock()
+	}, nil
 }
 
 func sleep(ctx context.Context, d time.Duration) bool {

@@ -350,6 +350,39 @@ func TestProcessMetaRateLimits(t *testing.T) {
 	}
 }
 
+func TestProcessMetaSaltsPausePerPriority(t *testing.T) {
+	fresh := context.Background()
+	backlog := source.WithPriority(fresh, source.Backlog)
+	limited := &source.RateLimitError{What: "salts", RetryAfter: time.Hour}
+
+	// The backlog out of budget: old matches wait, fresh ones still ask.
+	st := &fakeStore{}
+	salts := &countingSalts{err: limited}
+	s := newSyncer(st, fakeHistory{}, salts, nil)
+	s.Meta = fakeMeta{err: source.ErrNotFound}
+	s.processMeta(backlog, testMatch)
+	s.processMeta(backlog, testMatch+1)
+	if salts.calls != 1 {
+		t.Errorf("backlog while its budget is out: salts asked %d times, want 1", salts.calls)
+	}
+	s.processMeta(fresh, testMatch+2)
+	if salts.calls != 2 {
+		t.Errorf("a fresh match behind a paused backlog: salts asked %d times, want 2", salts.calls)
+	}
+
+	// Fresh out of budget: everything waits.
+	st = &fakeStore{}
+	salts = &countingSalts{err: limited}
+	s = newSyncer(st, fakeHistory{}, salts, nil)
+	s.Meta = fakeMeta{err: source.ErrNotFound}
+	s.processMeta(fresh, testMatch)
+	s.processMeta(backlog, testMatch+1)
+	s.processMeta(fresh, testMatch+2)
+	if salts.calls != 1 || st.failedMatch != 0 {
+		t.Errorf("after a fresh rate limit: salts asked %d times (want 1), failed %d", salts.calls, st.failedMatch)
+	}
+}
+
 func TestProcessMetaCancelledIsNotAFailure(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()

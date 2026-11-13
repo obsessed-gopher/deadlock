@@ -3,6 +3,7 @@
 import {
   ACCOUNT,
   STEAM_ID64,
+  choose,
   column,
   expect,
   expectNoHorizontalScroll,
@@ -15,6 +16,7 @@ import {
   test,
 } from "./helpers.ts";
 import { DOWN_VANITY, KNOWN_VANITY, OWNER_NAME } from "../mock/api.ts";
+import { queueOf } from "../src/lib/queue.ts";
 
 const { t } = ru;
 
@@ -125,7 +127,7 @@ test("hero table: search and filters", async ({ page }) => {
 
   const role = look.hero(heroes[0]!.heroId)!.type;
   const expected = heroes.filter((h) => look.hero(h.heroId)?.type === role).length;
-  await page.getByLabel(`${name}: ${t("filter.role")}`).selectOption(role);
+  await choose(page, `${name}: ${t("filter.role")}`, ru.role(role));
   if (expected > 10) await page.getByRole("button", { name: t("table.showAll", { n: expected }) }).click();
   await expect(page.getByRole("table", { name, exact: true }).locator("tbody tr")).toHaveCount(expected);
 });
@@ -154,7 +156,7 @@ test("matches: result, hero and reset filters", async ({ page }) => {
   for (const text of await column(page, name, 3)) expect(text).toBe(t("result.win"));
 
   const hero = rows.find((r) => r.won)!.heroId;
-  await page.getByLabel(t("filter.hero")).selectOption(String(hero));
+  await choose(page, t("filter.hero"), look.heroName(hero));
   await page.getByRole("button", { name: t("filter.apply") }).click();
   await expect(page).toHaveURL(new RegExp(`hero=${hero}.*result=win|result=win.*hero=${hero}`));
   const heroWins = rows.filter((r) => r.won && r.heroId === hero).length;
@@ -198,7 +200,7 @@ test("match breakdown: chart, sortable scoreboard, build and deaths filters", as
   // Build: collapsed, filter by kind, search; ability upgrades numbered by order.
   const build = t("match.build");
   await expect(page.getByRole("table", { name: build, exact: true }).locator("tbody tr")).toHaveCount(12);
-  await page.getByLabel(`${build}: ${t("filter.kind")}`).selectOption("abilities");
+  await choose(page, `${build}: ${t("filter.kind")}`, t("build.abilities"));
   await page.getByRole("button", { name: /^(Показать все|Свернуть)/ }).last().click();
   for (const type of await column(page, build, 3)) {
     expect([t("build.unlock"), ...[1, 2, 3, 4, 5].map((n) => t("build.upgrade", { n }))]).toContain(type);
@@ -210,7 +212,7 @@ test("match breakdown: chart, sortable scoreboard, build and deaths filters", as
   // Deaths: filter by killer.
   const deaths = t("match.deaths");
   const killer = (await column(page, deaths, 2))[0]!;
-  await page.getByLabel(`${deaths}: ${t("filter.killer")}`).selectOption(killer);
+  await choose(page, `${deaths}: ${t("filter.killer")}`, killer);
   for (const k of await column(page, deaths, 2)) expect(k).toBe(killer);
   await expectNoHorizontalScroll(page);
 });
@@ -239,4 +241,24 @@ test("scoreboard links to another player's breakdown", async ({ page }) => {
   await other.click();
   await expect(page).toHaveURL(href!);
   await expect(page.getByRole("heading", { name: t("match.chart") })).toBeVisible();
+});
+
+test("matches by queue: Street Brawl apart, ranked not mixed into normal, old links work", async ({ page }) => {
+  const name = t("matches.title");
+  const brawl = rows.filter((r) => queueOf(r.gameMode, r.matchMode) === "brawl").length;
+  await page.goto(`/players/${ACCOUNT}/matches`);
+  await choose(page, t("filter.mode"), t("queue.brawl"));
+  await page.getByRole("button", { name: t("filter.apply") }).click();
+  await expect(page).toHaveURL(/mode=brawl/);
+  await expect(page.getByRole("table", { name, exact: true }).locator("tbody tr")).toHaveCount(Math.max(brawl, 1));
+  if (brawl) for (const text of await column(page, name, 9)) expect(text).toBe(t("queue.brawl"));
+
+  const ranked = rows.filter((r) => queueOf(r.gameMode, r.matchMode) === "ranked").length;
+  await page.goto(`/players/${ACCOUNT}/matches?mode=ranked`);
+  await expect(page.getByRole("combobox", { name: t("filter.mode") })).toHaveText(t("queue.ranked"));
+  if (!ranked) await expect(page.getByText(t("matches.empty"))).toBeVisible();
+
+  // Links from before queues used Valve's game mode number.
+  await page.goto(`/players/${ACCOUNT}/matches?mode=4`);
+  await expect(page.getByRole("combobox", { name: t("filter.mode") })).toHaveText(t("queue.brawl"));
 });

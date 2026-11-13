@@ -358,6 +358,44 @@ func testMatchQueries(ctx context.Context, t *testing.T, d *DB, acc uint32, matc
 	if _, _, err := d.ListPlayerMatches(ctx, with(base, func(q *MatchQuery) { q.Result = 5 })); !errors.Is(err, ErrBadQuery) {
 		t.Errorf("unknown result err = %v, want ErrBadQuery", err)
 	}
+	if _, _, err := d.ListPlayerMatches(ctx, with(base, func(q *MatchQuery) { q.Queue = 9 })); !errors.Is(err, ErrBadQuery) {
+		t.Errorf("unknown queue err = %v, want ErrBadQuery", err)
+	}
+
+	// Queues: ranked is a match mode of the normal game mode and must not be
+	// counted as normal; Street Brawl is its own game mode.
+	setModes := func(id uint64, game, match int) {
+		t.Helper()
+		if _, err := d.Pool.Exec(ctx, `UPDATE matches SET game_mode = $2, match_mode = $3 WHERE match_id = $1`, id, game, match); err != nil {
+			t.Fatal(err)
+		}
+	}
+	setModes(match+1, 1, 4) // ranked
+	setModes(match+2, 4, 1) // street brawl
+	defer func() { setModes(match+1, 1, 1); setModes(match+2, 1, 1) }()
+	for queue, want := range map[v1.MatchQueue][]uint64{
+		v1.MatchQueue_MATCH_QUEUE_UNSPECIFIED:  {match + 1, match, match + 2},
+		v1.MatchQueue_MATCH_QUEUE_NORMAL:       {match},
+		v1.MatchQueue_MATCH_QUEUE_RANKED:       {match + 1},
+		v1.MatchQueue_MATCH_QUEUE_STREET_BRAWL: {match + 2},
+		v1.MatchQueue_MATCH_QUEUE_OTHER:        {},
+	} {
+		rows, total, err := d.ListPlayerMatches(ctx, with(base, func(q *MatchQuery) { q.Queue = queue }))
+		if err != nil {
+			t.Fatal(err)
+		}
+		got := []uint64{}
+		for _, r := range rows {
+			got = append(got, r.MatchId)
+		}
+		if !slices.Equal(got, want) || total != len(want) {
+			t.Errorf("queue %v = %v (total %d), want %v", queue, got, total, want)
+		}
+	}
+	setModes(match+1, 1, 7) // hero labs
+	if rows, _, _ := d.ListPlayerMatches(ctx, with(base, func(q *MatchQuery) { q.Queue = v1.MatchQueue_MATCH_QUEUE_OTHER })); len(rows) != 1 || rows[0].MatchId != match+1 {
+		t.Errorf("other queue = %v, want the hero labs match", rows)
+	}
 }
 
 func with(q MatchQuery, f func(*MatchQuery)) MatchQuery {

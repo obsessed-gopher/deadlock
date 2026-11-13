@@ -200,6 +200,64 @@ func (MatchSort) EnumDescriptor() ([]byte, []int) {
 	return file_deadlock_v1_stats_proto_rawDescGZIP(), []int{2}
 }
 
+// What players call the mode: the queue a match was played in. Derived from
+// Valve's game mode and match mode (ranked is a match mode of the normal game
+// mode, so filtering by game_mode alone mixes ranked into normal).
+type MatchQueue int32
+
+const (
+	MatchQueue_MATCH_QUEUE_UNSPECIFIED  MatchQueue = 0 // any
+	MatchQueue_MATCH_QUEUE_NORMAL       MatchQueue = 1 // normal game mode, unranked (or placement)
+	MatchQueue_MATCH_QUEUE_RANKED       MatchQueue = 2 // normal game mode, ranked
+	MatchQueue_MATCH_QUEUE_STREET_BRAWL MatchQueue = 3
+	MatchQueue_MATCH_QUEUE_OTHER        MatchQueue = 4 // hero labs, bots, private lobbies, tests
+)
+
+// Enum value maps for MatchQueue.
+var (
+	MatchQueue_name = map[int32]string{
+		0: "MATCH_QUEUE_UNSPECIFIED",
+		1: "MATCH_QUEUE_NORMAL",
+		2: "MATCH_QUEUE_RANKED",
+		3: "MATCH_QUEUE_STREET_BRAWL",
+		4: "MATCH_QUEUE_OTHER",
+	}
+	MatchQueue_value = map[string]int32{
+		"MATCH_QUEUE_UNSPECIFIED":  0,
+		"MATCH_QUEUE_NORMAL":       1,
+		"MATCH_QUEUE_RANKED":       2,
+		"MATCH_QUEUE_STREET_BRAWL": 3,
+		"MATCH_QUEUE_OTHER":        4,
+	}
+)
+
+func (x MatchQueue) Enum() *MatchQueue {
+	p := new(MatchQueue)
+	*p = x
+	return p
+}
+
+func (x MatchQueue) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (MatchQueue) Descriptor() protoreflect.EnumDescriptor {
+	return file_deadlock_v1_stats_proto_enumTypes[3].Descriptor()
+}
+
+func (MatchQueue) Type() protoreflect.EnumType {
+	return &file_deadlock_v1_stats_proto_enumTypes[3]
+}
+
+func (x MatchQueue) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use MatchQueue.Descriptor instead.
+func (MatchQueue) EnumDescriptor() ([]byte, []int) {
+	return file_deadlock_v1_stats_proto_rawDescGZIP(), []int{3}
+}
+
 type MatchResult int32
 
 const (
@@ -233,11 +291,11 @@ func (x MatchResult) String() string {
 }
 
 func (MatchResult) Descriptor() protoreflect.EnumDescriptor {
-	return file_deadlock_v1_stats_proto_enumTypes[3].Descriptor()
+	return file_deadlock_v1_stats_proto_enumTypes[4].Descriptor()
 }
 
 func (MatchResult) Type() protoreflect.EnumType {
-	return &file_deadlock_v1_stats_proto_enumTypes[3]
+	return &file_deadlock_v1_stats_proto_enumTypes[4]
 }
 
 func (x MatchResult) Number() protoreflect.EnumNumber {
@@ -246,7 +304,7 @@ func (x MatchResult) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use MatchResult.Descriptor instead.
 func (MatchResult) EnumDescriptor() ([]byte, []int) {
-	return file_deadlock_v1_stats_proto_rawDescGZIP(), []int{3}
+	return file_deadlock_v1_stats_proto_rawDescGZIP(), []int{4}
 }
 
 type GetGameDataRequest struct {
@@ -678,6 +736,7 @@ type ListPlayerMatchesRequest struct {
 	Result        MatchResult `protobuf:"varint,7,opt,name=result,proto3,enum=deadlock.v1.MatchResult" json:"result,omitempty"`                          // optional filter
 	GameMode      int32       `protobuf:"varint,8,opt,name=game_mode,json=gameMode,proto3" json:"game_mode,omitempty"`                                   // optional filter, 0 = any
 	MetaStatus    MetaStatus  `protobuf:"varint,9,opt,name=meta_status,json=metaStatus,proto3,enum=deadlock.v1.MetaStatus" json:"meta_status,omitempty"` // optional filter, UNSPECIFIED = any
+	Queue         MatchQueue  `protobuf:"varint,10,opt,name=queue,proto3,enum=deadlock.v1.MatchQueue" json:"queue,omitempty"`                            // optional filter, UNSPECIFIED = any
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -773,6 +832,13 @@ func (x *ListPlayerMatchesRequest) GetMetaStatus() MetaStatus {
 		return x.MetaStatus
 	}
 	return MetaStatus_META_STATUS_UNSPECIFIED
+}
+
+func (x *ListPlayerMatchesRequest) GetQueue() MatchQueue {
+	if x != nil {
+		return x.Queue
+	}
+	return MatchQueue_MATCH_QUEUE_UNSPECIFIED
 }
 
 type ListPlayerMatchesResponse struct {
@@ -3345,7 +3411,7 @@ const file_deadlock_v1_stats_proto_rawDesc = "" +
 	"\rmatches_total\x18\x05 \x01(\rR\fmatchesTotal\x12*\n" +
 	"\x11matches_with_meta\x18\x06 \x01(\rR\x0fmatchesWithMeta\x12'\n" +
 	"\x0fmatches_pending\x18\a \x01(\rR\x0ematchesPending\x12\x12\n" +
-	"\x04wins\x18\b \x01(\rR\x04wins\"\xe1\x02\n" +
+	"\x04wins\x18\b \x01(\rR\x04wins\"\x90\x03\n" +
 	"\x18ListPlayerMatchesRequest\x12\x1d\n" +
 	"\n" +
 	"account_id\x18\x01 \x01(\x04R\taccountId\x12\x1b\n" +
@@ -3358,7 +3424,9 @@ const file_deadlock_v1_stats_proto_rawDesc = "" +
 	"\x06result\x18\a \x01(\x0e2\x18.deadlock.v1.MatchResultR\x06result\x12\x1b\n" +
 	"\tgame_mode\x18\b \x01(\x05R\bgameMode\x128\n" +
 	"\vmeta_status\x18\t \x01(\x0e2\x17.deadlock.v1.MetaStatusR\n" +
-	"metaStatus\"\x90\x01\n" +
+	"metaStatus\x12-\n" +
+	"\x05queue\x18\n" +
+	" \x01(\x0e2\x17.deadlock.v1.MatchQueueR\x05queue\"\x90\x01\n" +
 	"\x19ListPlayerMatchesResponse\x125\n" +
 	"\amatches\x18\x01 \x03(\v2\x1b.deadlock.v1.PlayerMatchRowR\amatches\x12&\n" +
 	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken\x12\x14\n" +
@@ -3627,7 +3695,14 @@ const file_deadlock_v1_stats_proto_rawDesc = "" +
 	"\x12MATCH_SORT_ASSISTS\x10\x05\x12\x18\n" +
 	"\x14MATCH_SORT_NET_WORTH\x10\x06\x12\x18\n" +
 	"\x14MATCH_SORT_LAST_HITS\x10\a\x12\x19\n" +
-	"\x15MATCH_SORT_HERO_LEVEL\x10\b*X\n" +
+	"\x15MATCH_SORT_HERO_LEVEL\x10\b*\x8e\x01\n" +
+	"\n" +
+	"MatchQueue\x12\x1b\n" +
+	"\x17MATCH_QUEUE_UNSPECIFIED\x10\x00\x12\x16\n" +
+	"\x12MATCH_QUEUE_NORMAL\x10\x01\x12\x16\n" +
+	"\x12MATCH_QUEUE_RANKED\x10\x02\x12\x1c\n" +
+	"\x18MATCH_QUEUE_STREET_BRAWL\x10\x03\x12\x15\n" +
+	"\x11MATCH_QUEUE_OTHER\x10\x04*X\n" +
 	"\vMatchResult\x12\x1c\n" +
 	"\x18MATCH_RESULT_UNSPECIFIED\x10\x00\x12\x14\n" +
 	"\x10MATCH_RESULT_WIN\x10\x01\x12\x15\n" +
@@ -3659,107 +3734,109 @@ func file_deadlock_v1_stats_proto_rawDescGZIP() []byte {
 	return file_deadlock_v1_stats_proto_rawDescData
 }
 
-var file_deadlock_v1_stats_proto_enumTypes = make([]protoimpl.EnumInfo, 4)
+var file_deadlock_v1_stats_proto_enumTypes = make([]protoimpl.EnumInfo, 5)
 var file_deadlock_v1_stats_proto_msgTypes = make([]protoimpl.MessageInfo, 39)
 var file_deadlock_v1_stats_proto_goTypes = []any{
 	(MetaStatus)(0),                      // 0: deadlock.v1.MetaStatus
 	(SyncState)(0),                       // 1: deadlock.v1.SyncState
 	(MatchSort)(0),                       // 2: deadlock.v1.MatchSort
-	(MatchResult)(0),                     // 3: deadlock.v1.MatchResult
-	(*GetGameDataRequest)(nil),           // 4: deadlock.v1.GetGameDataRequest
-	(*GameData)(nil),                     // 5: deadlock.v1.GameData
-	(*Hero)(nil),                         // 6: deadlock.v1.Hero
-	(*Ability)(nil),                      // 7: deadlock.v1.Ability
-	(*GetPlayerRequest)(nil),             // 8: deadlock.v1.GetPlayerRequest
-	(*Player)(nil),                       // 9: deadlock.v1.Player
-	(*ListPlayerMatchesRequest)(nil),     // 10: deadlock.v1.ListPlayerMatchesRequest
-	(*ListPlayerMatchesResponse)(nil),    // 11: deadlock.v1.ListPlayerMatchesResponse
-	(*PlayerMatchRow)(nil),               // 12: deadlock.v1.PlayerMatchRow
-	(*ListPlayerHeroStatsRequest)(nil),   // 13: deadlock.v1.ListPlayerHeroStatsRequest
-	(*ListPlayerHeroStatsResponse)(nil),  // 14: deadlock.v1.ListPlayerHeroStatsResponse
-	(*HeroStats)(nil),                    // 15: deadlock.v1.HeroStats
-	(*ListPlayerMatchFactsRequest)(nil),  // 16: deadlock.v1.ListPlayerMatchFactsRequest
-	(*ListPlayerMatchFactsResponse)(nil), // 17: deadlock.v1.ListPlayerMatchFactsResponse
-	(*MatchFacts)(nil),                   // 18: deadlock.v1.MatchFacts
-	(*SoulSources)(nil),                  // 19: deadlock.v1.SoulSources
-	(*ListPlayerPeersRequest)(nil),       // 20: deadlock.v1.ListPlayerPeersRequest
-	(*ListPlayerPeersResponse)(nil),      // 21: deadlock.v1.ListPlayerPeersResponse
-	(*Peer)(nil),                         // 22: deadlock.v1.Peer
-	(*HeroMatchup)(nil),                  // 23: deadlock.v1.HeroMatchup
-	(*PartySize)(nil),                    // 24: deadlock.v1.PartySize
-	(*SyncPlayerRequest)(nil),            // 25: deadlock.v1.SyncPlayerRequest
-	(*SyncPlayerResponse)(nil),           // 26: deadlock.v1.SyncPlayerResponse
-	(*ListProfilesRequest)(nil),          // 27: deadlock.v1.ListProfilesRequest
-	(*ListProfilesResponse)(nil),         // 28: deadlock.v1.ListProfilesResponse
-	(*Profile)(nil),                      // 29: deadlock.v1.Profile
-	(*ResolveSteamVanityRequest)(nil),    // 30: deadlock.v1.ResolveSteamVanityRequest
-	(*ResolveSteamVanityResponse)(nil),   // 31: deadlock.v1.ResolveSteamVanityResponse
-	(*GetMatchRequest)(nil),              // 32: deadlock.v1.GetMatchRequest
-	(*Match)(nil),                        // 33: deadlock.v1.Match
-	(*MatchPlayer)(nil),                  // 34: deadlock.v1.MatchPlayer
-	(*GetPlayerMatchRequest)(nil),        // 35: deadlock.v1.GetPlayerMatchRequest
-	(*PlayerMatch)(nil),                  // 36: deadlock.v1.PlayerMatch
-	(*StatSnapshot)(nil),                 // 37: deadlock.v1.StatSnapshot
-	(*ItemEvent)(nil),                    // 38: deadlock.v1.ItemEvent
-	(*Death)(nil),                        // 39: deadlock.v1.Death
-	(*Vec3)(nil),                         // 40: deadlock.v1.Vec3
-	(*SlotTimeline)(nil),                 // 41: deadlock.v1.SlotTimeline
-	(*TimePoint)(nil),                    // 42: deadlock.v1.TimePoint
+	(MatchQueue)(0),                      // 3: deadlock.v1.MatchQueue
+	(MatchResult)(0),                     // 4: deadlock.v1.MatchResult
+	(*GetGameDataRequest)(nil),           // 5: deadlock.v1.GetGameDataRequest
+	(*GameData)(nil),                     // 6: deadlock.v1.GameData
+	(*Hero)(nil),                         // 7: deadlock.v1.Hero
+	(*Ability)(nil),                      // 8: deadlock.v1.Ability
+	(*GetPlayerRequest)(nil),             // 9: deadlock.v1.GetPlayerRequest
+	(*Player)(nil),                       // 10: deadlock.v1.Player
+	(*ListPlayerMatchesRequest)(nil),     // 11: deadlock.v1.ListPlayerMatchesRequest
+	(*ListPlayerMatchesResponse)(nil),    // 12: deadlock.v1.ListPlayerMatchesResponse
+	(*PlayerMatchRow)(nil),               // 13: deadlock.v1.PlayerMatchRow
+	(*ListPlayerHeroStatsRequest)(nil),   // 14: deadlock.v1.ListPlayerHeroStatsRequest
+	(*ListPlayerHeroStatsResponse)(nil),  // 15: deadlock.v1.ListPlayerHeroStatsResponse
+	(*HeroStats)(nil),                    // 16: deadlock.v1.HeroStats
+	(*ListPlayerMatchFactsRequest)(nil),  // 17: deadlock.v1.ListPlayerMatchFactsRequest
+	(*ListPlayerMatchFactsResponse)(nil), // 18: deadlock.v1.ListPlayerMatchFactsResponse
+	(*MatchFacts)(nil),                   // 19: deadlock.v1.MatchFacts
+	(*SoulSources)(nil),                  // 20: deadlock.v1.SoulSources
+	(*ListPlayerPeersRequest)(nil),       // 21: deadlock.v1.ListPlayerPeersRequest
+	(*ListPlayerPeersResponse)(nil),      // 22: deadlock.v1.ListPlayerPeersResponse
+	(*Peer)(nil),                         // 23: deadlock.v1.Peer
+	(*HeroMatchup)(nil),                  // 24: deadlock.v1.HeroMatchup
+	(*PartySize)(nil),                    // 25: deadlock.v1.PartySize
+	(*SyncPlayerRequest)(nil),            // 26: deadlock.v1.SyncPlayerRequest
+	(*SyncPlayerResponse)(nil),           // 27: deadlock.v1.SyncPlayerResponse
+	(*ListProfilesRequest)(nil),          // 28: deadlock.v1.ListProfilesRequest
+	(*ListProfilesResponse)(nil),         // 29: deadlock.v1.ListProfilesResponse
+	(*Profile)(nil),                      // 30: deadlock.v1.Profile
+	(*ResolveSteamVanityRequest)(nil),    // 31: deadlock.v1.ResolveSteamVanityRequest
+	(*ResolveSteamVanityResponse)(nil),   // 32: deadlock.v1.ResolveSteamVanityResponse
+	(*GetMatchRequest)(nil),              // 33: deadlock.v1.GetMatchRequest
+	(*Match)(nil),                        // 34: deadlock.v1.Match
+	(*MatchPlayer)(nil),                  // 35: deadlock.v1.MatchPlayer
+	(*GetPlayerMatchRequest)(nil),        // 36: deadlock.v1.GetPlayerMatchRequest
+	(*PlayerMatch)(nil),                  // 37: deadlock.v1.PlayerMatch
+	(*StatSnapshot)(nil),                 // 38: deadlock.v1.StatSnapshot
+	(*ItemEvent)(nil),                    // 39: deadlock.v1.ItemEvent
+	(*Death)(nil),                        // 40: deadlock.v1.Death
+	(*Vec3)(nil),                         // 41: deadlock.v1.Vec3
+	(*SlotTimeline)(nil),                 // 42: deadlock.v1.SlotTimeline
+	(*TimePoint)(nil),                    // 43: deadlock.v1.TimePoint
 }
 var file_deadlock_v1_stats_proto_depIdxs = []int32{
-	6,  // 0: deadlock.v1.GameData.heroes:type_name -> deadlock.v1.Hero
-	7,  // 1: deadlock.v1.GameData.abilities:type_name -> deadlock.v1.Ability
+	7,  // 0: deadlock.v1.GameData.heroes:type_name -> deadlock.v1.Hero
+	8,  // 1: deadlock.v1.GameData.abilities:type_name -> deadlock.v1.Ability
 	1,  // 2: deadlock.v1.Player.sync_state:type_name -> deadlock.v1.SyncState
 	2,  // 3: deadlock.v1.ListPlayerMatchesRequest.sort:type_name -> deadlock.v1.MatchSort
-	3,  // 4: deadlock.v1.ListPlayerMatchesRequest.result:type_name -> deadlock.v1.MatchResult
+	4,  // 4: deadlock.v1.ListPlayerMatchesRequest.result:type_name -> deadlock.v1.MatchResult
 	0,  // 5: deadlock.v1.ListPlayerMatchesRequest.meta_status:type_name -> deadlock.v1.MetaStatus
-	12, // 6: deadlock.v1.ListPlayerMatchesResponse.matches:type_name -> deadlock.v1.PlayerMatchRow
-	0,  // 7: deadlock.v1.PlayerMatchRow.meta_status:type_name -> deadlock.v1.MetaStatus
-	15, // 8: deadlock.v1.ListPlayerHeroStatsResponse.heroes:type_name -> deadlock.v1.HeroStats
-	18, // 9: deadlock.v1.ListPlayerMatchFactsResponse.matches:type_name -> deadlock.v1.MatchFacts
-	19, // 10: deadlock.v1.MatchFacts.souls_from:type_name -> deadlock.v1.SoulSources
-	22, // 11: deadlock.v1.ListPlayerPeersResponse.allies:type_name -> deadlock.v1.Peer
-	22, // 12: deadlock.v1.ListPlayerPeersResponse.enemies:type_name -> deadlock.v1.Peer
-	23, // 13: deadlock.v1.ListPlayerPeersResponse.heroes:type_name -> deadlock.v1.HeroMatchup
-	24, // 14: deadlock.v1.ListPlayerPeersResponse.party_sizes:type_name -> deadlock.v1.PartySize
-	29, // 15: deadlock.v1.ListProfilesResponse.profiles:type_name -> deadlock.v1.Profile
-	0,  // 16: deadlock.v1.Match.meta_status:type_name -> deadlock.v1.MetaStatus
-	34, // 17: deadlock.v1.Match.players:type_name -> deadlock.v1.MatchPlayer
-	33, // 18: deadlock.v1.PlayerMatch.match:type_name -> deadlock.v1.Match
-	37, // 19: deadlock.v1.PlayerMatch.timeline:type_name -> deadlock.v1.StatSnapshot
-	38, // 20: deadlock.v1.PlayerMatch.items:type_name -> deadlock.v1.ItemEvent
-	39, // 21: deadlock.v1.PlayerMatch.deaths:type_name -> deadlock.v1.Death
-	41, // 22: deadlock.v1.PlayerMatch.net_worth_by_slot:type_name -> deadlock.v1.SlotTimeline
-	40, // 23: deadlock.v1.Death.pos:type_name -> deadlock.v1.Vec3
-	40, // 24: deadlock.v1.Death.killer_pos:type_name -> deadlock.v1.Vec3
-	42, // 25: deadlock.v1.SlotTimeline.points:type_name -> deadlock.v1.TimePoint
-	8,  // 26: deadlock.v1.StatsService.GetPlayer:input_type -> deadlock.v1.GetPlayerRequest
-	10, // 27: deadlock.v1.StatsService.ListPlayerMatches:input_type -> deadlock.v1.ListPlayerMatchesRequest
-	13, // 28: deadlock.v1.StatsService.ListPlayerHeroStats:input_type -> deadlock.v1.ListPlayerHeroStatsRequest
-	16, // 29: deadlock.v1.StatsService.ListPlayerMatchFacts:input_type -> deadlock.v1.ListPlayerMatchFactsRequest
-	20, // 30: deadlock.v1.StatsService.ListPlayerPeers:input_type -> deadlock.v1.ListPlayerPeersRequest
-	25, // 31: deadlock.v1.StatsService.SyncPlayer:input_type -> deadlock.v1.SyncPlayerRequest
-	27, // 32: deadlock.v1.StatsService.ListProfiles:input_type -> deadlock.v1.ListProfilesRequest
-	30, // 33: deadlock.v1.StatsService.ResolveSteamVanity:input_type -> deadlock.v1.ResolveSteamVanityRequest
-	32, // 34: deadlock.v1.StatsService.GetMatch:input_type -> deadlock.v1.GetMatchRequest
-	35, // 35: deadlock.v1.StatsService.GetPlayerMatch:input_type -> deadlock.v1.GetPlayerMatchRequest
-	4,  // 36: deadlock.v1.StatsService.GetGameData:input_type -> deadlock.v1.GetGameDataRequest
-	9,  // 37: deadlock.v1.StatsService.GetPlayer:output_type -> deadlock.v1.Player
-	11, // 38: deadlock.v1.StatsService.ListPlayerMatches:output_type -> deadlock.v1.ListPlayerMatchesResponse
-	14, // 39: deadlock.v1.StatsService.ListPlayerHeroStats:output_type -> deadlock.v1.ListPlayerHeroStatsResponse
-	17, // 40: deadlock.v1.StatsService.ListPlayerMatchFacts:output_type -> deadlock.v1.ListPlayerMatchFactsResponse
-	21, // 41: deadlock.v1.StatsService.ListPlayerPeers:output_type -> deadlock.v1.ListPlayerPeersResponse
-	26, // 42: deadlock.v1.StatsService.SyncPlayer:output_type -> deadlock.v1.SyncPlayerResponse
-	28, // 43: deadlock.v1.StatsService.ListProfiles:output_type -> deadlock.v1.ListProfilesResponse
-	31, // 44: deadlock.v1.StatsService.ResolveSteamVanity:output_type -> deadlock.v1.ResolveSteamVanityResponse
-	33, // 45: deadlock.v1.StatsService.GetMatch:output_type -> deadlock.v1.Match
-	36, // 46: deadlock.v1.StatsService.GetPlayerMatch:output_type -> deadlock.v1.PlayerMatch
-	5,  // 47: deadlock.v1.StatsService.GetGameData:output_type -> deadlock.v1.GameData
-	37, // [37:48] is the sub-list for method output_type
-	26, // [26:37] is the sub-list for method input_type
-	26, // [26:26] is the sub-list for extension type_name
-	26, // [26:26] is the sub-list for extension extendee
-	0,  // [0:26] is the sub-list for field type_name
+	3,  // 6: deadlock.v1.ListPlayerMatchesRequest.queue:type_name -> deadlock.v1.MatchQueue
+	13, // 7: deadlock.v1.ListPlayerMatchesResponse.matches:type_name -> deadlock.v1.PlayerMatchRow
+	0,  // 8: deadlock.v1.PlayerMatchRow.meta_status:type_name -> deadlock.v1.MetaStatus
+	16, // 9: deadlock.v1.ListPlayerHeroStatsResponse.heroes:type_name -> deadlock.v1.HeroStats
+	19, // 10: deadlock.v1.ListPlayerMatchFactsResponse.matches:type_name -> deadlock.v1.MatchFacts
+	20, // 11: deadlock.v1.MatchFacts.souls_from:type_name -> deadlock.v1.SoulSources
+	23, // 12: deadlock.v1.ListPlayerPeersResponse.allies:type_name -> deadlock.v1.Peer
+	23, // 13: deadlock.v1.ListPlayerPeersResponse.enemies:type_name -> deadlock.v1.Peer
+	24, // 14: deadlock.v1.ListPlayerPeersResponse.heroes:type_name -> deadlock.v1.HeroMatchup
+	25, // 15: deadlock.v1.ListPlayerPeersResponse.party_sizes:type_name -> deadlock.v1.PartySize
+	30, // 16: deadlock.v1.ListProfilesResponse.profiles:type_name -> deadlock.v1.Profile
+	0,  // 17: deadlock.v1.Match.meta_status:type_name -> deadlock.v1.MetaStatus
+	35, // 18: deadlock.v1.Match.players:type_name -> deadlock.v1.MatchPlayer
+	34, // 19: deadlock.v1.PlayerMatch.match:type_name -> deadlock.v1.Match
+	38, // 20: deadlock.v1.PlayerMatch.timeline:type_name -> deadlock.v1.StatSnapshot
+	39, // 21: deadlock.v1.PlayerMatch.items:type_name -> deadlock.v1.ItemEvent
+	40, // 22: deadlock.v1.PlayerMatch.deaths:type_name -> deadlock.v1.Death
+	42, // 23: deadlock.v1.PlayerMatch.net_worth_by_slot:type_name -> deadlock.v1.SlotTimeline
+	41, // 24: deadlock.v1.Death.pos:type_name -> deadlock.v1.Vec3
+	41, // 25: deadlock.v1.Death.killer_pos:type_name -> deadlock.v1.Vec3
+	43, // 26: deadlock.v1.SlotTimeline.points:type_name -> deadlock.v1.TimePoint
+	9,  // 27: deadlock.v1.StatsService.GetPlayer:input_type -> deadlock.v1.GetPlayerRequest
+	11, // 28: deadlock.v1.StatsService.ListPlayerMatches:input_type -> deadlock.v1.ListPlayerMatchesRequest
+	14, // 29: deadlock.v1.StatsService.ListPlayerHeroStats:input_type -> deadlock.v1.ListPlayerHeroStatsRequest
+	17, // 30: deadlock.v1.StatsService.ListPlayerMatchFacts:input_type -> deadlock.v1.ListPlayerMatchFactsRequest
+	21, // 31: deadlock.v1.StatsService.ListPlayerPeers:input_type -> deadlock.v1.ListPlayerPeersRequest
+	26, // 32: deadlock.v1.StatsService.SyncPlayer:input_type -> deadlock.v1.SyncPlayerRequest
+	28, // 33: deadlock.v1.StatsService.ListProfiles:input_type -> deadlock.v1.ListProfilesRequest
+	31, // 34: deadlock.v1.StatsService.ResolveSteamVanity:input_type -> deadlock.v1.ResolveSteamVanityRequest
+	33, // 35: deadlock.v1.StatsService.GetMatch:input_type -> deadlock.v1.GetMatchRequest
+	36, // 36: deadlock.v1.StatsService.GetPlayerMatch:input_type -> deadlock.v1.GetPlayerMatchRequest
+	5,  // 37: deadlock.v1.StatsService.GetGameData:input_type -> deadlock.v1.GetGameDataRequest
+	10, // 38: deadlock.v1.StatsService.GetPlayer:output_type -> deadlock.v1.Player
+	12, // 39: deadlock.v1.StatsService.ListPlayerMatches:output_type -> deadlock.v1.ListPlayerMatchesResponse
+	15, // 40: deadlock.v1.StatsService.ListPlayerHeroStats:output_type -> deadlock.v1.ListPlayerHeroStatsResponse
+	18, // 41: deadlock.v1.StatsService.ListPlayerMatchFacts:output_type -> deadlock.v1.ListPlayerMatchFactsResponse
+	22, // 42: deadlock.v1.StatsService.ListPlayerPeers:output_type -> deadlock.v1.ListPlayerPeersResponse
+	27, // 43: deadlock.v1.StatsService.SyncPlayer:output_type -> deadlock.v1.SyncPlayerResponse
+	29, // 44: deadlock.v1.StatsService.ListProfiles:output_type -> deadlock.v1.ListProfilesResponse
+	32, // 45: deadlock.v1.StatsService.ResolveSteamVanity:output_type -> deadlock.v1.ResolveSteamVanityResponse
+	34, // 46: deadlock.v1.StatsService.GetMatch:output_type -> deadlock.v1.Match
+	37, // 47: deadlock.v1.StatsService.GetPlayerMatch:output_type -> deadlock.v1.PlayerMatch
+	6,  // 48: deadlock.v1.StatsService.GetGameData:output_type -> deadlock.v1.GameData
+	38, // [38:49] is the sub-list for method output_type
+	27, // [27:38] is the sub-list for method input_type
+	27, // [27:27] is the sub-list for extension type_name
+	27, // [27:27] is the sub-list for extension extendee
+	0,  // [0:27] is the sub-list for field type_name
 }
 
 func init() { file_deadlock_v1_stats_proto_init() }
@@ -3772,7 +3849,7 @@ func file_deadlock_v1_stats_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_deadlock_v1_stats_proto_rawDesc), len(file_deadlock_v1_stats_proto_rawDesc)),
-			NumEnums:      4,
+			NumEnums:      5,
 			NumMessages:   39,
 			NumExtensions: 0,
 			NumServices:   1,

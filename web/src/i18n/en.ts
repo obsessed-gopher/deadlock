@@ -127,6 +127,10 @@ export const en = {
   "team.1": "Sapphire",
   "team.n": "Team {n}",
 
+  "queue.normal": "Normal",
+  "queue.ranked": "Ranked",
+  "queue.brawl": "Street Brawl",
+  "queue.other": "Other",
   "gameMode.1": "Normal",
   "gameMode.2": "1v1",
   "gameMode.3": "Sandbox",

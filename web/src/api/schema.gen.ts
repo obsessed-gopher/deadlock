@@ -194,6 +194,18 @@ export interface MatchPlayer {
   team: number;
 }
 
+/**
+ * What players call the mode: the queue a match was played in. Derived from
+ * Valve's game mode and match mode (ranked is a match mode of the normal game
+ * mode, so filtering by game_mode alone mixes ranked into normal).
+ * 
+ * - MATCH_QUEUE_UNSPECIFIED: any
+ * - MATCH_QUEUE_NORMAL: normal game mode, unranked (or placement)
+ * - MATCH_QUEUE_RANKED: normal game mode, ranked
+ * - MATCH_QUEUE_OTHER: hero labs, bots, private lobbies, tests
+ */
+export type MatchQueue = "MATCH_QUEUE_UNSPECIFIED" | "MATCH_QUEUE_NORMAL" | "MATCH_QUEUE_RANKED" | "MATCH_QUEUE_STREET_BRAWL" | "MATCH_QUEUE_OTHER";
+
 /** - MATCH_RESULT_UNSPECIFIED: any */
 export type MatchResult = "MATCH_RESULT_UNSPECIFIED" | "MATCH_RESULT_WIN" | "MATCH_RESULT_LOSS";
 

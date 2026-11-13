@@ -2,7 +2,7 @@
 // (lib/peers.ts). Expected values come from the fixtures the mock serves.
 import { friends, party } from "../src/lib/peers.ts";
 import { winRate } from "../src/lib/progress.ts";
-import { ACCOUNT, STEAM_ID64, expect, expectNoHorizontalScroll, fx, look, nameOf, ru, test } from "./helpers.ts";
+import { ACCOUNT, STEAM_ID64, choose, expect, expectNoHorizontalScroll, fx, look, nameOf, ru, test } from "./helpers.ts";
 
 const { t } = ru;
 const p = fx.peers;
@@ -46,9 +46,9 @@ test("a friend card opens the friend's profile", async ({ page }) => {
 test("allies table filters friends and searches by id", async ({ page }) => {
   await page.goto(`/players/${ACCOUNT}/peers`);
   const table = page.getByRole("table", { name: t("allies.title") });
-  await page.getByRole("combobox", { name: `${t("allies.title")}: ${t("filter.who")}` }).selectOption("friends");
+  await choose(page, `${t("allies.title")}: ${t("filter.who")}`, t("filter.friends"));
   await expect(table.locator("tbody tr")).toHaveCount(fs.length);
-  await page.getByRole("combobox", { name: `${t("allies.title")}: ${t("filter.who")}` }).selectOption("");
+  await choose(page, `${t("allies.title")}: ${t("filter.who")}`, t("filter.all"));
   const target = p.allies[p.allies.length - 1]!;
   await page.getByRole("searchbox", { name: `${t("allies.title")}: ${t("filter.searchPlayer")}` }).fill(target.accountId);
   await expect(table.getByRole("link", { name: nameOf(ru, target.accountId) })).toBeVisible();

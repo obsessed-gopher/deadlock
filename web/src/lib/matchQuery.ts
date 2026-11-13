@@ -3,6 +3,7 @@
 // Sorting and filtering run on the server (ListPlayerMatches); invalid values
 // fall back to defaults instead of producing an error page.
 import type { MatchResult, MatchSort, MetaStatus } from "../api/schema.gen.ts";
+import { QUEUES, type QueueKey, apiQueue } from "./queue.ts";
 import type { SortDir } from "./table.ts";
 
 export const MATCH_SORTS = ["date", "duration", "kills", "deaths", "assists", "souls", "lastHits", "level"] as const;
@@ -17,7 +18,8 @@ export type MetaFilter = (typeof METAS)[number];
 export interface MatchListState {
   hero: number;
   result: ResultFilter;
-  mode: number;
+  /** Queue (normal, ranked, Street Brawl, other); "" = any. */
+  mode: QueueKey | "";
   meta: MetaFilter;
   sort: MatchSortKey;
   dir: SortDir;
@@ -30,7 +32,7 @@ export interface MatchListState {
 export const DEFAULT_STATE: MatchListState = {
   hero: 0,
   result: "",
-  mode: 0,
+  mode: "",
   meta: "",
   sort: "date",
   dir: "desc",
@@ -52,12 +54,19 @@ function nat(v: string): number {
   return /^\d{1,9}$/.test(v) ? Number(v) : 0;
 }
 
+/** Old links used Valve's game mode number: 1 = normal, 4 = Street Brawl. */
+const LEGACY_MODES: Record<string, QueueKey> = { "1": "normal", "4": "brawl" };
+
+function parseQueue(v: string): QueueKey | "" {
+  return LEGACY_MODES[v] ?? pick(QUEUES, v, "" as QueueKey);
+}
+
 export function parseMatchState(sp: Search): MatchListState {
   const page = one(sp.page);
   return {
     hero: nat(one(sp.hero)),
     result: pick(RESULTS, one(sp.result), ""),
-    mode: nat(one(sp.mode)),
+    mode: parseQueue(one(sp.mode)),
     meta: pick(METAS, one(sp.meta), ""),
     sort: pick(MATCH_SORTS, one(sp.sort), "date"),
     dir: pick(["asc", "desc"] as const, one(sp.dir), "desc"),
@@ -72,7 +81,7 @@ export function matchStateQuery(s: MatchListState): string {
   const q = new URLSearchParams();
   if (s.hero) q.set("hero", String(s.hero));
   if (s.result) q.set("result", s.result);
-  if (s.mode) q.set("mode", String(s.mode));
+  if (s.mode) q.set("mode", s.mode);
   if (s.meta) q.set("meta", s.meta);
   if (s.sort !== "date" || s.dir !== "desc") {
     q.set("sort", s.sort);
@@ -131,7 +140,7 @@ export function matchApiParams(s: MatchListState, pageSize: number): URLSearchPa
   const q = new URLSearchParams({ pageSize: String(pageSize) });
   if (s.hero) q.set("heroId", String(s.hero));
   if (s.result) q.set("result", apiResult[s.result]);
-  if (s.mode) q.set("gameMode", String(s.mode));
+  if (s.mode) q.set("queue", apiQueue[s.mode]);
   if (s.meta) q.set("metaStatus", apiMeta[s.meta]);
   if (s.sort !== "date") q.set("sort", apiSort[s.sort]);
   if (s.dir === "asc") q.set("ascending", "true");

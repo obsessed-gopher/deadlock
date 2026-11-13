@@ -18,6 +18,9 @@ import (
 type DeadlockAPI struct {
 	BaseURL string
 	HTTP    *http.Client
+	// APIKey, when set, is sent as X-API-Key: deadlock-api gives keys higher
+	// limits and a larger share of its queue.
+	APIKey string
 }
 
 // NewDeadlockAPI returns a client for the public instance.
@@ -111,6 +114,9 @@ func (c *DeadlockAPI) get(ctx context.Context, path string) (*http.Response, err
 		return nil, err
 	}
 	req.Header.Set("User-Agent", "deadlock-stats/0.1")
+	if c.APIKey != "" {
+		req.Header.Set("X-API-Key", c.APIKey)
+	}
 	resp, err := c.HTTP.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("deadlock-api %s: %w", path, err)

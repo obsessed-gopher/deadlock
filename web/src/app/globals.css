@@ -1513,3 +1513,103 @@ a.record:hover {
   gap: 8px;
   flex-wrap: nowrap;
 }
+
+/* dropdown (components/Select.tsx) */
+
+.field.select {
+  position: relative;
+  padding-right: 4px;
+}
+
+.select-button {
+  all: unset;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 34px;
+  padding: 0 6px 0 2px;
+  color: var(--text);
+  font-size: 13px;
+  cursor: pointer;
+  max-width: 220px;
+}
+
+.select-value {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.select-button .chevron {
+  flex: none;
+  color: var(--faint);
+  transition: transform 0.15s ease;
+}
+
+.field.select.open .chevron {
+  transform: rotate(180deg);
+}
+
+.field.select:has(.select-button:focus-visible) {
+  border-color: var(--text);
+}
+
+.select-list {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: -1px;
+  z-index: 20;
+  min-width: max(calc(100% + 2px), 200px);
+  max-width: min(280px, calc(100vw - 32px));
+  max-height: 320px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) transparent;
+  margin: 0;
+  padding: 4px;
+  list-style: none;
+  background: var(--surface-2);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.55);
+}
+
+.select-list.right {
+  left: auto;
+  right: -1px;
+}
+
+.select-list[hidden] {
+  display: none;
+}
+
+.select-list li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  border-radius: 6px;
+  color: var(--muted);
+  font-size: 13px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.select-list li.active {
+  background: var(--surface-3);
+  color: var(--text);
+}
+
+.select-list li[aria-selected="true"] {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.select-list li[aria-selected="true"]::after {
+  content: "";
+  margin-left: auto;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--text);
+}

@@ -152,6 +152,17 @@ enum MatchSort {
   MATCH_SORT_HERO_LEVEL = 8;
 }
 
+// What players call the mode: the queue a match was played in. Derived from
+// Valve's game mode and match mode (ranked is a match mode of the normal game
+// mode, so filtering by game_mode alone mixes ranked into normal).
+enum MatchQueue {
+  MATCH_QUEUE_UNSPECIFIED = 0;  // any
+  MATCH_QUEUE_NORMAL = 1;       // normal game mode, unranked (or placement)
+  MATCH_QUEUE_RANKED = 2;       // normal game mode, ranked
+  MATCH_QUEUE_STREET_BRAWL = 3;
+  MATCH_QUEUE_OTHER = 4;        // hero labs, bots, private lobbies, tests
+}
+
 enum MatchResult {
   MATCH_RESULT_UNSPECIFIED = 0; // any
   MATCH_RESULT_WIN = 1;
@@ -169,6 +180,7 @@ message ListPlayerMatchesRequest {
   MatchResult result = 7;     // optional filter
   int32 game_mode = 8;        // optional filter, 0 = any
   MetaStatus meta_status = 9; // optional filter, UNSPECIFIED = any
+  MatchQueue queue = 10;      // optional filter, UNSPECIFIED = any
 }
 
 message ListPlayerMatchesResponse {

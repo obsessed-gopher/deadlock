@@ -91,9 +91,12 @@ func (s *Server) ListPlayerMatches(ctx context.Context, req *v1.ListPlayerMatche
 	if _, ok := v1.MetaStatus_name[int32(req.GetMetaStatus())]; !ok {
 		return nil, status.Error(codes.InvalidArgument, "unknown meta_status")
 	}
+	if _, ok := v1.MatchQueue_name[int32(req.GetQueue())]; !ok {
+		return nil, status.Error(codes.InvalidArgument, "unknown queue")
+	}
 	q := db.MatchQuery{
 		AccountID: id, HeroID: req.GetHeroId(), Result: req.GetResult(),
-		GameMode: req.GetGameMode(), MetaStatus: req.GetMetaStatus(),
+		GameMode: req.GetGameMode(), MetaStatus: req.GetMetaStatus(), Queue: req.GetQueue(),
 		Sort: req.GetSort(), Ascending: req.GetAscending(), Limit: size,
 	}
 	if t := req.GetPageToken(); t != "" {

@@ -23,6 +23,7 @@ services:
       SYNC_ACCOUNTS: ${SYNC_ACCOUNTS:-}
       SYNC_EVERY: ${SYNC_EVERY:-30m}
       META_INTERVAL: ${META_INTERVAL:-1.5s}
+      DEADLOCK_API_KEY: ${DEADLOCK_API_KEY:-}
     ports:
       - "127.0.0.1:8080:8080" # REST gateway
       - "127.0.0.1:9090:9090" # gRPC

@@ -306,13 +306,15 @@ func TestListPlayerMatchesQuery(t *testing.T) {
 	_, err := s.ListPlayerMatches(context.Background(), &v1.ListPlayerMatchesRequest{
 		AccountId: 1, HeroId: 13, PageToken: "-5_101", Sort: v1.MatchSort_MATCH_SORT_NET_WORTH, Ascending: true,
 		Result: v1.MatchResult_MATCH_RESULT_WIN, GameMode: 4, MetaStatus: v1.MetaStatus_META_STATUS_OK,
+		Queue: v1.MatchQueue_MATCH_QUEUE_RANKED,
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
 	want := db.MatchQuery{
 		AccountID: 1, HeroID: 13, Result: v1.MatchResult_MATCH_RESULT_WIN, GameMode: 4,
-		MetaStatus: v1.MetaStatus_META_STATUS_OK, Sort: v1.MatchSort_MATCH_SORT_NET_WORTH, Ascending: true,
+		MetaStatus: v1.MetaStatus_META_STATUS_OK, Queue: v1.MatchQueue_MATCH_QUEUE_RANKED,
+		Sort: v1.MatchSort_MATCH_SORT_NET_WORTH, Ascending: true,
 		After: &db.MatchCursor{Value: -5, MatchID: 101}, Limit: 50,
 	}
 	got := st.gotQuery
@@ -333,6 +335,7 @@ func TestListPlayerMatchesRejectsBadInput(t *testing.T) {
 		"unknown sort":        {AccountId: 1, Sort: 99},
 		"unknown result":      {AccountId: 1, Result: 7},
 		"unknown meta status": {AccountId: 1, MetaStatus: 9},
+		"unknown queue":       {AccountId: 1, Queue: 9},
 	}
 	for name, req := range cases {
 		st := &fakeStore{}

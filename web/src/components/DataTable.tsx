@@ -13,6 +13,7 @@ import type { Cell, Row, TableSpec } from "@/lib/tableSpec.ts";
 
 import { Avatar } from "./Avatar.tsx";
 import { Icon } from "./Icon.tsx";
+import { Select } from "./Select.tsx";
 
 export function DataTable({ spec }: { spec: TableSpec }) {
   const { t, locale } = useI18n();
@@ -60,21 +61,14 @@ export function DataTable({ spec }: { spec: TableSpec }) {
             </label>
           )}
           {spec.filters?.map((f) => (
-            <label key={f.key} className="field">
-              <span>{f.label}</span>
-              <select
-                value={selected[f.key] ?? ""}
-                onChange={(e) => setSelected((s) => ({ ...s, [f.key]: e.target.value }))}
-                aria-label={`${spec.label}: ${f.label}`}
-              >
-                <option value="">{f.anyLabel}</option>
-                {f.options.map((o) => (
-                  <option key={o.value} value={o.value}>
-                    {o.label}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <Select
+              key={f.key}
+              label={f.label}
+              ariaLabel={`${spec.label}: ${f.label}`}
+              value={selected[f.key] ?? ""}
+              onChange={(v) => setSelected((s) => ({ ...s, [f.key]: v }))}
+              options={[{ value: "", label: f.anyLabel }, ...f.options]}
+            />
           ))}
         </div>
       )}

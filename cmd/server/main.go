@@ -9,6 +9,7 @@
 //	SYNC_ACCOUNTS  comma-separated account ids to re-sync periodically
 //	SYNC_EVERY     re-sync period                 (default 30m)
 //	META_INTERVAL  delay between metadata downloads (default 1.5s)
+//	DEADLOCK_API_KEY  optional deadlock-api key: higher rate limits
 package main
 
 import (
@@ -79,6 +80,8 @@ func run(log *slog.Logger) error {
 	log.Info("game data", "version", gd.GameVersion, "heroes", len(gd.Heroes), "abilities", len(gd.Abilities))
 
 	api := source.NewDeadlockAPI()
+	api.APIKey = cfg.DeadlockAPIKey
+	log.Info("deadlock-api", "key", cfg.DeadlockAPIKey != "")
 	sy := syncer.New(database, api, api, log)
 	sy.Interval = cfg.MetaInterval
 	sy.Profiles = api

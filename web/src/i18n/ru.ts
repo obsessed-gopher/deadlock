@@ -127,6 +127,10 @@ export const ru: Messages = {
   "team.1": "Сапфир",
   "team.n": "Команда {n}",
 
+  "queue.normal": "Обычный",
+  "queue.ranked": "Рейтинг",
+  "queue.brawl": "Street Brawl",
+  "queue.other": "Другое",
   "gameMode.1": "Обычный",
   "gameMode.2": "1v1",
   "gameMode.3": "Песочница",

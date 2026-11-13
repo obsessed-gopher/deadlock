@@ -66,6 +66,22 @@ func TestSaltsRateLimited(t *testing.T) {
 	}
 }
 
+func TestAPIKeyHeader(t *testing.T) {
+	var got []string
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		got = append(got, r.Header.Get("X-API-Key"))
+		_, _ = w.Write([]byte("x"))
+	}))
+	defer srv.Close()
+	c := &DeadlockAPI{BaseURL: srv.URL, HTTP: srv.Client()}
+	_, _ = c.MetadataRaw(context.Background(), 1)
+	c.APIKey = "k"
+	_, _ = c.MetadataRaw(context.Background(), 1)
+	if len(got) != 2 || got[0] != "" || got[1] != "k" {
+		t.Errorf("X-API-Key headers = %q, want none, then the key", got)
+	}
+}
+
 func TestRetryAfter(t *testing.T) {
 	for in, want := range map[string]time.Duration{
 		"5": 5 * time.Second, " 60 ": time.Minute, "": defaultRetryAfter, "0": defaultRetryAfter,

@@ -27,7 +27,7 @@ replay*.valve.net ──(.meta, запасной путь)──► syncer ─�
 ## Запуск
 
 ```sh
-cp .env.example .env          # SYNC_ACCOUNTS = твой account id
+cp .env.example .env          # SYNC_ACCOUNTS = твой account id; DEADLOCK_API_KEY — по желанию
 go run ./tools/gamedata -icons data/icons   # иконки из установленной игры (необязательно)
 docker compose up -d --build
 curl -X POST localhost:8080/v1/players/1517505834:sync

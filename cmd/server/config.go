@@ -18,6 +18,9 @@ type config struct {
 	SyncAccounts []uint32
 	SyncEvery    time.Duration
 	MetaInterval time.Duration
+	// DeadlockAPIKey raises deadlock-api limits (Steam fallback of salts:
+	// 300 an hour instead of 3). A secret: never logged.
+	DeadlockAPIKey string
 }
 
 // loadConfig reads and validates configuration; getenv is os.Getenv in
@@ -34,6 +37,8 @@ func loadConfig(getenv func(string) string) (config, error) {
 		DatabaseURL: getenv("DATABASE_URL"),
 		GRPCAddr:    get("GRPC_ADDR", ":9090"),
 		HTTPAddr:    get("HTTP_ADDR", ":8080"),
+
+		DeadlockAPIKey: strings.TrimSpace(getenv("DEADLOCK_API_KEY")),
 	}
 	if cfg.DatabaseURL == "" {
 		return config{}, errors.New("DATABASE_URL is required")

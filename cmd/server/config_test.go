@@ -30,18 +30,19 @@ func TestLoadConfigDefaults(t *testing.T) {
 
 func TestLoadConfigOverrides(t *testing.T) {
 	cfg, err := loadConfig(env(map[string]string{
-		"DATABASE_URL":  "postgres://x",
-		"GRPC_ADDR":     "127.0.0.1:1",
-		"HTTP_ADDR":     "127.0.0.1:2",
-		"SYNC_EVERY":    "1h",
-		"META_INTERVAL": "250ms",
-		"SYNC_ACCOUNTS": " 42, 76561199477771562 ,,",
+		"DATABASE_URL":     "postgres://x",
+		"GRPC_ADDR":        "127.0.0.1:1",
+		"HTTP_ADDR":        "127.0.0.1:2",
+		"SYNC_EVERY":       "1h",
+		"META_INTERVAL":    "250ms",
+		"SYNC_ACCOUNTS":    " 42, 76561199477771562 ,,",
+		"DEADLOCK_API_KEY": " secret ",
 	}))
 	if err != nil {
 		t.Fatal(err)
 	}
 	if cfg.GRPCAddr != "127.0.0.1:1" || cfg.HTTPAddr != "127.0.0.1:2" ||
-		cfg.SyncEvery != time.Hour || cfg.MetaInterval != 250*time.Millisecond {
+		cfg.SyncEvery != time.Hour || cfg.MetaInterval != 250*time.Millisecond || cfg.DeadlockAPIKey != "secret" {
 		t.Errorf("got %+v", cfg)
 	}
 	if want := []uint32{42, 1517505834}; !reflect.DeepEqual(cfg.SyncAccounts, want) {

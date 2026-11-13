@@ -34,6 +34,12 @@ export const fullBreakdown = mock.handle("GET", `/v1/matches/${fullMatch.matchId
   .body as PlayerMatch;
 
 /** Numbers as the page shows them ("29 130", "1,087") -> 29130. */
+/** Picks an option of our dropdown (components/Select.tsx) by visible names. */
+export async function choose(page: Page, label: string, option: string) {
+  await page.getByRole("combobox", { name: label, exact: true }).click();
+  await page.getByRole("listbox", { name: label, exact: true }).getByRole("option", { name: option, exact: true }).click();
+}
+
 export function parseNum(text: string): number {
   return Number(text.replace(/[^\d.,-]/g, "").replace(/[\s,]/g, ""));
 }

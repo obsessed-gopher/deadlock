@@ -5,8 +5,10 @@ import type { ListPlayerMatchesResponse, MetaStatus } from "@/api/schema.gen.ts"
 import type { I18n } from "@/i18n/core.ts";
 import { kda } from "@/lib/format.ts";
 import type { Lookup } from "@/lib/gamedata.ts";
+import { QUEUES, queueOf } from "@/lib/queue.ts";
 
 import { Icon } from "./Icon.tsx";
+import { Select } from "./Select.tsx";
 import {
   type MatchListState,
   type MatchSortKey,
@@ -93,44 +95,34 @@ export function MatchesTable({
         {state.sort !== DEFAULT_STATE.sort && <input type="hidden" name="sort" value={state.sort} />}
         {state.dir !== DEFAULT_STATE.dir && <input type="hidden" name="dir" value={state.dir} />}
         {state.result && <input type="hidden" name="result" value={state.result} />}
-        <label className="field">
-          <span>{t("filter.hero")}</span>
-          <select name="hero" defaultValue={state.hero ? String(state.hero) : ""}>
-            <option value="">{t("filter.all")}</option>
-            {look.playableHeroes.map((h) => (
-              <option key={h.id} value={h.id}>
-                {look.heroName(h.id)}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="field">
-          <span>{t("filter.mode")}</span>
-          <select name="mode" defaultValue={state.mode ? String(state.mode) : ""}>
-            <option value="">{t("filter.all")}</option>
-            {[1, 4].map((m) => (
-              <option key={m} value={m}>
-                {i18n.gameMode(m)}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="field">
-          <span>{t("filter.meta")}</span>
-          <select name="meta" defaultValue={state.meta}>
-            <option value="">{t("filter.any")}</option>
-            {metas.map(([v, label]) => (
-              <option key={v} value={v}>
-                {label}
-              </option>
-            ))}
-          </select>
-        </label>
+        <Select
+          name="hero"
+          label={t("filter.hero")}
+          defaultValue={state.hero ? String(state.hero) : ""}
+          options={[
+            { value: "", label: t("filter.all") },
+            ...look.playableHeroes
+              .map((h) => ({ value: String(h.id), label: look.heroName(h.id), icon: look.heroIcon(h.id) }))
+              .sort((a, b) => a.label.localeCompare(b.label, i18n.locale)),
+          ]}
+        />
+        <Select
+          name="mode"
+          label={t("filter.mode")}
+          defaultValue={state.mode}
+          options={[{ value: "", label: t("filter.all") }, ...QUEUES.map((q) => ({ value: q, label: t(`queue.${q}`) }))]}
+        />
+        <Select
+          name="meta"
+          label={t("filter.meta")}
+          defaultValue={state.meta}
+          options={[{ value: "", label: t("filter.any") }, ...metas.map(([v, label]) => ({ value: v, label }))]}
+        />
         <button type="submit" className="btn small">
           {t("filter.apply")}
         </button>
         {filtered ? (
-          <Link href={filterHref(base, state, { hero: 0, result: "", mode: 0, meta: "" })} className="btn small">
+          <Link href={filterHref(base, state, { hero: 0, result: "", mode: "", meta: "" })} className="btn small">
             {t("filter.reset")}
           </Link>
         ) : null}
@@ -190,8 +182,11 @@ export function MatchesTable({
                   <td className="num">{m.lastHits}</td>
                   <td className="num">{m.heroLevel}</td>
                   <td className="num">{i18n.duration(m.durationS)}</td>
-                  <td className="faint small" title={i18n.matchMode(m.matchMode)}>
-                    {i18n.gameMode(m.gameMode)}
+                  <td
+                    className="faint small"
+                    title={`${i18n.gameMode(m.gameMode)} · ${i18n.matchMode(m.matchMode)}`}
+                  >
+                    {t(`queue.${queueOf(m.gameMode, m.matchMode)}`)}
                   </td>
                   <td>
                     {m.metaStatus === "META_STATUS_OK" ? (

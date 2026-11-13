@@ -103,9 +103,16 @@ test("filters: result, game mode, metadata; total counts all pages", () => {
   assert.equal(wins.total + losses.total, fx.rows.length);
   const brawl = list("gameMode=4&pageSize=200");
   assert.ok(brawl.matches.every((m) => m.gameMode === 4));
+  const queues = ["NORMAL", "RANKED", "STREET_BRAWL", "OTHER"].map((q) => list(`queue=MATCH_QUEUE_${q}&pageSize=200`).total);
+  assert.equal(
+    queues.reduce((a, b) => a + b, 0),
+    fx.rows.length,
+    "every match is in exactly one queue",
+  );
+  assert.equal(queues[2], brawl.total);
   const ok = list("metaStatus=META_STATUS_OK&pageSize=200");
   assert.ok(ok.total > 0 && ok.matches.every((m) => m.metaStatus === "META_STATUS_OK"));
-  for (const bad of ["sort=MATCH_SORT_X", "result=DRAW", "metaStatus=X", "pageToken=101"]) {
+  for (const bad of ["sort=MATCH_SORT_X", "result=DRAW", "metaStatus=X", "pageToken=101", "queue=MATCH_QUEUE_X"]) {
     assert.equal(call("GET", `/v1/players/${ACCOUNT}/matches?${bad}`).status, 400, bad);
   }
 });

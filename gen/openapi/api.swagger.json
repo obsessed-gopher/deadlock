@@ -322,6 +322,21 @@
               "META_STATUS_FAILED"
             ],
             "default": "META_STATUS_UNSPECIFIED"
+          },
+          {
+            "name": "queue",
+            "description": "optional filter, UNSPECIFIED = any\n\n - MATCH_QUEUE_UNSPECIFIED: any\n - MATCH_QUEUE_NORMAL: normal game mode, unranked (or placement)\n - MATCH_QUEUE_RANKED: normal game mode, ranked\n - MATCH_QUEUE_OTHER: hero labs, bots, private lobbies, tests",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "MATCH_QUEUE_UNSPECIFIED",
+              "MATCH_QUEUE_NORMAL",
+              "MATCH_QUEUE_RANKED",
+              "MATCH_QUEUE_STREET_BRAWL",
+              "MATCH_QUEUE_OTHER"
+            ],
+            "default": "MATCH_QUEUE_UNSPECIFIED"
           }
         ],
         "tags": [
@@ -1032,6 +1047,18 @@
           "format": "int64"
         }
       }
+    },
+    "v1MatchQueue": {
+      "type": "string",
+      "enum": [
+        "MATCH_QUEUE_UNSPECIFIED",
+        "MATCH_QUEUE_NORMAL",
+        "MATCH_QUEUE_RANKED",
+        "MATCH_QUEUE_STREET_BRAWL",
+        "MATCH_QUEUE_OTHER"
+      ],
+      "default": "MATCH_QUEUE_UNSPECIFIED",
+      "description": "What players call the mode: the queue a match was played in. Derived from\nValve's game mode and match mode (ranked is a match mode of the normal game\nmode, so filtering by game_mode alone mixes ranked into normal).\n\n - MATCH_QUEUE_UNSPECIFIED: any\n - MATCH_QUEUE_NORMAL: normal game mode, unranked (or placement)\n - MATCH_QUEUE_RANKED: normal game mode, ranked\n - MATCH_QUEUE_OTHER: hero labs, bots, private lobbies, tests"
     },
     "v1MatchResult": {
       "type": "string",

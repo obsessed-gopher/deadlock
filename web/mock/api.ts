@@ -23,6 +23,8 @@ import type {
   SyncPlayerResponse,
 } from "../src/api/schema.gen.ts";
 
+import { type QueueKey, apiQueue, queueOf } from "../src/lib/queue.ts";
+
 export interface Fixtures {
   gameData: GameData;
   accountId: number;
@@ -219,6 +221,9 @@ export function createMockApi(fx: Fixtures, now: () => number = () => Date.now()
     const asc = get("ascending", "ascending") === "true";
     const heroId = Number(get("heroId", "hero_id") || 0);
     const gameMode = Number(get("gameMode", "game_mode") || 0);
+    const queue = get("queue", "queue") || "MATCH_QUEUE_UNSPECIFIED";
+    const queueKey = (Object.keys(apiQueue) as QueueKey[]).find((k) => apiQueue[k] === queue);
+    if (queue !== "MATCH_QUEUE_UNSPECIFIED" && !queueKey) return badRequest("unknown queue");
 
     // Same token format as the Go server: "<sort value>_<match id>".
     const token = get("pageToken", "page_token");
@@ -234,6 +239,7 @@ export function createMockApi(fx: Fixtures, now: () => number = () => Date.now()
         (!heroId || r.heroId === heroId) &&
         (RESULTS[result] === undefined || r.won === RESULTS[result]) &&
         (!gameMode || r.gameMode === gameMode) &&
+        (!queueKey || queueOf(r.gameMode, r.matchMode) === queueKey) &&
         (meta === "META_STATUS_UNSPECIFIED" || r.metaStatus === meta),
     );
     const key = (r: PlayerMatchRow) => ({ v: BigInt(value(r)), id: BigInt(r.matchId) });

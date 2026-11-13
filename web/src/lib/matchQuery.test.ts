@@ -25,16 +25,23 @@ test("valid query round-trips through the URL", () => {
   const s = parseMatchState({
     hero: "13",
     result: "win",
-    mode: "4",
+    mode: "ranked",
     meta: "ok",
     sort: "kills",
     dir: "asc",
     page: "7_101",
     from: "50",
   });
-  assert.deepEqual(s, { hero: 13, result: "win", mode: 4, meta: "ok", sort: "kills", dir: "asc", page: "7_101", from: 50 });
+  assert.deepEqual(s, { hero: 13, result: "win", mode: "ranked", meta: "ok", sort: "kills", dir: "asc", page: "7_101", from: 50 });
   assert.deepEqual(parseMatchState(Object.fromEntries(new URLSearchParams(matchStateQuery(s)))), s);
   assert.equal(matchStateQuery(DEFAULT_STATE), "");
+});
+
+test("old numeric mode links map to queues", () => {
+  assert.equal(parseMatchState({ mode: "1" }).mode, "normal");
+  assert.equal(parseMatchState({ mode: "4" }).mode, "brawl");
+  assert.equal(parseMatchState({ mode: "2" }).mode, "");
+  assert.equal(parseMatchState({ mode: "brawl" }).mode, "brawl");
 });
 
 test("sort links: same column flips, new column starts descending, page resets", () => {
@@ -57,10 +64,10 @@ test("next page carries the token and the offset", () => {
 });
 
 test("API parameters use the gateway's enum names", () => {
-  const s = parseMatchState({ hero: "13", result: "loss", mode: "1", meta: "pending", sort: "souls", dir: "asc", page: "3_4" });
+  const s = parseMatchState({ hero: "13", result: "loss", mode: "ranked", meta: "pending", sort: "souls", dir: "asc", page: "3_4" });
   assert.equal(
     matchApiParams(s, 50).toString(),
-    "pageSize=50&heroId=13&result=MATCH_RESULT_LOSS&gameMode=1&metaStatus=META_STATUS_PENDING" +
+    "pageSize=50&heroId=13&result=MATCH_RESULT_LOSS&queue=MATCH_QUEUE_RANKED&metaStatus=META_STATUS_PENDING" +
       "&sort=MATCH_SORT_NET_WORTH&ascending=true&pageToken=3_4",
   );
   assert.equal(matchApiParams(DEFAULT_STATE, 50).toString(), "pageSize=50");

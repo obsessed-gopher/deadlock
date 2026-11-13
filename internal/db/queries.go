@@ -79,6 +79,7 @@ type MatchQuery struct {
 	Result     v1.MatchResult
 	GameMode   int32
 	MetaStatus v1.MetaStatus
+	Queue      v1.MatchQueue
 
 	Sort      v1.MatchSort // UNSPECIFIED = START_TIME
 	Ascending bool
@@ -139,7 +140,17 @@ const matchFilter = `
 		  AND ($2 = 0 OR pm.hero_id = $2)
 		  AND ($3 = 0 OR pm.won = ($3 = 1))
 		  AND ($4 = 0 OR m.game_mode = $4)
-		  AND ($5 = '' OR m.meta_status = $5)`
+		  AND ($5 = '' OR m.meta_status = $5)
+		  AND ($6 = 0 OR ` + queueOf + ` = $6)`
+
+// queueOf is the SQL of v1.MatchQueue for a match row m: ranked is a match
+// mode (4) of the normal game mode (1); placement (8) counts as normal;
+// game mode 4 is Street Brawl. Keep in sync with queueOf in web/src/lib.
+const queueOf = `CASE
+		      WHEN m.game_mode = 4 THEN 3
+		      WHEN m.game_mode = 1 AND m.match_mode = 4 THEN 2
+		      WHEN m.game_mode = 1 AND m.match_mode IN (1, 8) THEN 1
+		      ELSE 4 END`
 
 // ListPlayerMatches returns one page of a player's matches and the number of
 // rows matching the filters across all pages. Pages are keyset by
@@ -158,7 +169,10 @@ func (d *DB) ListPlayerMatches(ctx context.Context, q MatchQuery) ([]*v1.PlayerM
 	if q.Result < v1.MatchResult_MATCH_RESULT_UNSPECIFIED || q.Result > v1.MatchResult_MATCH_RESULT_LOSS {
 		return nil, 0, fmt.Errorf("%w: result %v", ErrBadQuery, q.Result)
 	}
-	args := []any{q.AccountID, q.HeroID, int32(q.Result), q.GameMode, meta}
+	if _, ok := v1.MatchQueue_name[int32(q.Queue)]; !ok {
+		return nil, 0, fmt.Errorf("%w: queue %v", ErrBadQuery, q.Queue)
+	}
+	args := []any{q.AccountID, q.HeroID, int32(q.Result), q.GameMode, meta, int32(q.Queue)}
 
 	var total int
 	if err := d.Pool.QueryRow(ctx, `
@@ -174,7 +188,7 @@ func (d *DB) ListPlayerMatches(ctx context.Context, q MatchQuery) ([]*v1.PlayerM
 	}
 	cursor := ""
 	if q.After != nil {
-		cursor = " AND (" + expr + ", m.match_id) " + cmp + " ($6, $7)"
+		cursor = " AND (" + expr + ", m.match_id) " + cmp + " ($7, $8)"
 		args = append(args, q.After.Value, q.After.MatchID)
 	}
 	args = append(args, q.Limit)

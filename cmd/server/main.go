@@ -10,6 +10,8 @@
 //	SYNC_EVERY     re-sync period                 (default 30m)
 //	META_INTERVAL  delay between metadata downloads (default 1.5s)
 //	DEADLOCK_API_KEY  optional deadlock-api key: higher rate limits
+//	STEAM_BOT_USER, STEAM_BOT_TOKEN  optional Steam bot for the Deadlock GC
+//	               (go run ./tools/steambot login): history and salts first-hand
 package main
 
 import (
@@ -28,6 +30,7 @@ import (
 	"github.com/obsessed-gopher/deadlock/internal/gamedata"
 	"github.com/obsessed-gopher/deadlock/internal/server"
 	"github.com/obsessed-gopher/deadlock/internal/source"
+	"github.com/obsessed-gopher/deadlock/internal/steamgc"
 	"github.com/obsessed-gopher/deadlock/internal/syncer"
 
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
@@ -82,7 +85,23 @@ func run(log *slog.Logger) error {
 	api := source.NewDeadlockAPI()
 	api.APIKey = cfg.DeadlockAPIKey
 	log.Info("deadlock-api", "key", cfg.DeadlockAPIKey != "")
-	sy := syncer.New(database, api, api, log)
+	var history source.HistoryProvider = api
+	var salts source.SaltProvider = api
+	if cfg.SteamBotUser != "" {
+		// The GC is first-hand and fresh; deadlock-api has the full history
+		// and covers the GC being down.
+		bot := steamgc.NewBot(log, cfg.SteamBotUser, cfg.SteamBotToken)
+		go bot.Run(ctx)
+		history = source.MergedHistory{
+			Providers: []source.HistoryProvider{bot, api},
+			OnError: func(i int, err error) {
+				log.Warn("match history source failed", "source", []string{"steam gc", "deadlock-api"}[i], "err", err)
+			},
+		}
+		salts = source.SaltChain{bot, api}
+	}
+	log.Info("steam gc", "bot", cfg.SteamBotUser != "")
+	sy := syncer.New(database, history, salts, log)
 	sy.Interval = cfg.MetaInterval
 	sy.Profiles = api
 	sy.Meta = api

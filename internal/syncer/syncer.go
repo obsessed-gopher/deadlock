@@ -39,6 +39,9 @@ type Store interface {
 	StoreProfiles(ctx context.Context, requested []uint32, got []source.SteamProfile, at time.Time) error
 }
 
+// metaBatch is how many queued matches the worker takes at a time.
+const metaBatch = 10
+
 // Syncer coordinates providers and the database.
 type Syncer struct {
 	DB      Store
@@ -180,7 +183,9 @@ func (s *Syncer) Run(ctx context.Context) {
 	idle := time.NewTicker(time.Minute)
 	defer idle.Stop()
 	for {
-		ids, err := s.DB.NextPendingMeta(ctx, 50)
+		// Small batches: a match that arrives meanwhile (a fresh one, newest
+		// first) waits for at most this many downloads.
+		ids, err := s.DB.NextPendingMeta(ctx, metaBatch)
 		if err != nil && ctx.Err() == nil {
 			s.Log.Error("meta queue", "err", err)
 		}

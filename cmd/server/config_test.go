@@ -37,12 +37,15 @@ func TestLoadConfigOverrides(t *testing.T) {
 		"META_INTERVAL":    "250ms",
 		"SYNC_ACCOUNTS":    " 42, 76561199477771562 ,,",
 		"DEADLOCK_API_KEY": " secret ",
+		"STEAM_BOT_USER":   " bot ",
+		"STEAM_BOT_TOKEN":  " token ",
 	}))
 	if err != nil {
 		t.Fatal(err)
 	}
 	if cfg.GRPCAddr != "127.0.0.1:1" || cfg.HTTPAddr != "127.0.0.1:2" ||
-		cfg.SyncEvery != time.Hour || cfg.MetaInterval != 250*time.Millisecond || cfg.DeadlockAPIKey != "secret" {
+		cfg.SyncEvery != time.Hour || cfg.MetaInterval != 250*time.Millisecond || cfg.DeadlockAPIKey != "secret" ||
+		cfg.SteamBotUser != "bot" || cfg.SteamBotToken != "token" {
 		t.Errorf("got %+v", cfg)
 	}
 	if want := []uint32{42, 1517505834}; !reflect.DeepEqual(cfg.SyncAccounts, want) {
@@ -61,6 +64,8 @@ func TestLoadConfigErrors(t *testing.T) {
 		{"zero interval", map[string]string{"DATABASE_URL": "x", "META_INTERVAL": "0s"}, "META_INTERVAL"},
 		{"negative period", map[string]string{"DATABASE_URL": "x", "SYNC_EVERY": "-1m"}, "SYNC_EVERY"},
 		{"bad account", map[string]string{"DATABASE_URL": "x", "SYNC_ACCOUNTS": "1,nope"}, "SYNC_ACCOUNTS"},
+		{"bot without token", map[string]string{"DATABASE_URL": "x", "STEAM_BOT_USER": "bot"}, "STEAM_BOT_TOKEN"},
+		{"token without bot", map[string]string{"DATABASE_URL": "x", "STEAM_BOT_TOKEN": "t"}, "STEAM_BOT_USER"},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {

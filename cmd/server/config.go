@@ -21,6 +21,11 @@ type config struct {
 	// DeadlockAPIKey raises deadlock-api limits (Steam fallback of salts:
 	// 300 an hour instead of 3). A secret: never logged.
 	DeadlockAPIKey string
+	// SteamBotUser and SteamBotToken log a bot account on to the Deadlock GC
+	// (set up with tools/steambot): fresh history and salts without
+	// deadlock-api. Both or neither. The token is a secret: never logged.
+	SteamBotUser  string
+	SteamBotToken string
 }
 
 // loadConfig reads and validates configuration; getenv is os.Getenv in
@@ -39,9 +44,14 @@ func loadConfig(getenv func(string) string) (config, error) {
 		HTTPAddr:    get("HTTP_ADDR", ":8080"),
 
 		DeadlockAPIKey: strings.TrimSpace(getenv("DEADLOCK_API_KEY")),
+		SteamBotUser:   strings.TrimSpace(getenv("STEAM_BOT_USER")),
+		SteamBotToken:  strings.TrimSpace(getenv("STEAM_BOT_TOKEN")),
 	}
 	if cfg.DatabaseURL == "" {
 		return config{}, errors.New("DATABASE_URL is required")
+	}
+	if (cfg.SteamBotUser == "") != (cfg.SteamBotToken == "") {
+		return config{}, errors.New("STEAM_BOT_USER and STEAM_BOT_TOKEN go together (go run ./tools/steambot login)")
 	}
 
 	var err error

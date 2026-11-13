@@ -82,6 +82,7 @@ func run(log *slog.Logger) error {
 	sy := syncer.New(database, api, api, log)
 	sy.Interval = cfg.MetaInterval
 	sy.Profiles = api
+	sy.Meta = api
 
 	// gRPC
 	gs := grpc.NewServer(grpc.UnaryInterceptor(server.UnaryInterceptor(log)))

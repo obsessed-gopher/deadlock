@@ -5,9 +5,9 @@
 ## Как устроено
 
 ```
-deadlock-api.com ──(история матчей, соль URL)──┐
-                                              ▼
-replay*.valve.net ──(.meta, zstd)──► syncer ──► Postgres ◄── gRPC :9090 ◄── gateway REST :8080 ◄── web (Next.js :3000)
+deadlock-api.com ──(история матчей, .meta, соль URL)──┐
+                                                     ▼
+replay*.valve.net ──(.meta, запасной путь)──► syncer ──► Postgres ◄── gRPC :9090 ◄── gateway REST :8080 ◄── web (Next.js :3000)
 ```
 
 - `cmd/server` — gRPC + REST-gateway + фоновый воркер синхронизации в одном процессе

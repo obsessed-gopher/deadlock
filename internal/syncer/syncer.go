@@ -27,6 +27,7 @@ type Store interface {
 	NextPendingMeta(ctx context.Context, limit int) ([]uint64, error)
 	StoreMeta(ctx context.Context, matchID uint64, raw []byte, version uint32, mi *pb.CMsgMatchMetaDataContents_MatchInfo) error
 	MarkMetaFailure(ctx context.Context, matchID uint64, expired bool, cause error, maxAttempts int) error
+	DeferMeta(ctx context.Context, matchID uint64, until time.Time, cause error) error
 
 	// Re-derivation of stored matches after the derivation changed.
 	NextStaleMeta(ctx context.Context, after uint64, limit int) ([]uint64, error)
@@ -43,8 +44,11 @@ type Syncer struct {
 	DB      Store
 	History source.HistoryProvider
 	Salts   source.SaltProvider
-	HTTP    *http.Client
-	Log     *slog.Logger
+	// Meta, when set, is asked for the .meta file first; salts and Valve's
+	// CDN are the fallback for matches it doesn't have.
+	Meta source.MetaProvider
+	HTTP *http.Client
+	Log  *slog.Logger
 
 	// Delay between metadata downloads; keeps us polite to the salt
 	// provider and Valve's CDN.
@@ -60,6 +64,10 @@ type Syncer struct {
 	ProfileMaxAge time.Duration
 
 	wake chan struct{}
+
+	// The salts provider said 429: no salts requests before this moment.
+	// Touched only by the Run goroutine.
+	saltsPausedUntil time.Time
 }
 
 // New returns a Syncer with production defaults; tune the exported fields
@@ -180,11 +188,11 @@ func (s *Syncer) Run(ctx context.Context) {
 			if ctx.Err() != nil {
 				return
 			}
-			s.processMeta(ctx, id)
+			pause := s.processMeta(ctx, id)
 			select {
 			case <-ctx.Done():
 				return
-			case <-time.After(s.Interval):
+			case <-time.After(max(s.Interval, pause)):
 			}
 		}
 		if len(ids) > 0 {
@@ -243,49 +251,48 @@ func (s *Syncer) RunProfiles(ctx context.Context) {
 // errExpired marks replays Valve no longer hosts.
 var errExpired = errors.New("replay expired")
 
-func (s *Syncer) processMeta(ctx context.Context, matchID uint64) {
+// deferredError postpones a match without counting an attempt; pause also
+// holds back the whole queue (the provider of every download is limited).
+type deferredError struct {
+	until time.Time
+	pause time.Duration
+	err   error
+}
+
+func (e *deferredError) Error() string { return e.err.Error() }
+func (e *deferredError) Unwrap() error { return e.err }
+
+// processMeta downloads and stores one match. It returns how long the queue
+// must wait before the next download beyond the usual Interval.
+func (s *Syncer) processMeta(ctx context.Context, matchID uint64) time.Duration {
 	raw, version, mi, err := s.fetchMeta(ctx, matchID)
 	if err == nil {
 		err = s.DB.StoreMeta(ctx, matchID, raw, version, mi)
 	}
 	if err == nil {
 		s.Log.Info("meta stored", "match", matchID, "players", len(mi.GetPlayers()))
-		return
+		return 0
 	}
 	if ctx.Err() != nil {
-		return
+		return 0
+	}
+	if d, ok := errors.AsType[*deferredError](err); ok {
+		s.Log.Info("meta deferred", "match", matchID, "until", d.until.Format(time.RFC3339), "err", err)
+		if e := s.DB.DeferMeta(ctx, matchID, d.until, err); e != nil {
+			s.Log.Error("defer meta", "match", matchID, "err", e)
+		}
+		return d.pause
 	}
 	expired := errors.Is(err, errExpired)
 	s.Log.Warn("meta failed", "match", matchID, "expired", expired, "err", err)
 	if e := s.DB.MarkMetaFailure(ctx, matchID, expired, err, s.MaxAttempts); e != nil {
 		s.Log.Error("mark meta failure", "match", matchID, "err", e)
 	}
+	return 0
 }
 
 func (s *Syncer) fetchMeta(ctx context.Context, matchID uint64) ([]byte, uint32, *pb.CMsgMatchMetaDataContents_MatchInfo, error) {
-	salts, err := s.Salts.Salts(ctx, matchID)
-	if err != nil {
-		if errors.Is(err, source.ErrNotFound) {
-			return nil, 0, nil, fmt.Errorf("%w: %w", errExpired, err)
-		}
-		return nil, 0, nil, err
-	}
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, salts.MetadataURL(), nil)
-	if err != nil {
-		return nil, 0, nil, err
-	}
-	resp, err := s.HTTP.Do(req)
-	if err != nil {
-		return nil, 0, nil, err
-	}
-	defer func() { _ = resp.Body.Close() }()
-	switch {
-	case resp.StatusCode == http.StatusNotFound:
-		return nil, 0, nil, fmt.Errorf("%w: %s", errExpired, salts.MetadataURL())
-	case resp.StatusCode != http.StatusOK:
-		return nil, 0, nil, fmt.Errorf("metadata %s: %s", salts.MetadataURL(), resp.Status)
-	}
-	raw, err := io.ReadAll(io.LimitReader(resp.Body, 64<<20))
+	raw, err := s.downloadMeta(ctx, matchID)
 	if err != nil {
 		return nil, 0, nil, err
 	}
@@ -298,4 +305,51 @@ func (s *Syncer) fetchMeta(ctx context.Context, matchID uint64) ([]byte, uint32,
 		return nil, 0, nil, err
 	}
 	return raw, version, mi, nil
+}
+
+// downloadMeta returns the compressed .meta file: from s.Meta when it has
+// it, otherwise via salts from Valve's CDN.
+func (s *Syncer) downloadMeta(ctx context.Context, matchID uint64) ([]byte, error) {
+	if s.Meta != nil {
+		raw, err := s.Meta.MetadataRaw(ctx, matchID)
+		if rl, ok := errors.AsType[*source.RateLimitError](err); ok {
+			return nil, &deferredError{until: time.Now().Add(rl.RetryAfter), pause: rl.RetryAfter, err: err}
+		}
+		if !errors.Is(err, source.ErrNotFound) {
+			return raw, err
+		}
+	}
+	if now := time.Now(); now.Before(s.saltsPausedUntil) {
+		return nil, &deferredError{until: s.saltsPausedUntil, err: errors.New("salts: paused after a rate limit")}
+	}
+	salts, err := s.Salts.Salts(ctx, matchID)
+	if rl, ok := errors.AsType[*source.RateLimitError](err); ok {
+		// Salts not in deadlock-api's database come from Steam: 3 requests
+		// an hour. Stop asking until the window ends; matches it stores are
+		// still downloaded meanwhile.
+		s.saltsPausedUntil = time.Now().Add(rl.RetryAfter)
+		return nil, &deferredError{until: s.saltsPausedUntil, err: err}
+	}
+	if err != nil {
+		if errors.Is(err, source.ErrNotFound) {
+			return nil, fmt.Errorf("%w: %w", errExpired, err)
+		}
+		return nil, err
+	}
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, salts.MetadataURL(), nil)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := s.HTTP.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer func() { _ = resp.Body.Close() }()
+	switch {
+	case resp.StatusCode == http.StatusNotFound:
+		return nil, fmt.Errorf("%w: %s", errExpired, salts.MetadataURL())
+	case resp.StatusCode != http.StatusOK:
+		return nil, fmt.Errorf("metadata %s: %s", salts.MetadataURL(), resp.Status)
+	}
+	return io.ReadAll(io.LimitReader(resp.Body, source.MaxMetaSize))
 }

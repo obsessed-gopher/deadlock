@@ -95,6 +95,23 @@ type SteamFriend struct {
 	FriendSince *time.Time `json:"friend_since"`
 }
 
+// MetaProvider downloads a match's .meta file as stored by a third party
+// (compressed, the same bytes Valve's CDN serves).
+type MetaProvider interface {
+	MetadataRaw(ctx context.Context, matchID uint64) ([]byte, error)
+}
+
+// RateLimitError is a 429 from a provider: retry after RetryAfter, and
+// don't count it as a failed attempt.
+type RateLimitError struct {
+	What       string
+	RetryAfter time.Duration
+}
+
+func (e *RateLimitError) Error() string {
+	return fmt.Sprintf("%s: rate limited, retry after %s", e.What, e.RetryAfter)
+}
+
 // ErrNotFound means the provider has no data for the request (e.g. salts for
 // a match too old to still be hosted).
 var ErrNotFound = errors.New("not found")

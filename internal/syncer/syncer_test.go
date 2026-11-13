@@ -46,6 +46,10 @@ type fakeStore struct {
 	gotMaxAge      time.Duration
 	storedAsked    []uint32
 	storedProfiles []source.SteamProfile
+
+	deferredMatch uint64
+	deferredUntil time.Time
+	deferredCause error
 }
 
 func (f *fakeStore) StaleProfiles(_ context.Context, maxAge time.Duration, limit int) ([]uint32, error) {
@@ -129,6 +133,11 @@ func (f *fakeStore) StoreMeta(_ context.Context, matchID uint64, raw []byte, ver
 	return nil
 }
 
+func (f *fakeStore) DeferMeta(_ context.Context, matchID uint64, until time.Time, cause error) error {
+	f.deferredMatch, f.deferredUntil, f.deferredCause = matchID, until, cause
+	return nil
+}
+
 func (f *fakeStore) MarkMetaFailure(_ context.Context, matchID uint64, expired bool, cause error, _ int) error {
 	f.failedMatch, f.failedExpired, f.failedCause = matchID, expired, cause
 	return nil
@@ -148,6 +157,25 @@ type fakeSalts struct{ err error }
 func (f fakeSalts) Salts(_ context.Context, matchID uint64) (source.Salts, error) {
 	return source.Salts{MatchID: matchID, ClusterID: 1, MetadataSalt: 2}, f.err
 }
+
+// countingSalts records how often salts were asked for.
+type countingSalts struct {
+	calls int
+	err   error
+}
+
+func (c *countingSalts) Salts(_ context.Context, matchID uint64) (source.Salts, error) {
+	c.calls++
+	return source.Salts{MatchID: matchID, ClusterID: 1, MetadataSalt: 2}, c.err
+}
+
+// fakeMeta serves the .meta file from deadlock-api's storage.
+type fakeMeta struct {
+	raw []byte
+	err error
+}
+
+func (f fakeMeta) MetadataRaw(context.Context, uint64) ([]byte, error) { return f.raw, f.err }
 
 // roundTrip serves canned responses instead of Valve's CDN.
 type roundTrip func(*http.Request) (*http.Response, error)
@@ -256,6 +284,69 @@ func TestProcessMetaFailures(t *testing.T) {
 					st.failedMatch, st.failedExpired, testMatch, c.wantExpired, st.failedCause)
 			}
 		})
+	}
+}
+
+func TestProcessMetaPrefersStoredMeta(t *testing.T) {
+	raw, err := os.ReadFile(testMeta)
+	if err != nil {
+		t.Fatal(err)
+	}
+	st, salts := &fakeStore{}, &countingSalts{}
+	cdn := roundTrip(func(*http.Request) (*http.Response, error) { t.Fatal("CDN must not be asked"); return nil, nil })
+	s := newSyncer(st, fakeHistory{}, salts, cdn)
+	s.Meta = fakeMeta{raw: raw}
+
+	if pause := s.processMeta(context.Background(), testMatch); pause != 0 {
+		t.Errorf("pause = %s", pause)
+	}
+	if st.storedMatch != testMatch || !bytes.Equal(st.storedRaw, raw) || salts.calls != 0 {
+		t.Errorf("stored %d (same bytes %v), salts asked %d times; want stored without salts",
+			st.storedMatch, bytes.Equal(st.storedRaw, raw), salts.calls)
+	}
+
+	// Not in deadlock-api's storage: salts and the CDN, as before.
+	st = &fakeStore{}
+	s = newSyncer(st, fakeHistory{}, fakeSalts{}, respond(http.StatusOK, raw))
+	s.Meta = fakeMeta{err: source.ErrNotFound}
+	s.processMeta(context.Background(), testMatch)
+	if st.storedMatch != testMatch {
+		t.Errorf("fallback: stored %d, failure %v", st.storedMatch, st.failedCause)
+	}
+}
+
+func TestProcessMetaRateLimits(t *testing.T) {
+	ctx := context.Background()
+
+	// 429 from the metadata storage: defer the match, hold the queue, no attempt burnt.
+	st := &fakeStore{}
+	s := newSyncer(st, fakeHistory{}, &countingSalts{}, nil)
+	s.Meta = fakeMeta{err: &source.RateLimitError{What: "meta", RetryAfter: 30 * time.Second}}
+	before := time.Now()
+	if pause := s.processMeta(ctx, testMatch); pause != 30*time.Second {
+		t.Errorf("pause = %s, want 30s", pause)
+	}
+	if st.failedMatch != 0 || st.deferredMatch != testMatch || st.deferredUntil.Before(before.Add(30*time.Second)) {
+		t.Errorf("failed %d, deferred %d until %v", st.failedMatch, st.deferredMatch, st.deferredUntil)
+	}
+
+	// 429 from salts: defer, and stop asking for salts until the window ends,
+	// while the queue itself keeps going.
+	st = &fakeStore{}
+	salts := &countingSalts{err: &source.RateLimitError{What: "salts", RetryAfter: 20 * time.Minute}}
+	s = newSyncer(st, fakeHistory{}, salts, nil)
+	s.Meta = fakeMeta{err: source.ErrNotFound}
+	if pause := s.processMeta(ctx, testMatch); pause != 0 {
+		t.Errorf("salts 429 pause = %s, want 0: stored matches can still be downloaded", pause)
+	}
+	if st.failedMatch != 0 || st.deferredMatch != testMatch {
+		t.Fatalf("salts 429: failed %d, deferred %d", st.failedMatch, st.deferredMatch)
+	}
+	until := st.deferredUntil
+	st.deferredMatch = 0
+	s.processMeta(ctx, testMatch+1)
+	if salts.calls != 1 || st.deferredMatch != testMatch+1 || !st.deferredUntil.Equal(until) || st.failedMatch != 0 {
+		t.Errorf("while paused: salts asked %d times, deferred %d until %v (want %v)", salts.calls, st.deferredMatch, st.deferredUntil, until)
 	}
 }
 

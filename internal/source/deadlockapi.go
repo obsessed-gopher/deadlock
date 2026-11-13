@@ -71,23 +71,70 @@ func (c *DeadlockAPI) SteamProfiles(ctx context.Context, ids []uint32) ([]SteamP
 	return out, err
 }
 
+// MaxMetaSize caps a downloaded .meta file (real ones are a few MB).
+const MaxMetaSize = 64 << 20
+
+// MetadataRaw implements MetaProvider: the compressed .meta file from
+// deadlock-api's own storage. disable_steam keeps it off the scarce Steam
+// fallback (3 requests an hour per IP): a match it doesn't have is
+// ErrNotFound, and the caller tries the salts and Valve's CDN instead.
+func (c *DeadlockAPI) MetadataRaw(ctx context.Context, matchID uint64) ([]byte, error) {
+	resp, err := c.get(ctx, fmt.Sprintf("/v1/matches/%d/metadata/raw?disable_steam=true", matchID))
+	if err != nil {
+		return nil, err
+	}
+	defer func() { _ = resp.Body.Close() }()
+	raw, err := io.ReadAll(io.LimitReader(resp.Body, MaxMetaSize))
+	if err != nil {
+		return nil, fmt.Errorf("deadlock-api metadata %d: %w", matchID, err)
+	}
+	return raw, nil
+}
+
 func (c *DeadlockAPI) getJSON(ctx context.Context, path string, v any) error {
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.BaseURL+path, nil)
+	resp, err := c.get(ctx, path)
 	if err != nil {
 		return err
+	}
+	defer func() { _ = resp.Body.Close() }()
+	return json.NewDecoder(resp.Body).Decode(v)
+}
+
+// defaultRetryAfter is the pause after a 429 without a Retry-After header.
+const defaultRetryAfter = time.Minute
+
+// get returns a 200 response; 404 is ErrNotFound, 429 a *RateLimitError,
+// anything else an error with the start of the body.
+func (c *DeadlockAPI) get(ctx context.Context, path string) (*http.Response, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.BaseURL+path, nil)
+	if err != nil {
+		return nil, err
 	}
 	req.Header.Set("User-Agent", "deadlock-stats/0.1")
 	resp, err := c.HTTP.Do(req)
 	if err != nil {
-		return fmt.Errorf("deadlock-api %s: %w", path, err)
+		return nil, fmt.Errorf("deadlock-api %s: %w", path, err)
+	}
+	if resp.StatusCode == http.StatusOK {
+		return resp, nil
 	}
 	defer func() { _ = resp.Body.Close() }()
-	if resp.StatusCode == http.StatusNotFound {
-		return fmt.Errorf("deadlock-api %s: %w", path, ErrNotFound)
+	switch resp.StatusCode {
+	case http.StatusNotFound:
+		return nil, fmt.Errorf("deadlock-api %s: %w", path, ErrNotFound)
+	case http.StatusTooManyRequests:
+		return nil, &RateLimitError{What: "deadlock-api " + path, RetryAfter: retryAfter(resp.Header.Get("Retry-After"))}
 	}
-	if resp.StatusCode != http.StatusOK {
-		body, _ := io.ReadAll(io.LimitReader(resp.Body, 512))
-		return fmt.Errorf("deadlock-api %s: %s: %s", path, resp.Status, body)
+	body, _ := io.ReadAll(io.LimitReader(resp.Body, 512))
+	return nil, fmt.Errorf("deadlock-api %s: %s: %s", path, resp.Status, body)
+}
+
+// retryAfter parses Retry-After in seconds (the HTTP-date form is not used
+// by deadlock-api); missing or odd values mean defaultRetryAfter.
+func retryAfter(h string) time.Duration {
+	n, err := strconv.Atoi(strings.TrimSpace(h))
+	if err != nil || n <= 0 {
+		return defaultRetryAfter
 	}
-	return json.NewDecoder(resp.Body).Decode(v)
+	return time.Duration(n) * time.Second
 }

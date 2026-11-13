@@ -195,6 +195,7 @@ func TestIngestRoundTrip(t *testing.T) {
 	testMatchQueries(ctx, t, d, acc, match)
 	testMatchFacts(ctx, t, d, acc, match, mi.GetAverageBadgeTeam0(), mi.GetAverageBadgeTeam1())
 	testRederive(ctx, t, d, match, raw, mi)
+	testDeferMeta(ctx, t, d, match)
 	testPeers(ctx, t, d, acc, match)
 	testProfiles(ctx, t, d, acc)
 }
@@ -538,5 +539,40 @@ func testProfiles(ctx context.Context, t *testing.T, d *DB, acc uint32) {
 		if a.SteamFriend != (uint32(a.AccountId) == ally) {
 			t.Errorf("ally %d steam friend = %v", a.AccountId, a.SteamFriend)
 		}
+	}
+}
+
+// testDeferMeta: a deferred pending match waits without losing an attempt;
+// a stored match is left alone.
+func testDeferMeta(ctx context.Context, t *testing.T, d *DB, match uint64) {
+	t.Helper()
+	pending := match + 1 // history only, still pending
+	until := time.Now().Add(time.Hour).Truncate(time.Second)
+	if err := d.DeferMeta(ctx, pending, until, errors.New("rate limited")); err != nil {
+		t.Fatal(err)
+	}
+	var (
+		status, msg string
+		attempts    int
+		next        time.Time
+	)
+	if err := d.Pool.QueryRow(ctx, `SELECT meta_status, meta_error, meta_attempts, meta_next_try FROM matches WHERE match_id = $1`, pending).
+		Scan(&status, &msg, &attempts, &next); err != nil {
+		t.Fatal(err)
+	}
+	if status != MetaPending || msg != "rate limited" || attempts != 0 || !next.Equal(until) {
+		t.Errorf("deferred = %s %q attempts %d next %v; want pending, no attempt, next %v", status, msg, attempts, next, until)
+	}
+	if ids, _ := d.NextPendingMeta(ctx, 10); slices.Contains(ids, pending) {
+		t.Errorf("deferred match is due: %v", ids)
+	}
+	if err := d.DeferMeta(ctx, match, until, errors.New("x")); err != nil {
+		t.Fatal(err)
+	}
+	if err := d.Pool.QueryRow(ctx, `SELECT meta_status, meta_error FROM matches WHERE match_id = $1`, match).Scan(&status, &msg); err != nil {
+		t.Fatal(err)
+	}
+	if status != MetaOK || msg != "" {
+		t.Errorf("stored match after DeferMeta = %s %q, want untouched", status, msg)
 	}
 }

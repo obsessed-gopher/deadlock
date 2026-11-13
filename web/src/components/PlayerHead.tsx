@@ -20,12 +20,15 @@ export function PlayerHead({
   profile,
   tab,
   action,
+  compareHref,
 }: {
   i18n: I18n;
   player: Player;
   profile?: Profile;
   tab: ProfileTab;
   action: (prev: SyncState | null) => Promise<SyncState>;
+  /** "Compare with me" target; omitted on the owner's own profile. */
+  compareHref?: string;
 }) {
   const { t } = i18n;
   const id = String(p.accountId);
@@ -65,7 +68,14 @@ export function PlayerHead({
           </span>
           </div>
         </div>
-        <SyncButton action={action} />
+        <div className="row head-actions">
+          {compareHref && (
+            <a href={compareHref} className="btn">
+              {t("compare.withMe")}
+            </a>
+          )}
+          <SyncButton action={action} />
+        </div>
       </div>
       <nav className="tabs" aria-label={t("tab.label")}>
         {PROFILE_TABS.map((k) => (

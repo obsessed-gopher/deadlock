@@ -10,6 +10,7 @@ import type {
   ListPlayerMatchFactsResponse,
   ListPlayerPeersResponse,
   ListProfilesResponse,
+  ListSeenMatchesResponse,
   ResolveSteamVanityResponse,
   ListPlayerMatchesResponse,
   Match,
@@ -64,6 +65,8 @@ export const api = {
   heroStats: (accountId: string) => call<ListPlayerHeroStatsResponse>(`/v1/players/${accountId}/heroes`),
 
   facts: (accountId: string) => call<ListPlayerMatchFactsResponse>(`/v1/players/${accountId}/facts`),
+
+  seen: (accountId: string) => call<ListSeenMatchesResponse>(`/v1/players/${accountId}/seen`),
 
   peers: (accountId: string) => call<ListPlayerPeersResponse>(`/v1/players/${accountId}/peers`),
 

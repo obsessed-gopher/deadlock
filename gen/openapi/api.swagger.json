@@ -377,6 +377,39 @@
         ]
       }
     },
+    "/v1/players/{accountId}/seen": {
+      "get": {
+        "summary": "Every stored match with metadata the player took part in, oldest first:\nworks for anyone seen in a match, tracked or not (profiles of other\nplayers, comparisons).",
+        "operationId": "StatsService_ListSeenMatches",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ListSeenMatchesResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "accountId",
+            "description": "Account id or SteamID64.",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "uint64"
+          }
+        ],
+        "tags": [
+          "StatsService"
+        ]
+      }
+    },
     "/v1/players/{accountId}:sync": {
       "post": {
         "summary": "Pull fresh match history and queue metadata downloads for new matches.",
@@ -852,6 +885,19 @@
             "type": "object",
             "$ref": "#/definitions/v1Profile"
           }
+        }
+      }
+    },
+    "v1ListSeenMatchesResponse": {
+      "type": "object",
+      "properties": {
+        "matches": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1SeenMatch"
+          },
+          "title": "oldest first"
         }
       }
     },
@@ -1342,6 +1388,76 @@
           "format": "int64"
         }
       }
+    },
+    "v1SeenMatch": {
+      "type": "object",
+      "properties": {
+        "matchId": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "startTime": {
+          "type": "string",
+          "format": "int64",
+          "title": "unix seconds"
+        },
+        "durationS": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "gameMode": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "matchMode": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "heroId": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "team": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "won": {
+          "type": "boolean"
+        },
+        "kills": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "deaths": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "assists": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "netWorth": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "lastHits": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "playerDamage": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "playerHealing": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "level": {
+          "type": "integer",
+          "format": "int64"
+        }
+      },
+      "description": "One player's line in a stored match, from metadata."
     },
     "v1SlotTimeline": {
       "type": "object",

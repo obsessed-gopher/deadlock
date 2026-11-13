@@ -1613,3 +1613,160 @@ a.record:hover {
   border-radius: 50%;
   background: var(--text);
 }
+
+/* head actions (compare + sync) */
+
+.head-actions {
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+/* comparison page */
+
+.vs-head {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.vs-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 16px;
+}
+
+.vs-player {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--text);
+}
+
+.vs-player:hover {
+  border-color: var(--border-strong);
+  text-decoration: none;
+}
+
+.vs-row .vs-player:last-child {
+  flex-direction: row-reverse;
+  text-align: right;
+}
+
+.vs-name {
+  min-width: 0;
+}
+
+.vs-title {
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.vs-mark {
+  font-family: var(--mono, monospace);
+  color: var(--faint);
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.vs-metrics {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.vs-metric {
+  display: grid;
+  grid-template-columns: minmax(70px, 1fr) minmax(0, 3fr) minmax(70px, 1fr);
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.vs-metric:last-child {
+  border-bottom: none;
+}
+
+.vs-metric-head {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.vs-value {
+  color: var(--muted);
+}
+
+.vs-value.best {
+  color: var(--text);
+  font-weight: 700;
+}
+
+.vs-label {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  text-align: center;
+}
+
+.vs-bar {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--surface-3);
+  display: flex;
+  overflow: hidden;
+}
+
+.vs-bar.left {
+  justify-content: flex-end;
+}
+
+.vs-bar > span {
+  background: var(--border-strong);
+  border-radius: 3px;
+}
+
+.vs-bar > span.best {
+  background: var(--text);
+}
+
+.end {
+  text-align: right;
+}
+
+@media (max-width: 640px) {
+  .vs-row {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  .vs-row .vs-player:last-child {
+    flex-direction: row;
+    text-align: left;
+  }
+  .vs-mark {
+    text-align: center;
+  }
+  .vs-title {
+    font-size: 18px;
+  }
+  .vs-label {
+    grid-template-columns: 1fr;
+  }
+  .vs-label .vs-bar {
+    display: none;
+  }
+}
+
+.queue-nav {
+  align-self: flex-start;
+  flex-wrap: wrap;
+}

@@ -135,6 +135,11 @@ export interface ListProfilesResponse {
   profiles: Profile[];
 }
 
+export interface ListSeenMatchesResponse {
+  /** oldest first */
+  matches: SeenMatch[];
+}
+
 export interface Match {
   durationS: number;
   gameMode: number;
@@ -309,6 +314,27 @@ export interface Profile {
 
 export interface ResolveSteamVanityResponse {
   accountId: number;
+}
+
+/** One player's line in a stored match, from metadata. */
+export interface SeenMatch {
+  assists: number;
+  deaths: number;
+  durationS: number;
+  gameMode: number;
+  heroId: number;
+  kills: number;
+  lastHits: number;
+  level: number;
+  matchId: string;
+  matchMode: number;
+  netWorth: number;
+  playerDamage: number;
+  playerHealing: number;
+  /** unix seconds */
+  startTime: string;
+  team: number;
+  won: boolean;
 }
 
 export interface SlotTimeline {

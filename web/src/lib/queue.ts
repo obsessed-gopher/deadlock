@@ -25,3 +25,15 @@ export const apiQueue: Record<QueueKey, MatchQueue> = {
   brawl: "MATCH_QUEUE_STREET_BRAWL",
   other: "MATCH_QUEUE_OTHER",
 };
+
+/** Matches per queue. */
+export function countQueues(ms: { gameMode: number; matchMode: number }[]): Record<QueueKey, number> {
+  const out: Record<QueueKey, number> = { normal: 0, ranked: 0, brawl: 0, other: 0 };
+  for (const m of ms) out[queueOf(m.gameMode, m.matchMode)]++;
+  return out;
+}
+
+/** A queue from a URL parameter; anything else is "" (all queues). */
+export function parseQueue(v: unknown): QueueKey | "" {
+  return typeof v === "string" && (QUEUES as readonly string[]).includes(v) ? (v as QueueKey) : "";
+}

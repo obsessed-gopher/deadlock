@@ -13,6 +13,7 @@ import type {
   ListPlayerMatchesResponse,
   ListPlayerPeersResponse,
   ListProfilesResponse,
+  ListSeenMatchesResponse,
   Match,
   Player,
   PlayerMatch,
@@ -20,6 +21,7 @@ import type {
   Profile,
   ResolveSteamVanityResponse,
   RpcStatus,
+  SeenMatch,
   SyncPlayerResponse,
 } from "../src/api/schema.gen.ts";
 
@@ -279,6 +281,39 @@ export function createMockApi(fx: Fixtures, now: () => number = () => Date.now()
     return ok(header);
   }
 
+  /**
+   * Seen matches come from the full breakdowns only: the fixtures have
+   * rosters for just those few matches, for every player in them.
+   */
+  function seenMatches(accountId: number): SeenMatch[] {
+    const matches = new Map<string, Match>();
+    for (const pm of fx.playerMatches.values()) if (pm.match) matches.set(pm.match.matchId, pm.match);
+    const out: SeenMatch[] = [];
+    for (const m of matches.values()) {
+      const p = m.players.find((x) => x.accountId === accountId);
+      if (!p) continue;
+      out.push({
+        matchId: m.matchId,
+        startTime: m.startTime,
+        durationS: m.durationS,
+        gameMode: m.gameMode,
+        matchMode: m.matchMode,
+        heroId: p.heroId,
+        team: p.team,
+        won: p.team === m.winningTeam,
+        kills: p.kills,
+        deaths: p.deaths,
+        assists: p.assists,
+        netWorth: p.netWorth,
+        lastHits: p.lastHits,
+        playerDamage: p.playerDamage,
+        playerHealing: p.playerHealing,
+        level: p.level,
+      });
+    }
+    return out.sort((a, b) => Number(BigInt(a.startTime) - BigInt(b.startTime)));
+  }
+
   /** Handles one request; path may include a query string. */
   function handle(method: string, url: string): Response {
     const u = new URL(url, "http://mock");
@@ -341,6 +376,10 @@ export function createMockApi(fx: Fixtures, now: () => number = () => Date.now()
         const body: ListPlayerMatchFactsResponse = tracked
           ? fx.facts
           : { matches: [], soulMarksS: fx.facts.soulMarksS, soulTargets: fx.facts.soulTargets };
+        return ok(body);
+      }
+      if (parts.length === 4 && parts[3] === "seen") {
+        const body: ListSeenMatchesResponse = { matches: seenMatches(id) };
         return ok(body);
       }
       if (parts.length === 4 && parts[3] === "peers") {

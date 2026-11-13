@@ -1,17 +1,10 @@
 import Link from "next/link";
 
 import { getI18n } from "@/i18n/server.ts";
+import { trackedAccounts } from "@/lib/tracked.ts";
 
 // Reads SYNC_ACCOUNTS and cookies at request time.
 export const dynamic = "force-dynamic";
-
-/** Accounts the server syncs on its own (same variable as the Go server). */
-function trackedAccounts(): string[] {
-  return (process.env.SYNC_ACCOUNTS ?? "")
-    .split(",")
-    .map((s) => s.trim())
-    .filter((s) => /^\d+$/.test(s));
-}
 
 /** ?error= values set by the search redirect (app/players/page.tsx). */
 const SEARCH_ERRORS = ["badId", "steamNotFound", "steamDown"] as const;

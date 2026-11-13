@@ -28,6 +28,7 @@ type Store interface {
 	ListPlayerHeroStats(ctx context.Context, accountID uint32) ([]*v1.HeroStats, error)
 	ListPlayerMatchFacts(ctx context.Context, accountID uint32) ([]*v1.MatchFacts, error)
 	ListPlayerPeers(ctx context.Context, accountID uint32) (*db.Peers, error)
+	ListProfiles(ctx context.Context, ids []uint32) ([]*v1.Profile, error)
 	GetMatch(ctx context.Context, matchID uint64) (*v1.Match, error)
 	GetPlayerMatch(ctx context.Context, matchID uint64, accountID uint32) (*v1.PlayerMatch, error)
 }
@@ -199,6 +200,29 @@ func (s *Server) SyncPlayer(ctx context.Context, req *v1.SyncPlayerRequest) (*v1
 		return nil, status.Errorf(codes.Unavailable, "sync: %v", err)
 	}
 	return &v1.SyncPlayerResponse{NewMatches: uint32(n), QueuedMeta: uint32(pending)}, nil
+}
+
+// MaxProfiles is how many accounts one ListProfiles call may ask for.
+const MaxProfiles = 1000
+
+// ListProfiles implements v1.StatsServiceServer.
+func (s *Server) ListProfiles(ctx context.Context, req *v1.ListProfilesRequest) (*v1.ListProfilesResponse, error) {
+	if n := len(req.GetAccountIds()); n > MaxProfiles {
+		return nil, status.Errorf(codes.InvalidArgument, "%d account_ids, max %d", n, MaxProfiles)
+	}
+	ids := make([]uint32, 0, len(req.GetAccountIds()))
+	for _, v := range req.GetAccountIds() {
+		id, err := accountID(v)
+		if err != nil {
+			return nil, err
+		}
+		ids = append(ids, id)
+	}
+	ps, err := s.store.ListProfiles(ctx, ids)
+	if err != nil {
+		return nil, toStatus(err)
+	}
+	return &v1.ListProfilesResponse{Profiles: ps}, nil
 }
 
 // ResolveSteamVanity implements v1.StatsServiceServer.

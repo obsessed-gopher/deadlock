@@ -1,5 +1,6 @@
 // Languages: interface ru/en (browser preference, header switch, settings)
 // and hero/item names (English by default, Russian only from settings).
+import { OWNER_NAME } from "../mock/api.ts";
 import { ACCOUNT, en, expect, fullMatch, look, lookRuNames, ru, test } from "./helpers.ts";
 
 test.describe("English browser", () => {
@@ -8,7 +9,7 @@ test.describe("English browser", () => {
   test("interface follows Accept-Language", async ({ page }) => {
     await page.goto(`/players/${ACCOUNT}/heroes`);
     await expect(page.locator("html")).toHaveAttribute("lang", "en");
-    await expect(page.getByRole("heading", { level: 1 })).toHaveText(en.t("player.title", { id: ACCOUNT }));
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText(OWNER_NAME);
     await expect(page.getByRole("heading", { name: new RegExp(en.t("heroes.title")) })).toBeVisible();
   });
 });

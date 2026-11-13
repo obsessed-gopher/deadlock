@@ -26,6 +26,7 @@ export default async function MatchPage({ params }: { params: Promise<Params> })
   if (!gd.ok) return <ErrorState i18n={i18n} kind={gd.kind} retryHref={`/matches/${matchId}`} />;
   const m = match.data;
   const look = makeLookup(gd.data, i18n);
+  const profiles = await api.profiles(m.players.map((p) => p.accountId));
   return (
     <>
       <section>
@@ -38,8 +39,8 @@ export default async function MatchPage({ params }: { params: Promise<Params> })
       <section aria-labelledby="scoreboard-title">
         <h2 id="scoreboard-title">{t("match.scoreboard")}</h2>
         {m.players.length > 0 ? (
-          <div className="grid-2">
-            {scoreboardTables({ i18n, look }, m).map((spec) => (
+          <div className="stack gap-16">
+            {scoreboardTables({ i18n, look }, m, undefined, profiles).map((spec) => (
               <DataTable key={spec.label} spec={spec} />
             ))}
           </div>

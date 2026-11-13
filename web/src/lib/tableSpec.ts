@@ -18,6 +18,8 @@ export interface Cell {
   slot?: string;
   /** Icon URL before the text (lib/icons.ts). */
   icon?: string;
+  /** Round Steam avatar before the text; empty src shows the name's letter. */
+  avatar?: { src: string; name: string };
   /** Tile for glyph icons (items, abilities); none for hero portraits. */
   iconTile?: IconTile;
   /** Strike through (sold items). */

@@ -27,11 +27,16 @@ type Store interface {
 	NextPendingMeta(ctx context.Context, limit int) ([]uint64, error)
 	StoreMeta(ctx context.Context, matchID uint64, raw []byte, version uint32, mi *pb.CMsgMatchMetaDataContents_MatchInfo) error
 	MarkMetaFailure(ctx context.Context, matchID uint64, expired bool, cause error, maxAttempts int) error
+	DeferMeta(ctx context.Context, matchID uint64, until time.Time, cause error) error
 
 	// Re-derivation of stored matches after the derivation changed.
 	NextStaleMeta(ctx context.Context, after uint64, limit int) ([]uint64, error)
 	MetaRaw(ctx context.Context, matchID uint64) ([]byte, error)
 	RederiveMeta(ctx context.Context, matchID uint64, mi *pb.CMsgMatchMetaDataContents_MatchInfo) error
+
+	// Steam profiles of everyone seen.
+	StaleProfiles(ctx context.Context, maxAge time.Duration, limit int) ([]uint32, error)
+	StoreProfiles(ctx context.Context, requested []uint32, got []source.SteamProfile, at time.Time) error
 }
 
 // Syncer coordinates providers and the database.
@@ -39,15 +44,30 @@ type Syncer struct {
 	DB      Store
 	History source.HistoryProvider
 	Salts   source.SaltProvider
-	HTTP    *http.Client
-	Log     *slog.Logger
+	// Meta, when set, is asked for the .meta file first; salts and Valve's
+	// CDN are the fallback for matches it doesn't have.
+	Meta source.MetaProvider
+	HTTP *http.Client
+	Log  *slog.Logger
 
 	// Delay between metadata downloads; keeps us polite to the salt
 	// provider and Valve's CDN.
 	Interval    time.Duration
 	MaxAttempts int
 
+	// Steam profiles (names, avatars); nil Profiles disables RunProfiles.
+	// One batch per ProfileEvery while there is work, a check per
+	// ProfileIdle otherwise; a profile is refreshed after ProfileMaxAge.
+	Profiles      source.ProfileProvider
+	ProfileEvery  time.Duration
+	ProfileIdle   time.Duration
+	ProfileMaxAge time.Duration
+
 	wake chan struct{}
+
+	// The salts provider said 429: no salts requests before this moment.
+	// Touched only by the Run goroutine.
+	saltsPausedUntil time.Time
 }
 
 // New returns a Syncer with production defaults; tune the exported fields
@@ -55,10 +75,13 @@ type Syncer struct {
 func New(d Store, hist source.HistoryProvider, salts source.SaltProvider, log *slog.Logger) *Syncer {
 	return &Syncer{
 		DB: d, History: hist, Salts: salts, Log: log,
-		HTTP:        &http.Client{Timeout: 2 * time.Minute},
-		Interval:    1500 * time.Millisecond,
-		MaxAttempts: 5,
-		wake:        make(chan struct{}, 1),
+		HTTP:          &http.Client{Timeout: 2 * time.Minute},
+		Interval:      1500 * time.Millisecond,
+		MaxAttempts:   5,
+		ProfileEvery:  time.Minute,
+		ProfileIdle:   15 * time.Minute,
+		ProfileMaxAge: 7 * 24 * time.Hour,
+		wake:          make(chan struct{}, 1),
 	}
 }
 
@@ -165,11 +188,11 @@ func (s *Syncer) Run(ctx context.Context) {
 			if ctx.Err() != nil {
 				return
 			}
-			s.processMeta(ctx, id)
+			pause := s.processMeta(ctx, id)
 			select {
 			case <-ctx.Done():
 				return
-			case <-time.After(s.Interval):
+			case <-time.After(max(s.Interval, pause)):
 			}
 		}
 		if len(ids) > 0 {
@@ -184,52 +207,92 @@ func (s *Syncer) Run(ctx context.Context) {
 	}
 }
 
+// RefreshProfiles fetches one batch of missing or outdated Steam profiles
+// and returns how many accounts it asked for.
+func (s *Syncer) RefreshProfiles(ctx context.Context) (int, error) {
+	ids, err := s.DB.StaleProfiles(ctx, s.ProfileMaxAge, source.MaxProfileBatch)
+	if err != nil || len(ids) == 0 {
+		return 0, err
+	}
+	got, err := s.Profiles.SteamProfiles(ctx, ids)
+	if err != nil {
+		return 0, fmt.Errorf("steam profiles: %w", err)
+	}
+	return len(ids), s.DB.StoreProfiles(ctx, ids, got, time.Now())
+}
+
+// RunProfiles keeps Steam profiles fresh until ctx is cancelled. A full
+// batch means more work is waiting: the next one follows after ProfileEvery.
+// Otherwise (or after an error) it rests for ProfileIdle.
+func (s *Syncer) RunProfiles(ctx context.Context) {
+	if s.Profiles == nil {
+		return
+	}
+	for {
+		n, err := s.RefreshProfiles(ctx)
+		switch {
+		case err != nil && ctx.Err() == nil:
+			s.Log.Warn("steam profiles", "err", err)
+		case n > 0:
+			s.Log.Info("steam profiles refreshed", "accounts", n)
+		}
+		wait := s.ProfileIdle
+		if err == nil && n == source.MaxProfileBatch {
+			wait = s.ProfileEvery
+		}
+		select {
+		case <-ctx.Done():
+			return
+		case <-time.After(wait):
+		}
+	}
+}
+
 // errExpired marks replays Valve no longer hosts.
 var errExpired = errors.New("replay expired")
 
-func (s *Syncer) processMeta(ctx context.Context, matchID uint64) {
+// deferredError postpones a match without counting an attempt; pause also
+// holds back the whole queue (the provider of every download is limited).
+type deferredError struct {
+	until time.Time
+	pause time.Duration
+	err   error
+}
+
+func (e *deferredError) Error() string { return e.err.Error() }
+func (e *deferredError) Unwrap() error { return e.err }
+
+// processMeta downloads and stores one match. It returns how long the queue
+// must wait before the next download beyond the usual Interval.
+func (s *Syncer) processMeta(ctx context.Context, matchID uint64) time.Duration {
 	raw, version, mi, err := s.fetchMeta(ctx, matchID)
 	if err == nil {
 		err = s.DB.StoreMeta(ctx, matchID, raw, version, mi)
 	}
 	if err == nil {
 		s.Log.Info("meta stored", "match", matchID, "players", len(mi.GetPlayers()))
-		return
+		return 0
 	}
 	if ctx.Err() != nil {
-		return
+		return 0
+	}
+	if d, ok := errors.AsType[*deferredError](err); ok {
+		s.Log.Info("meta deferred", "match", matchID, "until", d.until.Format(time.RFC3339), "err", err)
+		if e := s.DB.DeferMeta(ctx, matchID, d.until, err); e != nil {
+			s.Log.Error("defer meta", "match", matchID, "err", e)
+		}
+		return d.pause
 	}
 	expired := errors.Is(err, errExpired)
 	s.Log.Warn("meta failed", "match", matchID, "expired", expired, "err", err)
 	if e := s.DB.MarkMetaFailure(ctx, matchID, expired, err, s.MaxAttempts); e != nil {
 		s.Log.Error("mark meta failure", "match", matchID, "err", e)
 	}
+	return 0
 }
 
 func (s *Syncer) fetchMeta(ctx context.Context, matchID uint64) ([]byte, uint32, *pb.CMsgMatchMetaDataContents_MatchInfo, error) {
-	salts, err := s.Salts.Salts(ctx, matchID)
-	if err != nil {
-		if errors.Is(err, source.ErrNotFound) {
-			return nil, 0, nil, fmt.Errorf("%w: %w", errExpired, err)
-		}
-		return nil, 0, nil, err
-	}
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, salts.MetadataURL(), nil)
-	if err != nil {
-		return nil, 0, nil, err
-	}
-	resp, err := s.HTTP.Do(req)
-	if err != nil {
-		return nil, 0, nil, err
-	}
-	defer func() { _ = resp.Body.Close() }()
-	switch {
-	case resp.StatusCode == http.StatusNotFound:
-		return nil, 0, nil, fmt.Errorf("%w: %s", errExpired, salts.MetadataURL())
-	case resp.StatusCode != http.StatusOK:
-		return nil, 0, nil, fmt.Errorf("metadata %s: %s", salts.MetadataURL(), resp.Status)
-	}
-	raw, err := io.ReadAll(io.LimitReader(resp.Body, 64<<20))
+	raw, err := s.downloadMeta(ctx, matchID)
 	if err != nil {
 		return nil, 0, nil, err
 	}
@@ -242,4 +305,51 @@ func (s *Syncer) fetchMeta(ctx context.Context, matchID uint64) ([]byte, uint32,
 		return nil, 0, nil, err
 	}
 	return raw, version, mi, nil
+}
+
+// downloadMeta returns the compressed .meta file: from s.Meta when it has
+// it, otherwise via salts from Valve's CDN.
+func (s *Syncer) downloadMeta(ctx context.Context, matchID uint64) ([]byte, error) {
+	if s.Meta != nil {
+		raw, err := s.Meta.MetadataRaw(ctx, matchID)
+		if rl, ok := errors.AsType[*source.RateLimitError](err); ok {
+			return nil, &deferredError{until: time.Now().Add(rl.RetryAfter), pause: rl.RetryAfter, err: err}
+		}
+		if !errors.Is(err, source.ErrNotFound) {
+			return raw, err
+		}
+	}
+	if now := time.Now(); now.Before(s.saltsPausedUntil) {
+		return nil, &deferredError{until: s.saltsPausedUntil, err: errors.New("salts: paused after a rate limit")}
+	}
+	salts, err := s.Salts.Salts(ctx, matchID)
+	if rl, ok := errors.AsType[*source.RateLimitError](err); ok {
+		// Salts not in deadlock-api's database come from Steam: 3 requests
+		// an hour. Stop asking until the window ends; matches it stores are
+		// still downloaded meanwhile.
+		s.saltsPausedUntil = time.Now().Add(rl.RetryAfter)
+		return nil, &deferredError{until: s.saltsPausedUntil, err: err}
+	}
+	if err != nil {
+		if errors.Is(err, source.ErrNotFound) {
+			return nil, fmt.Errorf("%w: %w", errExpired, err)
+		}
+		return nil, err
+	}
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, salts.MetadataURL(), nil)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := s.HTTP.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer func() { _ = resp.Body.Close() }()
+	switch {
+	case resp.StatusCode == http.StatusNotFound:
+		return nil, fmt.Errorf("%w: %s", errExpired, salts.MetadataURL())
+	case resp.StatusCode != http.StatusOK:
+		return nil, fmt.Errorf("metadata %s: %s", salts.MetadataURL(), resp.Status)
+	}
+	return io.ReadAll(io.LimitReader(resp.Body, source.MaxMetaSize))
 }

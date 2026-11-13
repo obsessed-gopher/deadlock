@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"slices"
 	"testing"
 
 	"github.com/obsessed-gopher/deadlock/internal/db"
@@ -29,6 +30,7 @@ type fakeStore struct {
 	err    error
 
 	gotAccount uint32
+	gotIDs     []uint32
 	gotQuery   db.MatchQuery
 	total      int
 }
@@ -59,6 +61,15 @@ func (f *fakeStore) ListPlayerPeers(_ context.Context, accountID uint32) (*db.Pe
 		return &db.Peers{}, f.err
 	}
 	return f.peers, f.err
+}
+
+func (f *fakeStore) ListProfiles(_ context.Context, ids []uint32) ([]*v1.Profile, error) {
+	f.gotIDs = ids
+	out := make([]*v1.Profile, 0, len(ids))
+	for _, id := range ids {
+		out = append(out, &v1.Profile{AccountId: id, PersonaName: "p"})
+	}
+	return out, f.err
 }
 
 func (f *fakeStore) GetPlayerMatch(_ context.Context, _ uint64, accountID uint32) (*v1.PlayerMatch, error) {
@@ -100,6 +111,31 @@ func (fakeSteam) ResolveVanity(_ context.Context, name string) (uint32, error) {
 		return 0, source.ErrBadVanity
 	default:
 		return 0, source.ErrNotFound
+	}
+}
+
+func TestListProfiles(t *testing.T) {
+	st := &fakeStore{}
+	s := newServer(st, fakeSyncer{})
+	ctx := context.Background()
+	resp, err := s.ListProfiles(ctx, &v1.ListProfilesRequest{AccountIds: []uint64{76561199477771562, 42}})
+	if err != nil || len(resp.GetProfiles()) != 2 {
+		t.Fatalf("profiles = %v, %v", resp, err)
+	}
+	if !slices.Equal(st.gotIDs, []uint32{1517505834, 42}) {
+		t.Errorf("store got %v, want SteamID64 normalized", st.gotIDs)
+	}
+	if resp, err := s.ListProfiles(ctx, &v1.ListProfilesRequest{}); err != nil || len(resp.GetProfiles()) != 0 {
+		t.Errorf("no ids = %v, %v", resp, err)
+	}
+	for name, ids := range map[string][]uint64{
+		"zero":      {1, 0},
+		"too many":  make([]uint64, MaxProfiles+1),
+		"not an id": {4_294_967_296},
+	} {
+		if _, err := s.ListProfiles(ctx, &v1.ListProfilesRequest{AccountIds: ids}); status.Code(err) != codes.InvalidArgument {
+			t.Errorf("%s: code = %s, want InvalidArgument", name, status.Code(err))
+		}
 	}
 }
 

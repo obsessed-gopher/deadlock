@@ -121,6 +121,16 @@ func (d *DB) MarkMetaFailure(ctx context.Context, matchID uint64, expired bool, 
 	return err
 }
 
+// DeferMeta postpones a match's download until `until` without counting an
+// attempt: the provider asked us to wait (rate limit), the match itself is
+// fine.
+func (d *DB) DeferMeta(ctx context.Context, matchID uint64, until time.Time, cause error) error {
+	_, err := d.Pool.Exec(ctx, `
+		UPDATE matches SET meta_error = $2, meta_next_try = $3
+		WHERE match_id = $1 AND meta_status = 'pending'`, matchID, cause.Error(), until)
+	return err
+}
+
 // DeriveVersion is the version of what StoreMeta derives from metadata. Bump
 // it when the derivation changes (a new column, a fix): on start the syncer
 // re-derives every stored match from meta_raw, without downloads.

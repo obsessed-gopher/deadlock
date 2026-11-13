@@ -2,7 +2,7 @@ import { join } from "node:path";
 
 import { type Page, test as base, expect } from "@playwright/test";
 
-import { createMockApi, loadFixtures } from "../mock/api.ts";
+import { createMockApi, loadFixtures, mockProfile } from "../mock/api.ts";
 import type { ListPlayerHeroStatsResponse, ListPlayerMatchesResponse, PlayerMatch } from "../src/api/schema.gen.ts";
 import { createI18n } from "../src/i18n/core.ts";
 import { makeLookup } from "../src/lib/gamedata.ts";
@@ -17,6 +17,11 @@ export const STEAM_ID64 = String(76561197960265728n + BigInt(fx.accountId));
 export const ru = createI18n({ locale: "ru", names: "en" });
 export const en = createI18n({ locale: "en", names: "en" });
 export const look = makeLookup(fx.gameData, ru);
+
+/** The name the mock's synthetic Steam profile gives an account, or the fallback. */
+export function nameOf(i18n: typeof ru, id: string | number): string {
+  return mockProfile(Number(id), fx.accountId)?.personaName ?? i18n.t("player.title", { id: String(id) });
+}
 export const lookRuNames = makeLookup(fx.gameData, createI18n({ locale: "ru", names: "ru" }));
 
 const mock = createMockApi(fx);

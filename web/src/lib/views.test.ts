@@ -2,12 +2,18 @@ import assert from "node:assert/strict";
 import { join } from "node:path";
 import { test } from "node:test";
 
-import { createMockApi, loadFixtures } from "../../mock/api.ts";
-import type { ListPlayerHeroStatsResponse, ListPlayerPeersResponse, PlayerMatch } from "../api/schema.gen.ts";
+import { OWNER_NAME, createMockApi, loadFixtures } from "../../mock/api.ts";
+import type {
+  ListPlayerHeroStatsResponse,
+  ListPlayerPeersResponse,
+  ListProfilesResponse,
+  PlayerMatch,
+} from "../api/schema.gen.ts";
 import { createI18n } from "../i18n/core.ts";
 import { buildEntries } from "./build.ts";
 import { makeLookup } from "./gamedata.ts";
 import { matchupTable, peerTable } from "./peerViews.ts";
+import { profileMap } from "./profiles.ts";
 import { buildTable, deathsTable, heroTable, scoreboardTables } from "./views.ts";
 
 // Real data: the captured fixtures, match 134969900 (Haze, 8 deaths, a leaver).
@@ -55,6 +61,26 @@ test("scoreboard: a table per team, the player marked, the leaver tagged", () =>
   assert.equal(amber.filter((r) => r.me).length, 1);
   assert.equal(amber.find((r) => r.me)?.cells.hero?.text, "Haze");
   assert.equal(amber.filter((r) => r.cells.hero?.tag === "left").length, 1);
+});
+
+test("scoreboard: players by Steam name with a fallback, linked to their profiles", () => {
+  const ids = pm.match!.players.map((p) => p.accountId);
+  const profiles = profileMap(
+    (mock.handle("GET", `/v1/profiles?${ids.map((id) => `account_ids=${id}`).join("&")}`).body as ListProfilesResponse).profiles,
+  );
+  const rows = scoreboardTables(ctx("ru", "en"), pm.match!, pm.slot, profiles).flatMap((t) => t.rows);
+  const me = rows.find((r) => r.me)!;
+  assert.equal(me.cells.player?.text, OWNER_NAME);
+  assert.equal(me.cells.player?.href, `/players/${ACC}`);
+  for (const p of pm.match!.players) {
+    const row = rows.find((r) => r.id === String(p.slot))!;
+    const want = profiles.get(String(p.accountId))?.personaName ?? `Игрок ${p.accountId}`;
+    assert.equal(row.cells.player?.text, want);
+    assert.equal(row.cells.player?.avatar?.name, want);
+  }
+  // Without profiles every player keeps the fallback.
+  const plain = scoreboardTables(ctx("en", "en"), pm.match!, pm.slot).flatMap((t) => t.rows);
+  assert.equal(plain.find((r) => r.me)?.cells.player?.text, `Player ${ACC}`);
 });
 
 test("deaths: time, killer filter, unknown time-to-kill as a dash", () => {

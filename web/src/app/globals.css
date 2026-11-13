@@ -1462,3 +1462,54 @@ a.record:hover {
   flex: 1 1 auto;
   min-width: 0;
 }
+
+/* avatars */
+
+.avatar {
+  border-radius: 50%;
+  flex: none;
+  object-fit: cover;
+  background: var(--surface-3);
+}
+
+.avatar-empty {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  border: 1px solid var(--border-strong);
+  font-weight: 600;
+  line-height: 1;
+}
+
+.player-id {
+  gap: 20px;
+  flex-wrap: nowrap;
+  align-items: center;
+  min-width: 0;
+}
+
+.player-id h1 {
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 640px) {
+  .player-id {
+    gap: 14px;
+  }
+  .player-id .avatar {
+    width: 52px;
+    height: 52px;
+  }
+}
+
+.friend-hero {
+  gap: 6px;
+  flex-wrap: nowrap;
+  min-width: 0;
+}
+
+.friend-foot {
+  gap: 8px;
+  flex-wrap: nowrap;
+}

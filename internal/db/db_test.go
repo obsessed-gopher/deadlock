@@ -195,7 +195,9 @@ func TestIngestRoundTrip(t *testing.T) {
 	testMatchQueries(ctx, t, d, acc, match)
 	testMatchFacts(ctx, t, d, acc, match, mi.GetAverageBadgeTeam0(), mi.GetAverageBadgeTeam1())
 	testRederive(ctx, t, d, match, raw, mi)
+	testDeferMeta(ctx, t, d, match)
 	testPeers(ctx, t, d, acc, match)
+	testProfiles(ctx, t, d, acc)
 }
 
 // testMatchFacts: the matches of testMatchQueries, oldest first; only match
@@ -466,5 +468,111 @@ func testPeers(ctx context.Context, t *testing.T, d *DB, acc uint32, match uint6
 
 	if p, err := d.ListPlayerPeers(ctx, 42); err != nil || p.Matches != 0 || p.Allies != nil || p.PartySizes != nil {
 		t.Errorf("unknown player peers = %+v, %v", p, err)
+	}
+}
+
+// testProfiles: stale accounts come tracked first; stored profiles are
+// listed, missing ones remembered; friends of tracked players mark peers.
+func testProfiles(ctx context.Context, t *testing.T, d *DB, acc uint32) {
+	t.Helper()
+	ids, err := d.StaleProfiles(ctx, 7*24*time.Hour, 1000)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(ids) < 12 || ids[0] != acc || slices.Contains(ids, 0) {
+		t.Fatalf("stale = %d ids starting %v; want the tracked player first and everyone from matches", len(ids), ids[:min(3, len(ids))])
+	}
+	p, err := d.ListPlayerPeers(ctx, acc)
+	if err != nil || len(p.Allies) == 0 {
+		t.Fatalf("peers: %v, %v", p, err)
+	}
+	ally := uint32(p.Allies[0].AccountId)
+	if p.Allies[0].SteamFriend {
+		t.Error("steam friend before any friend list")
+	}
+
+	since := time.Date(2024, 1, 2, 0, 0, 0, 0, time.UTC)
+	got := []source.SteamProfile{
+		{AccountID: acc, PersonaName: "me", AvatarMedium: "https://a/me.jpg", Friends: []source.SteamFriend{{AccountID: ally, FriendSince: &since}}},
+		{AccountID: ally, PersonaName: "mate", Friends: []source.SteamFriend{{AccountID: 5}}}, // untracked: friends not kept
+	}
+	now := time.Now()
+	if err := d.StoreProfiles(ctx, ids, got, now); err != nil {
+		t.Fatal(err)
+	}
+	if err := d.StoreProfiles(ctx, ids, got, now); err != nil { // idempotent
+		t.Fatal(err)
+	}
+	if left, err := d.StaleProfiles(ctx, 7*24*time.Hour, 1000); err != nil || len(left) != 0 {
+		t.Errorf("stale after store = %v, %v; want none (missing ones are remembered)", left, err)
+	}
+	if left, _ := d.StaleProfiles(ctx, 0, 1000); len(left) != len(ids) {
+		t.Errorf("stale with max age 0 = %d, want all %d", len(left), len(ids))
+	}
+
+	ps, err := d.ListProfiles(ctx, []uint32{ally, acc, 424242})
+	if err != nil || len(ps) != 2 {
+		t.Fatalf("profiles = %v, %v; want the two found", ps, err)
+	}
+	byID := map[uint32]string{}
+	for _, x := range ps {
+		byID[x.AccountId] = x.PersonaName
+	}
+	if byID[acc] != "me" || byID[ally] != "mate" {
+		t.Errorf("profiles = %v", byID)
+	}
+	var friends int
+	if err := d.Pool.QueryRow(ctx, `SELECT count(*) FROM steam_friends`).Scan(&friends); err != nil || friends != 1 {
+		t.Errorf("stored friends = %d, %v; want only the tracked player's", friends, err)
+	}
+
+	// A profile that disappeared keeps its last name.
+	if err := d.StoreProfiles(ctx, []uint32{ally}, nil, now); err != nil {
+		t.Fatal(err)
+	}
+	if ps, _ := d.ListProfiles(ctx, []uint32{ally}); len(ps) != 1 || ps[0].PersonaName != "mate" {
+		t.Errorf("vanished profile = %v, want the last known name", ps)
+	}
+
+	p, _ = d.ListPlayerPeers(ctx, acc)
+	for _, a := range p.Allies {
+		if a.SteamFriend != (uint32(a.AccountId) == ally) {
+			t.Errorf("ally %d steam friend = %v", a.AccountId, a.SteamFriend)
+		}
+	}
+}
+
+// testDeferMeta: a deferred pending match waits without losing an attempt;
+// a stored match is left alone.
+func testDeferMeta(ctx context.Context, t *testing.T, d *DB, match uint64) {
+	t.Helper()
+	pending := match + 1 // history only, still pending
+	until := time.Now().Add(time.Hour).Truncate(time.Second)
+	if err := d.DeferMeta(ctx, pending, until, errors.New("rate limited")); err != nil {
+		t.Fatal(err)
+	}
+	var (
+		status, msg string
+		attempts    int
+		next        time.Time
+	)
+	if err := d.Pool.QueryRow(ctx, `SELECT meta_status, meta_error, meta_attempts, meta_next_try FROM matches WHERE match_id = $1`, pending).
+		Scan(&status, &msg, &attempts, &next); err != nil {
+		t.Fatal(err)
+	}
+	if status != MetaPending || msg != "rate limited" || attempts != 0 || !next.Equal(until) {
+		t.Errorf("deferred = %s %q attempts %d next %v; want pending, no attempt, next %v", status, msg, attempts, next, until)
+	}
+	if ids, _ := d.NextPendingMeta(ctx, 10); slices.Contains(ids, pending) {
+		t.Errorf("deferred match is due: %v", ids)
+	}
+	if err := d.DeferMeta(ctx, match, until, errors.New("x")); err != nil {
+		t.Fatal(err)
+	}
+	if err := d.Pool.QueryRow(ctx, `SELECT meta_status, meta_error FROM matches WHERE match_id = $1`, match).Scan(&status, &msg); err != nil {
+		t.Fatal(err)
+	}
+	if status != MetaOK || msg != "" {
+		t.Errorf("stored match after DeferMeta = %s %q, want untouched", status, msg)
 	}
 }

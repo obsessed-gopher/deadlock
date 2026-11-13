@@ -42,6 +42,7 @@ export default async function PeersPage({ params }: { params: Promise<Params> })
     );
   }
   const look = makeLookup(gd.data, i18n);
+  const profiles = await api.profiles([...p.allies, ...p.enemies].map((x) => x.accountId));
   const total = { matches: p.matches, wins: p.wins };
   const min = minMatchup(p.matches);
   const ctx = { i18n, look };
@@ -61,6 +62,7 @@ export default async function PeersPage({ params }: { params: Promise<Params> })
         total={total}
         ownerId={ownerId}
         friendMin={p.friendMinMatches}
+        profiles={profiles}
       />
       <section aria-labelledby="matchups-title">
         <h2 id="matchups-title">{t("matchups.title")}</h2>
@@ -82,6 +84,7 @@ export default async function PeersPage({ params }: { params: Promise<Params> })
             total,
             ownerId,
             friendMin: p.friendMinMatches,
+            profiles,
           })}
         />
       </section>
@@ -93,7 +96,7 @@ export default async function PeersPage({ params }: { params: Promise<Params> })
           </h2>
           <span className="faint small">{t("peers.listSub", { n: p.peerMinMatches })}</span>
         </div>
-        <DataTable spec={peerTable(ctx, { label: t("enemies.title"), peers: p.enemies, total, ownerId })} />
+        <DataTable spec={peerTable(ctx, { label: t("enemies.title"), peers: p.enemies, total, ownerId, profiles })} />
       </section>
     </>
   );

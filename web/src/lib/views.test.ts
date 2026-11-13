@@ -26,7 +26,7 @@ test("hero table: one row per hero, English names by default even in Russian", (
   assert.equal(spec.rows.length, stats.length);
   const haze = spec.rows.find((r) => r.id === "13");
   assert.equal(haze?.cells.hero?.text, "Haze");
-  assert.equal(haze?.cells.hero?.href, `/players/${ACC}?hero=13`);
+  assert.equal(haze?.cells.hero?.href, `/players/${ACC}/matches?hero=13`);
   assert.equal(haze?.me, true);
   assert.equal(haze?.cells.hero?.icon, "/icons/heroes/hero_haze");
   assert.equal(spec.columns[0]?.label, "Герой");

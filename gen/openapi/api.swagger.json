@@ -145,6 +145,39 @@
         ]
       }
     },
+    "/v1/players/{accountId}/facts": {
+      "get": {
+        "summary": "Compact facts of every match of a player, oldest first: the input of\nclient-side trends (progress, development speed, sessions, records).",
+        "operationId": "StatsService_ListPlayerMatchFacts",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ListPlayerMatchFactsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "accountId",
+            "description": "Account id or SteamID64.",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "uint64"
+          }
+        ],
+        "tags": [
+          "StatsService"
+        ]
+      }
+    },
     "/v1/players/{accountId}/heroes": {
       "get": {
         "summary": "Per-hero totals of a player over all synced matches, most played first.",
@@ -565,6 +598,35 @@
         }
       }
     },
+    "v1ListPlayerMatchFactsResponse": {
+      "type": "object",
+      "properties": {
+        "matches": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1MatchFacts"
+          },
+          "title": "oldest first"
+        },
+        "soulMarksS": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "title": "game times of MatchFacts.souls_at"
+        },
+        "soulTargets": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "title": "soul totals of MatchFacts.time_to_souls_s"
+        }
+      }
+    },
     "v1ListPlayerMatchesResponse": {
       "type": "object",
       "properties": {
@@ -621,6 +683,95 @@
             "type": "object",
             "$ref": "#/definitions/v1MatchPlayer"
           }
+        }
+      }
+    },
+    "v1MatchFacts": {
+      "type": "object",
+      "properties": {
+        "matchId": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "startTime": {
+          "type": "string",
+          "format": "int64",
+          "title": "unix seconds"
+        },
+        "durationS": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "gameMode": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "matchMode": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "heroId": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "won": {
+          "type": "boolean"
+        },
+        "kills": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "deaths": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "assists": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "netWorth": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "lastHits": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "hasMeta": {
+          "type": "boolean",
+          "description": "The rest comes from metadata: zero when has_meta is false."
+        },
+        "playerDamage": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "playerHealing": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "soulsAt": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "description": "Net worth at each soul_marks_s; 0 when the match ended earlier."
+        },
+        "timeToSoulsS": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "description": "Seconds to reach each soul_targets; 0 when never reached."
+        },
+        "soulsFrom": {
+          "$ref": "#/definitions/v1SoulSources"
+        },
+        "lobbyBadge": {
+          "type": "integer",
+          "format": "int64",
+          "description": "Average rank badge of both teams (tier * 10 + subtier); 0 = not reported.\nValve writes no per-player rank into metadata."
         }
       }
     },
@@ -888,6 +1039,33 @@
           }
         }
       }
+    },
+    "v1SoulSources": {
+      "type": "object",
+      "properties": {
+        "heroes": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "laneCreeps": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "neutrals": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "bosses": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "treasure": {
+          "type": "integer",
+          "format": "int64",
+          "title": "urns, crates"
+        }
+      },
+      "description": "Souls earned by source over the whole match."
     },
     "v1StatSnapshot": {
       "type": "object",

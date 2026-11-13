@@ -36,7 +36,7 @@ export function heroTable({ i18n, look }: Ctx, stats: HeroStats[], accountId: st
           winRate: h.winRate >= 0.5 ? "high" : "low",
         },
         cells: {
-          hero: { text: name, href: `/players/${accountId}?hero=${h.heroId}`, icon: look.heroIcon(h.heroId) },
+          hero: { text: name, href: `/players/${accountId}/matches?hero=${h.heroId}`, icon: look.heroIcon(h.heroId) },
           matches: { text: i18n.num(h.matches), sort: h.matches },
           winRate: {
             text: i18n.pct(h.wins, h.matches),

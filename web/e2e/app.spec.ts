@@ -41,8 +41,10 @@ test("home lists tracked accounts", async ({ page }) => {
 });
 
 test("profile: totals, hero table collapsed to 10 with English names", async ({ page }) => {
-  await page.goto(`/players/${ACCOUNT}`);
-  await expect(page.locator(".stat").filter({ hasText: t("stat.matches") })).toContainText(String(rows.length));
+  await page.goto(`/players/${ACCOUNT}/heroes`);
+  const wins = rows.filter((r) => r.won).length;
+  await expect(page.getByText(t("player.summary", { matches: rows.length, winRate: ru.pct(wins, rows.length) }))).toBeVisible();
+  await expect(page.getByRole("link", { name: t("tab.heroes") })).toHaveAttribute("aria-current", "page");
   const table = page.getByRole("table", { name: t("heroes.title"), exact: true });
   await expect(table.locator("tbody tr")).toHaveCount(Math.min(10, heroes.length));
   await expect(table.locator("tbody tr").first()).toContainText(look.heroName(heroes[0]!.heroId));
@@ -56,7 +58,7 @@ test("profile: totals, hero table collapsed to 10 with English names", async ({ 
 });
 
 test("hero table: sort by any column, both directions", async ({ page }) => {
-  await page.goto(`/players/${ACCOUNT}`);
+  await page.goto(`/players/${ACCOUNT}/heroes`);
   const name = t("heroes.title");
   const header = page.getByRole("table", { name, exact: true }).getByRole("columnheader", { name: t("col.kda") });
   await header.getByRole("button").click();
@@ -76,7 +78,7 @@ test("hero table: sort by any column, both directions", async ({ page }) => {
 });
 
 test("hero table: search and filters", async ({ page }) => {
-  await page.goto(`/players/${ACCOUNT}`);
+  await page.goto(`/players/${ACCOUNT}/heroes`);
   const name = t("heroes.title");
   const top = look.heroName(heroes[0]!.heroId);
   await page.getByLabel(`${name}: ${t("filter.searchHero")}`).fill(top.slice(0, 3).toLowerCase());
@@ -93,24 +95,24 @@ test("hero table: search and filters", async ({ page }) => {
 });
 
 test("matches: server-side sort by souls, then reversed", async ({ page }) => {
-  await page.goto(`/players/${ACCOUNT}`);
+  await page.goto(`/players/${ACCOUNT}/matches`);
   const name = t("matches.title");
   await page.getByRole("link", { name: t("col.souls") }).click();
-  await expect(page).toHaveURL(`/players/${ACCOUNT}?sort=souls&dir=desc`);
+  await expect(page).toHaveURL(`/players/${ACCOUNT}/matches?sort=souls&dir=desc`);
   const desc = (await column(page, name, 5)).map(parseNum);
   expect(desc[0]).toBe(Math.max(...rows.map((r) => r.netWorth)));
   expect(desc).toEqual([...desc].sort((a, b) => b - a));
   await page.getByRole("link", { name: t("col.souls") }).click();
-  await expect(page).toHaveURL(`/players/${ACCOUNT}?sort=souls&dir=asc`);
+  await expect(page).toHaveURL(`/players/${ACCOUNT}/matches?sort=souls&dir=asc`);
   const asc = (await column(page, name, 5)).map(parseNum);
   expect(asc[0]).toBe(Math.min(...rows.map((r) => r.netWorth)));
 });
 
 test("matches: result, hero and reset filters", async ({ page }) => {
-  await page.goto(`/players/${ACCOUNT}`);
+  await page.goto(`/players/${ACCOUNT}/matches`);
   const name = t("matches.title");
   await page.getByRole("navigation", { name: t("filter.result") }).getByRole("link", { name: t("result.wins") }).click();
-  await expect(page).toHaveURL(`/players/${ACCOUNT}?result=win`);
+  await expect(page).toHaveURL(`/players/${ACCOUNT}/matches?result=win`);
   const wins = rows.filter((r) => r.won).length;
   await expect(page.getByRole("heading", { name: new RegExp(t("matches.title")) })).toContainText(String(wins));
   for (const text of await column(page, name, 3)) expect(text).toBe(t("result.win"));
@@ -124,17 +126,17 @@ test("matches: result, hero and reset filters", async ({ page }) => {
   for (const text of await column(page, name, 2)) expect(text).toBe(look.heroName(hero));
 
   await page.getByRole("link", { name: t("filter.reset") }).click();
-  await expect(page).toHaveURL(`/players/${ACCOUNT}`);
+  await expect(page).toHaveURL(`/players/${ACCOUNT}/matches`);
 });
 
 test("matches: pages show their range and go back to the first", async ({ page }) => {
   test.skip(rows.length <= 50, "fixtures fit on one page");
-  await page.goto(`/players/${ACCOUNT}`);
+  await page.goto(`/players/${ACCOUNT}/matches`);
   await expect(page.getByText(t("matches.range", { from: 1, to: 50, total: rows.length }))).toBeVisible();
   await page.getByRole("link", { name: t("matches.next") }).click();
   await expect(page.getByText(t("matches.range", { from: 51, to: Math.min(100, rows.length), total: rows.length }))).toBeVisible();
   await page.getByRole("link", { name: t("matches.first") }).click();
-  await expect(page).toHaveURL(`/players/${ACCOUNT}`);
+  await expect(page).toHaveURL(`/players/${ACCOUNT}/matches`);
 });
 
 test("sync button reports the result", async ({ page }) => {
@@ -144,7 +146,7 @@ test("sync button reports the result", async ({ page }) => {
 });
 
 test("match breakdown: chart, sortable scoreboard, build and deaths filters", async ({ page }) => {
-  await page.goto(`/players/${ACCOUNT}`);
+  await page.goto(`/players/${ACCOUNT}/matches`);
   await page.getByRole("link", { name: t("matches.breakdown") }).first().click();
   await expect(page).toHaveURL(`/matches/${fullMatch.matchId}/players/${ACCOUNT}`);
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(look.heroName(fullMatch.heroId));

@@ -9,6 +9,7 @@ import type {
   GameData,
   HeroStats,
   ListPlayerHeroStatsResponse,
+  ListPlayerMatchFactsResponse,
   ListPlayerMatchesResponse,
   Match,
   Player,
@@ -22,6 +23,8 @@ export interface Fixtures {
   gameData: GameData;
   accountId: number;
   rows: PlayerMatchRow[];
+  /** Facts of the same matches, oldest first, as the real server has them. */
+  facts: ListPlayerMatchFactsResponse;
   /** Keyed by `${matchId}-${accountId}`. */
   playerMatches: Map<string, PlayerMatch>;
 }
@@ -33,7 +36,13 @@ export function loadFixtures(dir: string): Fixtures {
   for (const f of readdirSync(join(dir, "player-matches"))) {
     if (f.endsWith(".json")) playerMatches.set(f.slice(0, -5), read<PlayerMatch>("player-matches", f));
   }
-  return { gameData: read<GameData>("gamedata.json"), accountId, rows: matches, playerMatches };
+  return {
+    gameData: read<GameData>("gamedata.json"),
+    accountId,
+    rows: matches,
+    facts: read<ListPlayerMatchFactsResponse>("facts.json"),
+    playerMatches,
+  };
 }
 
 export interface Response {
@@ -265,6 +274,12 @@ export function createMockApi(fx: Fixtures, now: () => number = () => Date.now()
       if (parts.length === 3) return tracked ? ok(player()) : notFound();
       if (parts.length === 4 && parts[3] === "matches") {
         return tracked ? listMatches(u.searchParams) : ok({ matches: [], nextPageToken: "" });
+      }
+      if (parts.length === 4 && parts[3] === "facts") {
+        const body: ListPlayerMatchFactsResponse = tracked
+          ? fx.facts
+          : { matches: [], soulMarksS: fx.facts.soulMarksS, soulTargets: fx.facts.soulTargets };
+        return ok(body);
       }
       if (parts.length === 4 && parts[3] === "heroes") {
         const body: ListPlayerHeroStatsResponse = { heroes: tracked ? heroStats() : [] };

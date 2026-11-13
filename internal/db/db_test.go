@@ -1,6 +1,7 @@
 package db
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"os"
@@ -11,6 +12,7 @@ import (
 	v1 "github.com/obsessed-gopher/deadlock/gen/go/deadlock/v1"
 	"github.com/obsessed-gopher/deadlock/internal/compress"
 	"github.com/obsessed-gopher/deadlock/internal/meta"
+	"github.com/obsessed-gopher/deadlock/internal/pb"
 	"github.com/obsessed-gopher/deadlock/internal/source"
 )
 
@@ -191,6 +193,91 @@ func TestIngestRoundTrip(t *testing.T) {
 	}
 
 	testMatchQueries(ctx, t, d, acc, match)
+	testMatchFacts(ctx, t, d, acc, match, mi.GetAverageBadgeTeam0(), mi.GetAverageBadgeTeam1())
+	testRederive(ctx, t, d, match, raw, mi)
+}
+
+// testMatchFacts: the matches of testMatchQueries, oldest first; only match
+// has metadata (29 130 souls in a 28:48 game).
+func testMatchFacts(ctx context.Context, t *testing.T, d *DB, acc uint32, match uint64, b0, b1 uint32) {
+	t.Helper()
+	facts, err := d.ListPlayerMatchFacts(ctx, acc)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var ids []uint64
+	for _, f := range facts {
+		ids = append(ids, f.MatchId)
+	}
+	if !slices.Equal(ids, []uint64{match + 2, match, match + 1}) {
+		t.Fatalf("facts order = %v, want oldest first", ids)
+	}
+	if f := facts[0]; f.HasMeta || f.SoulsAt != nil || f.SoulsFrom != nil || f.LobbyBadge != 0 || f.HeroId != 7 {
+		t.Errorf("fact without meta = %+v", f)
+	}
+	f := facts[1]
+	if !f.HasMeta || f.NetWorth != 29130 || f.PlayerDamage == 0 {
+		t.Errorf("fact with meta = %+v", f)
+	}
+	if want := lobbyBadge(int16(b0), int16(b1)); f.LobbyBadge != want {
+		t.Errorf("lobby badge = %d, want %d", f.LobbyBadge, want)
+	}
+	if len(f.SoulsAt) != len(SoulMarksS) || !slices.IsSorted(f.SoulsAt) || f.SoulsAt[0] == 0 {
+		t.Errorf("souls at %v = %v, want growing and non-zero", SoulMarksS, f.SoulsAt)
+	}
+	// 10k and 20k reached within the game, 30k never.
+	if tt := f.TimeToSoulsS; len(tt) != 3 || tt[0] == 0 || tt[1] <= tt[0] || tt[1] > 1728 || tt[2] != 0 {
+		t.Errorf("time to %v = %v", SoulTargets, tt)
+	}
+	src := f.SoulsFrom
+	if sum := src.GetHeroes() + src.GetLaneCreeps() + src.GetNeutrals() + src.GetBosses() + src.GetTreasure(); sum == 0 || sum > 2*f.NetWorth {
+		t.Errorf("soul sources = %+v (sum %d)", src, sum)
+	}
+	if facts, err := d.ListPlayerMatchFacts(ctx, 42); err != nil || len(facts) != 0 {
+		t.Errorf("unknown player facts = %v, %v", facts, err)
+	}
+}
+
+// testRederive: a match derived by an older version is found, rebuilt from
+// meta_raw and meta_raw stays byte for byte the same.
+func testRederive(ctx context.Context, t *testing.T, d *DB, match uint64, raw []byte, mi *pb.CMsgMatchMetaDataContents_MatchInfo) {
+	t.Helper()
+	if ids, err := d.NextStaleMeta(ctx, 0, 10); err != nil || len(ids) != 0 {
+		t.Fatalf("fresh ingest is stale: %v, %v", ids, err)
+	}
+	if _, err := d.Pool.Exec(ctx, `UPDATE matches SET derive_version = 0, badge_team0 = 0 WHERE match_id = $1`, match); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := d.Pool.Exec(ctx, `DELETE FROM deaths WHERE match_id = $1`, match); err != nil {
+		t.Fatal(err)
+	}
+	ids, err := d.NextStaleMeta(ctx, 0, 10)
+	if err != nil || !slices.Equal(ids, []uint64{match}) {
+		t.Fatalf("NextStaleMeta = %v, %v", ids, err)
+	}
+	if ids, _ := d.NextStaleMeta(ctx, match, 10); len(ids) != 0 {
+		t.Errorf("NextStaleMeta after the last id = %v", ids)
+	}
+	got, err := d.MetaRaw(ctx, match)
+	if err != nil || !bytes.Equal(got, raw) {
+		t.Fatalf("MetaRaw = %d bytes, %v", len(got), err)
+	}
+	if err := d.RederiveMeta(ctx, match, mi); err != nil {
+		t.Fatal(err)
+	}
+	if ids, _ := d.NextStaleMeta(ctx, 0, 10); len(ids) != 0 {
+		t.Errorf("still stale after rederive: %v", ids)
+	}
+	pm, err := d.GetPlayerMatch(ctx, match, 1517505834)
+	if err != nil || len(pm.Deaths) != 8 {
+		t.Errorf("deaths after rederive = %d, %v", len(pm.GetDeaths()), err)
+	}
+	if got, _ := d.MetaRaw(ctx, match); !bytes.Equal(got, raw) {
+		t.Error("rederive changed meta_raw")
+	}
+	if _, err := d.MetaRaw(ctx, 1); !errors.Is(err, ErrNotFound) {
+		t.Errorf("MetaRaw of unknown match: %v", err)
+	}
 }
 
 // testMatchQueries runs on the three matches of TestIngestRoundTrip:

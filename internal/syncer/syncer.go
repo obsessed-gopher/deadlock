@@ -27,6 +27,11 @@ type Store interface {
 	NextPendingMeta(ctx context.Context, limit int) ([]uint64, error)
 	StoreMeta(ctx context.Context, matchID uint64, raw []byte, version uint32, mi *pb.CMsgMatchMetaDataContents_MatchInfo) error
 	MarkMetaFailure(ctx context.Context, matchID uint64, expired bool, cause error, maxAttempts int) error
+
+	// Re-derivation of stored matches after the derivation changed.
+	NextStaleMeta(ctx context.Context, after uint64, limit int) ([]uint64, error)
+	MetaRaw(ctx context.Context, matchID uint64) ([]byte, error)
+	RederiveMeta(ctx context.Context, matchID uint64, mi *pb.CMsgMatchMetaDataContents_MatchInfo) error
 }
 
 // Syncer coordinates providers and the database.
@@ -100,8 +105,55 @@ func (s *Syncer) Wake() {
 	}
 }
 
-// Run processes the metadata queue until ctx is cancelled.
+// Rederive rebuilds the derived tables of every stored match whose
+// derivation is out of date, from meta_raw alone: no network. A match that
+// fails is logged and skipped, so one bad file never blocks the rest.
+func (s *Syncer) Rederive(ctx context.Context) (done, failed int, err error) {
+	var after uint64
+	for {
+		ids, err := s.DB.NextStaleMeta(ctx, after, 100)
+		if err != nil || len(ids) == 0 {
+			return done, failed, err
+		}
+		for _, id := range ids {
+			if err := s.rederiveOne(ctx, id); err != nil {
+				if ctx.Err() != nil {
+					return done, failed, ctx.Err()
+				}
+				failed++
+				s.Log.Warn("rederive failed", "match", id, "err", err)
+				continue
+			}
+			done++
+		}
+		after = ids[len(ids)-1]
+	}
+}
+
+func (s *Syncer) rederiveOne(ctx context.Context, matchID uint64) error {
+	raw, err := s.DB.MetaRaw(ctx, matchID)
+	if err != nil {
+		return err
+	}
+	plain, err := compress.ReadAll(bytes.NewReader(raw))
+	if err != nil {
+		return fmt.Errorf("decompress: %w", err)
+	}
+	mi, err := meta.Decode(plain)
+	if err != nil {
+		return err
+	}
+	return s.DB.RederiveMeta(ctx, matchID, mi)
+}
+
+// Run brings stale derived tables up to date, then processes the metadata
+// queue until ctx is cancelled.
 func (s *Syncer) Run(ctx context.Context) {
+	if done, failed, err := s.Rederive(ctx); err != nil && ctx.Err() == nil {
+		s.Log.Error("rederive", "err", err)
+	} else if done+failed > 0 {
+		s.Log.Info("rederived stored matches", "done", done, "failed", failed)
+	}
 	idle := time.NewTicker(time.Minute)
 	defer idle.Stop()
 	for {

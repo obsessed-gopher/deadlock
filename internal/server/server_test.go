@@ -46,6 +46,11 @@ func (f *fakeStore) ListPlayerHeroStats(_ context.Context, accountID uint32) ([]
 	return f.heroes, f.err
 }
 
+func (f *fakeStore) ListPlayerMatchFacts(_ context.Context, accountID uint32) ([]*v1.MatchFacts, error) {
+	f.gotAccount = accountID
+	return nil, f.err
+}
+
 func (f *fakeStore) GetPlayerMatch(_ context.Context, _ uint64, accountID uint32) (*v1.PlayerMatch, error) {
 	f.gotAccount = accountID
 	return &v1.PlayerMatch{}, f.err
@@ -81,6 +86,10 @@ func TestRequiredIDs(t *testing.T) {
 		"SyncPlayer":        func() error { _, err := s.SyncPlayer(ctx, &v1.SyncPlayerRequest{}); return err },
 		"ListPlayerHeroStats": func() error {
 			_, err := s.ListPlayerHeroStats(ctx, &v1.ListPlayerHeroStatsRequest{})
+			return err
+		},
+		"ListPlayerMatchFacts": func() error {
+			_, err := s.ListPlayerMatchFacts(ctx, &v1.ListPlayerMatchFactsRequest{})
 			return err
 		},
 		"GetMatch": func() error { _, err := s.GetMatch(ctx, &v1.GetMatchRequest{}); return err },
@@ -119,6 +128,10 @@ func TestAccountIDAcceptsSteamID64(t *testing.T) {
 		},
 		"ListPlayerHeroStats": func(id uint64) (uint32, error) {
 			_, err := s.ListPlayerHeroStats(ctx, &v1.ListPlayerHeroStatsRequest{AccountId: id})
+			return st.gotAccount, err
+		},
+		"ListPlayerMatchFacts": func(id uint64) (uint32, error) {
+			_, err := s.ListPlayerMatchFacts(ctx, &v1.ListPlayerMatchFactsRequest{AccountId: id})
 			return st.gotAccount, err
 		},
 		"SyncPlayer": func(id uint64) (uint32, error) {

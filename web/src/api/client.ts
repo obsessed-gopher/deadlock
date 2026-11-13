@@ -6,6 +6,7 @@ import { type MatchListState, matchApiParams } from "../lib/matchQuery.ts";
 import type {
   GameData,
   ListPlayerHeroStatsResponse,
+  ListPlayerMatchFactsResponse,
   ListPlayerMatchesResponse,
   Match,
   Player,
@@ -57,6 +58,8 @@ export const api = {
     call<ListPlayerMatchesResponse>(`/v1/players/${accountId}/matches?${matchApiParams(state, PAGE_SIZE)}`),
 
   heroStats: (accountId: string) => call<ListPlayerHeroStatsResponse>(`/v1/players/${accountId}/heroes`),
+
+  facts: (accountId: string) => call<ListPlayerMatchFactsResponse>(`/v1/players/${accountId}/facts`),
 
   sync: (accountId: string) =>
     call<SyncPlayerResponse>(`/v1/players/${accountId}:sync`, {

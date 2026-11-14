@@ -1,6 +1,6 @@
 module github.com/obsessed-gopher/deadlock
 
-go 1.27.0
+go 1.27.4
 
 require (
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.33.0

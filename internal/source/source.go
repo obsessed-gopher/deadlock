@@ -112,6 +112,16 @@ func (e *RateLimitError) Error() string {
 	return fmt.Sprintf("%s: rate limited, retry after %s", e.What, e.RetryAfter)
 }
 
+// BotBudget is the stored request budget of one kind of one GC bot: a token
+// bucket and its rate-limit pause. It lives in the database so that a restart
+// or another process carries on with the same budget.
+type BotBudget struct {
+	Tokens      float64
+	RefilledAt  time.Time
+	PausedUntil time.Time
+	Strikes     int // rate limits in a row
+}
+
 // ErrNotFound means the provider has no data for the request (e.g. salts for
 // a match too old to still be hosted).
 var ErrNotFound = errors.New("not found")

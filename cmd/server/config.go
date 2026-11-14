@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/obsessed-gopher/deadlock/internal/source"
+	"github.com/obsessed-gopher/deadlock/internal/steamgc"
 )
 
 // config is everything the server reads from the environment. The variables
@@ -21,6 +22,33 @@ type config struct {
 	// DeadlockAPIKey raises deadlock-api limits (Steam fallback of salts:
 	// 300 an hour instead of 3). A secret: never logged.
 	DeadlockAPIKey string
+	// SteamBots log bot accounts on to the Deadlock GC (set up with
+	// tools/steambot): fresh history and salts without deadlock-api.
+	// STEAM_BOT_USER and STEAM_BOT_TOKEN are comma-separated lists of equal
+	// length, one entry per bot. Tokens are secrets: never logged.
+	SteamBots []steamgc.Account
+}
+
+// parseBots pairs the comma-separated bot logins with their tokens.
+func parseBots(users, tokens string) ([]steamgc.Account, error) {
+	split := func(s string) []string {
+		var out []string
+		for p := range strings.SplitSeq(s, ",") {
+			if p = strings.TrimSpace(p); p != "" {
+				out = append(out, p)
+			}
+		}
+		return out
+	}
+	us, ts := split(users), split(tokens)
+	if len(us) != len(ts) {
+		return nil, fmt.Errorf("STEAM_BOT_USER has %d entries, STEAM_BOT_TOKEN %d: they go in pairs (go run ./tools/steambot login)", len(us), len(ts))
+	}
+	var bots []steamgc.Account
+	for i := range us {
+		bots = append(bots, steamgc.Account{Username: us[i], Token: ts[i]})
+	}
+	return bots, nil
 }
 
 // loadConfig reads and validates configuration; getenv is os.Getenv in
@@ -45,6 +73,9 @@ func loadConfig(getenv func(string) string) (config, error) {
 	}
 
 	var err error
+	if cfg.SteamBots, err = parseBots(getenv("STEAM_BOT_USER"), getenv("STEAM_BOT_TOKEN")); err != nil {
+		return config{}, err
+	}
 	if cfg.SyncEvery, err = positiveDuration(get("SYNC_EVERY", "30m")); err != nil {
 		return config{}, fmt.Errorf("SYNC_EVERY: %w", err)
 	}

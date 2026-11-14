@@ -1,9 +1,11 @@
 package db
 
 import (
+	"cmp"
 	"context"
 	"errors"
 	"fmt"
+	"slices"
 	"time"
 
 	"github.com/obsessed-gopher/deadlock/internal/pb"
@@ -70,17 +72,31 @@ func (d *DB) UpsertHistory(ctx context.Context, accountID uint32, ms []source.Ma
 	return newMatches, err
 }
 
-// NextPendingMeta returns matches whose metadata is due for download,
-// newest first (recent replays are the ones still hosted by Valve).
-func (d *DB) NextPendingMeta(ctx context.Context, limit int) ([]uint64, error) {
+// ClaimPendingMeta takes up to limit matches whose metadata is due for
+// download, newest first (recent replays are the ones still hosted by Valve),
+// and leases them: they are not due again for lease, so several workers (in
+// one process or many) never take the same match. Storing, deferring or
+// failing a match ends its lease; a worker that dies lets it expire.
+func (d *DB) ClaimPendingMeta(ctx context.Context, limit int, lease time.Duration) ([]source.QueuedMatch, error) {
 	rows, err := d.Pool.Query(ctx, `
-		SELECT match_id FROM matches
-		WHERE meta_status = 'pending' AND meta_next_try <= now()
-		ORDER BY match_id DESC LIMIT $1`, limit)
+		WITH due AS (
+			SELECT match_id FROM matches
+			WHERE meta_status = 'pending' AND meta_next_try <= now()
+			ORDER BY match_id DESC LIMIT $1
+			FOR UPDATE SKIP LOCKED)
+		UPDATE matches m SET meta_next_try = now() + make_interval(secs => $2)
+		FROM due WHERE m.match_id = due.match_id
+		RETURNING m.match_id, m.start_time`, limit, lease.Seconds())
 	if err != nil {
 		return nil, err
 	}
-	return pgx.CollectRows(rows, pgx.RowTo[uint64])
+	ms, err := pgx.CollectRows(rows, func(r pgx.CollectableRow) (source.QueuedMatch, error) {
+		var q source.QueuedMatch
+		return q, r.Scan(&q.MatchID, &q.StartTime)
+	})
+	// UPDATE ... RETURNING has no order.
+	slices.SortFunc(ms, func(a, b source.QueuedMatch) int { return cmp.Compare(b.MatchID, a.MatchID) })
+	return ms, err
 }
 
 // CountPendingMeta returns how many of the player's matches are still waiting

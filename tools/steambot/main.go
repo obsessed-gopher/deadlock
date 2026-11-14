@@ -1,0 +1,221 @@
+// Command steambot sets up and checks the Steam bot account that talks to the
+// Deadlock Game Coordinator (dev tool, run by hand in your own terminal).
+//
+//	go run ./tools/steambot login            # log the bot in, save its token to .env
+//	go run ./tools/steambot probe [account]  # newest matches of account + salts of the newest
+//
+// login asks for the bot's login and password (the password is not echoed,
+// used once and not stored), walks through Steam Guard and adds the bot to
+// the comma-separated STEAM_BOT_USER and STEAM_BOT_TOKEN lists in .env (run
+// it once per bot; logging in a known bot again renews its token). probe
+// uses the first bot from the environment or .env.
+package main
+
+import (
+	"bufio"
+	"context"
+	"errors"
+	"fmt"
+	"log"
+	"log/slog"
+	"os"
+	"os/signal"
+	"strings"
+	"time"
+
+	"golang.org/x/term"
+
+	"github.com/obsessed-gopher/deadlock/internal/source"
+	"github.com/obsessed-gopher/deadlock/internal/steamgc"
+)
+
+const envFile = ".env"
+
+func main() {
+	log.SetFlags(0)
+	if err := run(os.Args[1:]); err != nil {
+		log.Fatal(err)
+	}
+}
+
+func run(args []string) error {
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
+	defer stop()
+	if len(args) == 0 {
+		return errors.New("usage: steambot login | probe [account_id]")
+	}
+	var err error
+	switch args[0] {
+	case "login":
+		err = login(ctx)
+	case "probe":
+		err = probe(ctx, args[1:])
+	default:
+		err = fmt.Errorf("unknown command %q", args[0])
+	}
+	return err
+}
+
+func login(ctx context.Context) error {
+	in := bufio.NewReader(os.Stdin)
+	user := prompt(in, "Steam login of the bot: ")
+	fmt.Print("Password (not shown): ")
+	pw, err := term.ReadPassword(int(os.Stdin.Fd()))
+	fmt.Println()
+	if err != nil {
+		return fmt.Errorf("read password: %w", err)
+	}
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Minute)
+	defer cancel()
+	token, err := steamgc.Login(ctx, user, string(pw), func(_ context.Context, kind steamgc.GuardKind, _ string) (string, error) {
+		switch kind {
+		case steamgc.GuardAppApproval:
+			fmt.Println("Approve the login in the Steam mobile app…")
+			return "", nil
+		case steamgc.GuardEmailLink:
+			fmt.Println("Approve the login via the link in the email from Steam…")
+			return "", nil
+		case steamgc.GuardDeviceCode:
+			return prompt(in, "Steam Guard code from the mobile app: "), nil
+		default:
+			return prompt(in, "Steam Guard code from the email: "), nil
+		}
+	})
+	if err != nil {
+		return err
+	}
+	env := readEnv(envFile)
+	users, tokens := withBot(list(env("STEAM_BOT_USER")), list(env("STEAM_BOT_TOKEN")), user, token)
+	if err := setEnv(envFile, map[string]string{
+		"STEAM_BOT_USER":  strings.Join(users, ","),
+		"STEAM_BOT_TOKEN": strings.Join(tokens, ","),
+	}); err != nil {
+		return err
+	}
+	fmt.Printf("Done: %d bot(s) in .env. Check with: go run ./tools/steambot probe\n", len(users))
+	return nil
+}
+
+// withBot puts a bot into the parallel login/token lists: a new token for a
+// known login replaces the old one, a new login is appended.
+func withBot(users, tokens []string, user, token string) ([]string, []string) {
+	users, tokens = users[:min(len(users), len(tokens))], tokens[:min(len(users), len(tokens))]
+	for i, u := range users {
+		if u == user {
+			tokens[i] = token
+			return users, tokens
+		}
+	}
+	return append(users, user), append(tokens, token)
+}
+
+func list(s string) []string {
+	var out []string
+	for p := range strings.SplitSeq(s, ",") {
+		if p = strings.TrimSpace(p); p != "" {
+			out = append(out, p)
+		}
+	}
+	return out
+}
+
+func probe(ctx context.Context, args []string) error {
+	env := readEnv(envFile)
+	users, tokens := list(env("STEAM_BOT_USER")), list(env("STEAM_BOT_TOKEN"))
+	if len(users) == 0 || len(users) != len(tokens) {
+		return errors.New("no bot in STEAM_BOT_USER/STEAM_BOT_TOKEN: go run ./tools/steambot login")
+	}
+	user, token := users[0], tokens[0] // the first bot
+	var account uint32
+	if len(args) > 0 {
+		id, err := source.ParseAccountID(args[0])
+		if err != nil {
+			return err
+		}
+		account = id
+	} else {
+		first, _, _ := strings.Cut(env("SYNC_ACCOUNTS"), ",")
+		id, err := source.ParseAccountID(strings.TrimSpace(first))
+		if err != nil {
+			return errors.New("pass an account id or set SYNC_ACCOUNTS")
+		}
+		account = id
+	}
+	ctx, cancel := context.WithTimeout(ctx, time.Minute)
+	defer cancel()
+	logger := slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: slog.LevelDebug}))
+	c, err := steamgc.Dial(ctx, logger, user, token)
+	if err != nil {
+		return err
+	}
+	defer c.Close()
+
+	ms, err := c.MatchHistory(ctx, account)
+	if err != nil {
+		return err
+	}
+	fmt.Printf("match history of %d: %d matches\n", account, len(ms))
+	for i, m := range ms {
+		if i == 5 {
+			break
+		}
+		fmt.Printf("  %d  %s  hero %d  %d/%d/%d\n", m.MatchID, time.Unix(m.StartTime, 0).UTC().Format(time.DateTime), m.HeroID, m.Kills, m.Deaths, m.Assists)
+	}
+	if len(ms) == 0 {
+		return nil
+	}
+	s, err := c.Salts(ctx, ms[0].MatchID)
+	if err != nil {
+		return err
+	}
+	fmt.Printf("salts of %d: cluster %d, metadata %s\n", s.MatchID, s.ClusterID, s.MetadataURL())
+	return nil
+}
+
+func prompt(in *bufio.Reader, q string) string {
+	fmt.Print(q)
+	s, _ := in.ReadString('\n')
+	return strings.TrimSpace(s)
+}
+
+// readEnv looks a key up in the process environment, then in the env file.
+func readEnv(path string) func(string) string {
+	file := map[string]string{}
+	if b, err := os.ReadFile(path); err == nil {
+		for line := range strings.Lines(string(b)) {
+			k, v, ok := strings.Cut(strings.TrimSpace(line), "=")
+			if ok && !strings.HasPrefix(k, "#") {
+				file[k] = strings.Trim(v, `"'`)
+			}
+		}
+	}
+	return func(k string) string {
+		if v := os.Getenv(k); v != "" {
+			return v
+		}
+		return file[k]
+	}
+}
+
+// setEnv replaces or appends keys in the env file, keeping everything else.
+func setEnv(path string, kv map[string]string) error {
+	b, err := os.ReadFile(path)
+	if err != nil && !errors.Is(err, os.ErrNotExist) {
+		return err
+	}
+	var out []string
+	for line := range strings.Lines(string(b)) {
+		line = strings.TrimRight(line, "\r\n")
+		k, _, _ := strings.Cut(line, "=")
+		if _, ok := kv[strings.TrimSpace(k)]; ok {
+			continue
+		}
+		out = append(out, line)
+	}
+	for _, k := range []string{"STEAM_BOT_USER", "STEAM_BOT_TOKEN"} {
+		if v, ok := kv[k]; ok {
+			out = append(out, k+"="+v)
+		}
+	}
+	return os.WriteFile(path, []byte(strings.Join(out, "\n")+"\n"), 0o600)
+}

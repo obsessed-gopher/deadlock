@@ -28,6 +28,7 @@ replay*.valve.net ──(.meta, запасной путь)──► syncer ─�
 
 ```sh
 cp .env.example .env          # SYNC_ACCOUNTS = твой account id; DEADLOCK_API_KEY — по желанию
+go run ./tools/steambot login # бот Steam для свежих матчей (необязательно, см. ниже)
 go run ./tools/gamedata -icons data/icons   # иконки из установленной игры (необязательно)
 docker compose up -d --build
 curl -X POST localhost:8080/v1/players/1517505834:sync
@@ -37,6 +38,16 @@ curl localhost:8080/v1/matches/134969900/players/1517505834
 ```
 
 Веб-интерфейс: http://localhost:3000. Вместо account id везде можно указать SteamID64, а в поиск — ещё и ссылку на профиль Steam (`steamcommunity.com/profiles/…` или `steamcommunity.com/id/…`), SteamID2 или SteamID3.
+
+### Бот Steam (свежие матчи без задержки)
+
+Без бота история и соли берутся только у deadlock-api, и свежий матч может появиться через часы или дни. С ботом сервер сам спрашивает Game Coordinator Deadlock и видит матч сразу после его окончания.
+
+1. Заведи отдельный аккаунт Steam с Deadlock (основной не подходит: сессия бота выкидывала бы тебя из игры) и добавь его в друзья с аккаунтов из `SYNC_ACCOUNTS` — GC показывает историю только друзьям. Заявку бот примет сам.
+2. В своём терминале: `go run ./tools/steambot login` — логин, пароль (не отображается и не сохраняется), подтверждение Steam Guard. В `.env` запишутся `STEAM_BOT_USER` и `STEAM_BOT_TOKEN` (refresh-токен — секрет, его нельзя коммитить и показывать). Ещё один бот — та же команда: он добавится в списки через запятую, у каждого бота свой лимит запросов к GC.
+3. Проверка: `go run ./tools/steambot probe` — последние матчи из GC и соли свежего. Затем `docker compose up -d --build`.
+
+Автоматический клиент Steam — серая зона правил Steam: при худшем раскладе блокируют аккаунт бота, не основной. Бот ходит в GC редко: история отслеживаемых аккаунтов при синхронизации и соли только для матчей без разбора.
 
 ### Dev на мок-данных
 

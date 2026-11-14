@@ -72,9 +72,19 @@ func TestIngestRoundTrip(t *testing.T) {
 	if n, _ := d.UpsertHistory(ctx, acc, hist); n != 0 {
 		t.Errorf("second UpsertHistory new = %d, want 0", n)
 	}
-	ids, err := d.NextPendingMeta(ctx, 10)
-	if err != nil || len(ids) != 1 || ids[0] != match {
-		t.Fatalf("NextPendingMeta = %v, %v", ids, err)
+	claimed, err := d.ClaimPendingMeta(ctx, 10, time.Minute)
+	if err != nil || len(claimed) != 1 || claimed[0].MatchID != match || claimed[0].StartTime.Unix() != 1794330963 {
+		t.Fatalf("ClaimPendingMeta = %+v, %v", claimed, err)
+	}
+	// Leased: another worker does not get it, a lease that ran out gives it back.
+	if again, err := d.ClaimPendingMeta(ctx, 10, time.Minute); err != nil || len(again) != 0 {
+		t.Errorf("second claim = %+v, %v; want nothing while leased", again, err)
+	}
+	if _, err := d.Pool.Exec(ctx, `UPDATE matches SET meta_next_try = now() WHERE match_id = $1`, match); err != nil {
+		t.Fatal(err)
+	}
+	if again, _ := d.ClaimPendingMeta(ctx, 10, 0); len(again) != 1 {
+		t.Errorf("claim after the lease = %+v; want the match back", again)
 	}
 	if n, err := d.CountPendingMeta(ctx, acc); err != nil || n != 1 {
 		t.Errorf("CountPendingMeta = %d, %v; want 1", n, err)
@@ -602,8 +612,8 @@ func testDeferMeta(ctx context.Context, t *testing.T, d *DB, match uint64) {
 	if status != MetaPending || msg != "rate limited" || attempts != 0 || !next.Equal(until) {
 		t.Errorf("deferred = %s %q attempts %d next %v; want pending, no attempt, next %v", status, msg, attempts, next, until)
 	}
-	if ids, _ := d.NextPendingMeta(ctx, 10); slices.Contains(ids, pending) {
-		t.Errorf("deferred match is due: %v", ids)
+	if ms, _ := d.ClaimPendingMeta(ctx, 10, 0); slices.ContainsFunc(ms, func(q source.QueuedMatch) bool { return q.MatchID == pending }) {
+		t.Errorf("deferred match is due: %v", ms)
 	}
 	if err := d.DeferMeta(ctx, match, until, errors.New("x")); err != nil {
 		t.Fatal(err)

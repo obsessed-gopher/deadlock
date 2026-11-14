@@ -5,6 +5,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/obsessed-gopher/deadlock/internal/steamgc"
 )
 
 func env(m map[string]string) func(string) string {
@@ -37,6 +39,8 @@ func TestLoadConfigOverrides(t *testing.T) {
 		"META_INTERVAL":    "250ms",
 		"SYNC_ACCOUNTS":    " 42, 76561199477771562 ,,",
 		"DEADLOCK_API_KEY": " secret ",
+		"STEAM_BOT_USER":   " bot1, bot2 ",
+		"STEAM_BOT_TOKEN":  "t1,t2",
 	}))
 	if err != nil {
 		t.Fatal(err)
@@ -44,6 +48,9 @@ func TestLoadConfigOverrides(t *testing.T) {
 	if cfg.GRPCAddr != "127.0.0.1:1" || cfg.HTTPAddr != "127.0.0.1:2" ||
 		cfg.SyncEvery != time.Hour || cfg.MetaInterval != 250*time.Millisecond || cfg.DeadlockAPIKey != "secret" {
 		t.Errorf("got %+v", cfg)
+	}
+	if want := []steamgc.Account{{Username: "bot1", Token: "t1"}, {Username: "bot2", Token: "t2"}}; !reflect.DeepEqual(cfg.SteamBots, want) {
+		t.Errorf("bots = %v, want %v", cfg.SteamBots, want)
 	}
 	if want := []uint32{42, 1517505834}; !reflect.DeepEqual(cfg.SyncAccounts, want) {
 		t.Errorf("accounts = %v, want %v", cfg.SyncAccounts, want)
@@ -61,6 +68,9 @@ func TestLoadConfigErrors(t *testing.T) {
 		{"zero interval", map[string]string{"DATABASE_URL": "x", "META_INTERVAL": "0s"}, "META_INTERVAL"},
 		{"negative period", map[string]string{"DATABASE_URL": "x", "SYNC_EVERY": "-1m"}, "SYNC_EVERY"},
 		{"bad account", map[string]string{"DATABASE_URL": "x", "SYNC_ACCOUNTS": "1,nope"}, "SYNC_ACCOUNTS"},
+		{"bot without token", map[string]string{"DATABASE_URL": "x", "STEAM_BOT_USER": "bot"}, "STEAM_BOT_TOKEN"},
+		{"token without bot", map[string]string{"DATABASE_URL": "x", "STEAM_BOT_TOKEN": "t"}, "STEAM_BOT_USER"},
+		{"more bots than tokens", map[string]string{"DATABASE_URL": "x", "STEAM_BOT_USER": "a,b", "STEAM_BOT_TOKEN": "t"}, "pairs"},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {

@@ -90,7 +90,9 @@ func run(log *slog.Logger) error {
 	if len(cfg.SteamBots) > 0 {
 		// The GC is first-hand and fresh; deadlock-api has the full history
 		// and covers the GC being down or out of budget.
-		bots := steamgc.NewPool(log, cfg.SteamBots)
+		// Budgets and leases live in the database: a restart keeps the
+		// budget, and with several processes each bot runs in one of them.
+		bots := steamgc.NewPool(log, cfg.SteamBots, database)
 		go bots.Run(ctx)
 		history = source.MergedHistory{
 			Providers: []source.HistoryProvider{bots, api},

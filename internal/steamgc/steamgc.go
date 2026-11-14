@@ -176,8 +176,12 @@ func (c *Client) fail(err error) {
 	if c.stop != nil {
 		c.stop()
 	}
-	c.dl.Close()
-	c.sc.Disconnect()
+	if c.dl != nil { // nil in a Client that never dialed (tests)
+		c.dl.Close()
+	}
+	if c.sc != nil {
+		c.sc.Disconnect()
+	}
 }
 
 func (c *Client) cause() error {

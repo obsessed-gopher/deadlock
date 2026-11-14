@@ -2,9 +2,11 @@ package steamgc
 
 import (
 	"context"
+	"crypto/rand"
 	"errors"
 	"fmt"
 	"log/slog"
+	"os"
 	"time"
 
 	"github.com/obsessed-gopher/deadlock/internal/source"
@@ -29,13 +31,30 @@ type Pool struct {
 	bots []*Bot
 }
 
-// NewPool makes a bot per account; Run connects them.
-func NewPool(log *slog.Logger, accounts []Account) *Pool {
+// NewPool makes a bot per account; Run connects them. The budgets and leases
+// live in store (a MemoryStore if nil): every process of the service shares
+// them, so a bot runs in one process at a time and a restart keeps its budget.
+func NewPool(log *slog.Logger, accounts []Account, store Store) *Pool {
+	if store == nil {
+		store = &MemoryStore{}
+	}
+	owner := processID()
+	log.Info("steam bot owner", "owner", owner)
 	p := &Pool{}
 	for _, a := range accounts {
-		p.bots = append(p.bots, NewBot(log, a))
+		p.bots = append(p.bots, NewBot(log, a, store, owner))
 	}
 	return p
+}
+
+// processID names this process in the lease table: the host, the pid and a
+// random suffix, so a restarted process with a reused pid is still new.
+func processID() string {
+	host, err := os.Hostname()
+	if err != nil {
+		host = "unknown"
+	}
+	return fmt.Sprintf("%s/%d/%s", host, os.Getpid(), rand.Text()[:8])
 }
 
 // Run keeps every bot connected until ctx ends.
@@ -86,7 +105,10 @@ func (p *Pool) Salts(ctx context.Context, matchID uint64) (source.Salts, error) 
 	fresh := source.PriorityOf(ctx) == source.Fresh
 	var wait time.Duration
 	for i, b := range bots {
-		w, ok := b.reserve(b.salts, fresh)
+		w, ok, err := b.reserve(ctx, saltsKind, fresh)
+		if err != nil {
+			return source.Salts{}, fmt.Errorf("steam gc: salts budget: %w", err)
+		}
 		if !ok {
 			if wait == 0 || w < wait {
 				wait = w
@@ -101,7 +123,7 @@ func (p *Pool) Salts(ctx context.Context, matchID uint64) (source.Salts, error) 
 		s, err := cs[i].Salts(rctx, matchID)
 		cancel()
 		release()
-		b.outcome(b.salts, err)
+		b.outcome(ctx, saltsKind, err)
 		return s, err
 	}
 	return source.Salts{}, &source.RateLimitError{What: "steam gc salts budget", RetryAfter: max(wait, time.Second)}
@@ -120,7 +142,10 @@ func (p *Pool) MatchHistory(ctx context.Context, accountID uint32) ([]source.Mat
 			continue
 		}
 		friend = true
-		w, ok := b.reserve(b.history, true)
+		w, ok, err := b.reserve(ctx, historyKind, true)
+		if err != nil {
+			return nil, fmt.Errorf("steam gc: history budget: %w", err)
+		}
 		if !ok {
 			if wait == 0 || w < wait {
 				wait = w
@@ -135,7 +160,7 @@ func (p *Pool) MatchHistory(ctx context.Context, accountID uint32) ([]source.Mat
 		ms, err := cs[i].MatchHistory(rctx, accountID)
 		cancel()
 		release()
-		b.outcome(b.history, err)
+		b.outcome(ctx, historyKind, err)
 		return ms, err
 	}
 	if !friend {

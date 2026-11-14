@@ -5,6 +5,8 @@ import (
 	"log/slog"
 	"sync"
 	"time"
+
+	"github.com/obsessed-gopher/deadlock/internal/source"
 )
 
 // Pacing of one bot. The GC answered "rate limited" after ~50 salts in a row
@@ -26,6 +28,26 @@ const (
 	dialTimeout      = time.Minute
 	// requestTimeout bounds one GC request: the GC drops some silently.
 	requestTimeout = 30 * time.Second
+
+	// A process runs a bot only while it holds the bot's lease: LeaseTTL
+	// long, renewed every LeaseRenew. A process that dies frees the bot
+	// within LeaseTTL.
+	LeaseTTL   = 2 * time.Minute
+	LeaseRenew = 30 * time.Second
+	// storeTimeout bounds the budget and lease writes that must happen even
+	// when the request that caused them is gone.
+	storeTimeout = 5 * time.Second
+)
+
+// kind is a budget of one sort of GC request, stored under name.
+type kind struct {
+	name string
+	limits
+}
+
+var (
+	saltsKind   = kind{"salts", limits{SaltsPerHour, saltsBurst, saltsReserve}}
+	historyKind = kind{"history", limits{HistoryPerHour, historyBurst, 0}}
 )
 
 // Account is a bot's login: the name and the refresh token from Login (a
@@ -35,39 +57,54 @@ type Account struct {
 	Token    string
 }
 
-// Bot keeps one GC session alive and owns that account's request budget.
+// Bot keeps one GC session alive while its process holds the bot's lease;
+// the request budget lives in the Store.
 type Bot struct {
-	log *slog.Logger
-	acc Account
+	log   *slog.Logger
+	acc   Account
+	store Store
+	owner string // this process in the lease table
+	dial  func(ctx context.Context) (*Client, error)
+
+	leaseTTL, leaseRenew time.Duration
 
 	mu         sync.Mutex
 	cur        *Client
 	connecting bool
-	salts      *bucket
-	history    *bucket
 	last       time.Time // when the previous request was sent
 
 	req sync.Mutex // one GC request at a time
 }
 
-// NewBot returns a bot; Run connects it.
-func NewBot(log *slog.Logger, acc Account) *Bot {
-	now := time.Now()
-	return &Bot{
-		log:     log.With("bot", acc.Username),
-		acc:     acc,
-		salts:   newBucket(SaltsPerHour, saltsBurst, saltsReserve, now),
-		history: newBucket(HistoryPerHour, historyBurst, 0, now),
+// NewBot returns a bot of the owner process; Run connects it.
+func NewBot(log *slog.Logger, acc Account, store Store, owner string) *Bot {
+	b := &Bot{
+		log: log.With("bot", acc.Username), acc: acc, store: store, owner: owner,
+		leaseTTL: LeaseTTL, leaseRenew: LeaseRenew,
 	}
+	b.dial = func(ctx context.Context) (*Client, error) { return Dial(ctx, b.log, acc.Username, acc.Token) }
+	return b
 }
 
-// Run keeps the session up until ctx ends, reconnecting with a backoff.
+// Run keeps the session up until ctx ends, reconnecting with a backoff. The
+// session only runs while this process holds the bot's lease; otherwise Run
+// waits for the lease.
 func (b *Bot) Run(ctx context.Context) {
+	defer func() {
+		rctx, cancel := context.WithTimeout(context.WithoutCancel(ctx), storeTimeout)
+		defer cancel()
+		if err := b.store.ReleaseBot(rctx, b.acc.Username, b.owner); err != nil {
+			b.log.Warn("steam bot lease not released", "err", err)
+		}
+	}()
 	backoff := ReconnectFirst
 	for ctx.Err() == nil {
+		if !b.acquire(ctx) {
+			return
+		}
 		b.setConnecting(true)
 		dctx, cancel := context.WithTimeout(ctx, dialTimeout)
-		c, err := Dial(dctx, b.log, b.acc.Username, b.acc.Token)
+		c, err := b.dial(dctx)
 		cancel()
 		b.setConnecting(false)
 		if err != nil {
@@ -80,14 +117,10 @@ func (b *Bot) Run(ctx context.Context) {
 		}
 		b.set(c)
 		up := time.Now()
-		select {
-		case <-ctx.Done():
-			c.Close()
-			b.set(nil)
+		b.hold(ctx, c)
+		b.set(nil)
+		if ctx.Err() != nil {
 			return
-		case <-c.Done():
-			b.set(nil)
-			b.log.Warn("steam gc session ended", "err", c.Err())
 		}
 		// A session that held for a while resets the backoff.
 		if time.Since(up) > ReconnectLongest {
@@ -97,6 +130,68 @@ func (b *Bot) Run(ctx context.Context) {
 			return
 		}
 		backoff = min(backoff*2, ReconnectLongest)
+	}
+}
+
+// acquire waits until this process holds the bot's lease; false if ctx ended.
+func (b *Bot) acquire(ctx context.Context) bool {
+	waiting := false
+	for {
+		ok, err := b.store.LeaseBot(ctx, b.acc.Username, b.owner, b.leaseTTL)
+		switch {
+		case ctx.Err() != nil:
+			return false
+		case err != nil:
+			b.log.Warn("steam bot lease", "err", err)
+		case ok:
+			if waiting {
+				b.log.Info("steam bot taken over from another process")
+			}
+			return true
+		case !waiting:
+			b.log.Info("steam bot runs in another process, waiting for its lease")
+			waiting = true
+		}
+		if !sleep(ctx, b.leaseRenew) {
+			return false
+		}
+	}
+}
+
+// hold renews the lease while the session lives. It closes the session when
+// ctx ends or the lease is lost (taken by another process, or not renewed
+// for so long that it may have been), and returns once the session is over.
+func (b *Bot) hold(ctx context.Context, c *Client) {
+	t := time.NewTicker(b.leaseRenew)
+	defer t.Stop()
+	renewed := time.Now()
+	for {
+		select {
+		case <-ctx.Done():
+			c.Close()
+			return
+		case <-c.Done():
+			b.log.Warn("steam gc session ended", "err", c.Err())
+			return
+		case <-t.C:
+		}
+		ok, err := b.store.LeaseBot(ctx, b.acc.Username, b.owner, b.leaseTTL)
+		switch {
+		case ctx.Err() != nil:
+			continue // ctx.Done closes the session
+		case ok:
+			renewed = time.Now()
+			continue
+		case err == nil:
+			b.log.Warn("steam bot lease taken by another process, logging off")
+		case time.Since(renewed) < b.leaseTTL-b.leaseRenew:
+			b.log.Warn("steam bot lease not renewed, retrying", "err", err)
+			continue
+		default:
+			b.log.Warn("steam bot lease lost, logging off", "err", err)
+		}
+		c.Close()
+		return
 	}
 }
 
@@ -122,25 +217,41 @@ func (b *Bot) state() (*Client, bool) {
 	return b.cur, b.connecting
 }
 
-// reserve spends a token of the kind's budget or tells how long to wait.
-func (b *Bot) reserve(kind *bucket, fresh bool) (time.Duration, bool) {
-	b.mu.Lock()
-	defer b.mu.Unlock()
-	return kind.take(time.Now(), fresh)
+// reserve spends a token of the kind's stored budget or tells how long to
+// wait.
+func (b *Bot) reserve(ctx context.Context, k kind, fresh bool) (wait time.Duration, ok bool, err error) {
+	now := time.Now()
+	err = b.store.UpdateBotBudget(ctx, b.acc.Username, k.name, k.full(now), func(s *source.BotBudget) {
+		wait, ok = k.take(s, now, fresh)
+	})
+	return wait, ok, err
 }
 
 // outcome feeds a GC answer back into the budget: a rate limit pauses the
-// kind with an escalating backoff, a success resets it.
-func (b *Bot) outcome(kind *bucket, err error) {
-	b.mu.Lock()
-	defer b.mu.Unlock()
-	if isRateLimit(err) {
-		d := kind.limited(time.Now())
-		b.log.Warn("steam gc rate limit", "pause", d.String(), "in_a_row", kind.strikes)
+// kind with an escalating backoff, a success resets it. It is recorded even
+// if the request's ctx is gone.
+func (b *Bot) outcome(ctx context.Context, k kind, err error) {
+	if err != nil && !isRateLimit(err) {
 		return
 	}
-	if err == nil {
-		kind.succeeded()
+	sctx, cancel := context.WithTimeout(context.WithoutCancel(ctx), storeTimeout)
+	defer cancel()
+	now := time.Now()
+	var pause time.Duration
+	var strikes int
+	serr := b.store.UpdateBotBudget(sctx, b.acc.Username, k.name, k.full(now), func(s *source.BotBudget) {
+		if err != nil {
+			pause = limited(s, now)
+			strikes = s.Strikes
+		} else {
+			succeeded(s)
+		}
+	})
+	if serr != nil {
+		b.log.Warn("steam gc budget not saved", "kind", k.name, "err", serr)
+	}
+	if err != nil {
+		b.log.Warn("steam gc rate limit", "kind", k.name, "pause", pause.String(), "in_a_row", strikes)
 	}
 }
 
